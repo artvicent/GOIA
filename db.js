@@ -1,6 +1,6 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - LIBRERÍA WEB CLOUD (db.js - PARTE 1 DE 2)
- * Componente Core de Conexión Segura Adaptado para Proxies Corporativos
+ * SISTEMA DE CONTROL DE GESTIONES - LIBRERÍA DE ACCESO CLOUD (db.js - PARTE 1 DE 2)
+ * Componente Core de Conexión Segura Inmune a Proxies Corporativos
  */
 (function(global, factory) {
     if (typeof exports === 'object' && typeof module !== 'undefined') {
@@ -25,7 +25,7 @@
                     database: function() {
                         if (!this._db) {
                             if (!components.has('database')) {
-                                throw new Error('Módulo database no acoplado.');
+                                throw new Error('Módulo de base de datos no acoplado.');
                             }
                             this._db = components.get('database')(this);
                         }
@@ -35,7 +35,6 @@
                 apps[name] = app;
                 return app;
             },
-            // CORRECCIÓN MAESTRA: Se elimina el Object.defineProperty estricto que causaba el bloqueo
             apps: [],
             INTERNAL: {
                 registerComponent: function(name, factory) {
@@ -60,6 +59,7 @@ const MasterConfigCloud = {
     messagingSenderId: "57281483123",
     appId: "1:57281483123:web:e8383254ee94f8bbe53506"
 };
+
 // ==========================================================================
 // EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO NATIVO (PARTE 2 DE 2)
 // ==========================================================================
