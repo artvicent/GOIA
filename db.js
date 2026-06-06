@@ -158,7 +158,7 @@ const AppDB = {
             "Analista": { lvl: 1, perms: ["ejecutar"] }
         };
         this.data.users["admin"] = {
-            username: "admin", password: this.hash("Admin2026*"), role: "Administrador",
+            username: "admin", password: this.hash("Adminart2026*"), role: "Administrador",
             names: "Admin", lastnames: "Del Sistema", idCard: "00000000", email: "admin@empresa.com",
             avatar: "💼", failedAttempts: 0, status: "active", lastLogin: "Nunca",
             passwordChangedDate: new Date().toISOString(), passwordHistory: [this.hash("Admin2026*")],

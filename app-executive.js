@@ -342,13 +342,13 @@ App.openAboutModal = function() {
         <div style="text-align:center; padding:1rem 0;">
             <div style="font-size:3rem; margin-bottom:0.5rem;">🛡️</div>
             <h2 style="font-size:14px; margin:0 0 0.25rem 0; color:#0f172a; font-weight:700;">SISTEMA DE CONTROL DE GESTIONES</h2>
-            <p style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:bold; margin-bottom:1.5rem;">Versión 2.0.1 (Despliegue de Red)</p>
+            <p style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:bold; margin-bottom:1.5rem;">Versión 2.0.2</p>
             
             <div style="background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0; text-align:left; font-size:11px; color:#334155;">
                 <strong>Desarrollado y Diseñado por: Arturo Valero</strong><br>
                 • El AI Collaborator (Motor de Ingeniería Web)<br>
                 • En colaboración directa con el Gerente de la Gerencia de Adquirencia.<br><br>
-                <strong>Entorno Operativo:</strong> Carpeta Compartida Local (Intranet Corporativa) con Cifrado Simétrico Integrado y Persistencia en Búfer Asíncrono de Red.
+                <strong>Entorno Operativo:</strong> Cifrado Simétrico Integrado y Persistencia en Búfer Asíncrono de Red.
             </div>
         </div>
         <div style="margin-top:0.5rem; text-align:right;">
