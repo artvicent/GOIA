@@ -150,7 +150,7 @@ const AppDB = {
     },
 
     seedInitialData() {
-        this.data.config = { title: "Gerencia General de Adquirencia", logo: "🏢", passwordExpiryDays: 90 };
+        this.data.config = { title: "Operaciones Integrales de Adquiriencia", logo: "🏢", passwordExpiryDays: 90 };
         this.data.roles = {
             "Gerente": { lvl: 4, perms: ["all", "crear", "modificar", "eliminar", "ejecutar"] },
             "Administrador": { lvl: 3, perms: ["all", "crear", "modificar", "eliminar", "ejecutar"] },
