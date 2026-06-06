@@ -5,15 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
     <link rel="stylesheet" href="styles.css">
-    
-    <!-- SDK de Firebase v8 Obligatorio para Conexión Web Cloud -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
     <!-- CAPA INTEGRADA DE FONDO NATIVO -->
-    <img src="1.jpg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
+    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
 
     <!-- 1. BIENVENIDA Y RECONOCIMIENTO TOP COLABORADOR -->
     <header id="topBanner" class="hidden" style="position: relative; z-index: 10;">
@@ -160,7 +156,11 @@
         <div id="modalContent" class="modal-content custom-scrollbar"></div>
     </div>
 
-    <!-- CARGA ESTÁTICA TRADICIONAL SECUENCIAL COMPLETA (0 ERRORES DE DUPLICIDAD Y TIEMPOS) -->
+    <!-- CARGA ASÍNCRONA SECUENCIAL: Incluye librerías Firebase estables desde CDNJS -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+    
+    <!-- Scripts lógicos del programa -->
     <script src="db.js"></script>
     <script src="app-core.js"></script>
     <script src="app-executive.js"></script>
