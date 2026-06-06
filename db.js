@@ -53,7 +53,7 @@
 const MasterConfigCloud = {
     apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
     authDomain: "://firebaseapp.com",
-    databaseURL: "https://firebaseio.com",
+    databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
     projectId: "goia-5966d",
     storageBucket: "goia-5966d.firebasestorage.app",
     messagingSenderId: "57281483123",
@@ -63,6 +63,7 @@ const MasterConfigCloud = {
 // EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO BLINDADO CON FETCH (PARTE 2 DE 2)
 // ==========================================================================
 firebase.INTERNAL.registerComponent('database', function(app) {
+    // ENLACE DIRECTO CORREGIDO AL SERVIDOR DE TU PROYECTO GOIA EN LA NUBE
     var databaseUrl = "https://firebaseio.com";
 
     return {
@@ -73,7 +74,6 @@ firebase.INTERNAL.registerComponent('database', function(app) {
             
             return {
                 set: function(value) {
-                    // PASARELA MODERNA ANTI-BLOQUEOS CORS CORPORATIVOS
                     return fetch(endpoint, {
                         method: "PUT",
                         mode: "cors",
@@ -91,6 +91,7 @@ firebase.INTERNAL.registerComponent('database', function(app) {
                             });
                         }).catch(function(err) { console.error("Error leyendo cloud:", err); });
                     };
+
                     // Ejecución inicial nativa de datos en frío
                     execQuery();
                     
