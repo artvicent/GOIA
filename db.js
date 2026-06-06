@@ -48,23 +48,10 @@
     })();
     return firebase;
 }));
-
-// CONFIGURACIÓN DE TU PROYECTO MAESTRO GOIA EN FIREBASE CLOUD
-const MasterConfigCloud = {
-    apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
-    authDomain: "goia-5966d.firebaseapp.com",
-    databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
-    projectId: "goia-5966d",
-    storageBucket: "goia-5966d.firebasestorage.app",
-    messagingSenderId: "57281483123",
-    appId: "1:57281483123:web:e8383254ee94f8bbe53506",
-    measurementId: "G-77KKQV767G"
-};
 // ==========================================================================
 // EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO BLINDADO CON FETCH (PARTE 2 DE 2)
 // ==========================================================================
 firebase.INTERNAL.registerComponent('database', function(app) {
-    // ENLACE DIRECTO CORREGIDO AL SERVIDOR DE TU PROYECTO GOIA EN LA NUBE
     var databaseUrl = "https://firebaseio.com";
 
     return {
@@ -93,10 +80,7 @@ firebase.INTERNAL.registerComponent('database', function(app) {
                         }).catch(function(err) { console.error("Error leyendo cloud:", err); });
                     };
 
-                    // Ejecución inicial nativa de datos en frío
                     execQuery();
-                    
-                    // Polling síncrono controlado en segundo plano cada 4 segundos
                     setInterval(execQuery, 4000);
                 }
             };
@@ -114,13 +98,23 @@ const AppDB = {
 
     init() {
         var self = this;
-        // Inicializar el motor local integrado de forma síncrona
+        
+        // Credenciales fijas integradas en el hilo de memoria principal de GOIA
+        var localConfigCloud = {
+            apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
+            authDomain: "://firebaseapp.com",
+            databaseURL: "https://firebaseio.com",
+            projectId: "goia-5966d",
+            storageBucket: "goia-5966d.firebasestorage.app",
+            messagingSenderId: "57281483123",
+            appId: "1:57281483123:web:e8383254ee94f8bbe53506"
+        };
+
         setTimeout(function() {
             if (typeof firebase !== 'undefined') {
-                var app = firebase.initializeApp(MasterConfigCloud);
+                var app = firebase.initializeApp(localConfigCloud);
                 self.dbRef = app.database().ref("gerencia_database_branch");
 
-                // Escuchar los datos en vivo desde la nube de Firebase Realtime Database
                 self.dbRef.on("value", function(snapshot) {
                     var cloudData = snapshot.val();
                     if (cloudData && cloudData.cipherPayload) {
@@ -130,19 +124,16 @@ const AppDB = {
                             if (parsed && parsed.users) {
                                 self.data = parsed;
                                 localStorage.setItem(self.STORAGE_KEY, decryptedRaw);
-                                // Refrescar las grillas numéricas en pantalla si el analista inició sesión
                                 if (typeof App !== 'undefined' && App.currentUser) {
                                     App.renderDashboardData();
                                 }
                             }
                         } catch(e) { console.error("Error interpretando bloque cripto."); }
                     } else {
-                        // Sembrar la nómina maestra si el servidor de Google está vacío
                         self.seedInitialData();
                     }
                 });
             } else {
-                // Contingencia en caché local activa si no hay red
                 var storedData = localStorage.getItem(self.STORAGE_KEY);
                 if (storedData && storedData !== "{}") {
                     try { self.data = JSON.parse(storedData); } catch (e) {}
@@ -154,10 +145,8 @@ const AppDB = {
     save() {
         var dataStr = JSON.stringify(this.data);
         localStorage.setItem(this.STORAGE_KEY, dataStr);
-        
         var cipherText = this.encrypt(dataStr);
         
-        // ENVÍO DE DATOS DIRECTO A TU SERVIDOR DE FIREBASE (0% DEPENDENCIAS DE LOCALSTORAGE)
         if (this.dbRef) {
             this.dbRef.set({
                 cipherPayload: cipherText,
