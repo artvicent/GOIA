@@ -161,14 +161,18 @@
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
 
-    <!-- Hilo lógico secuencial estricto -->
-    <script src="db.js"></script>
-    <script src="app-core.js"></script>
-    <script src="app-executive.js"></script>
-    <script src="app-admin-users.js"></script>
-    <script src="app-admin-assign.js"></script>
-    <script src="app-admin-roles.js"></script>
-    <script src="app-admin-managements.js"></script>
-    <script src="app-admin-logs.js"></script>
+    <!-- TRUCO DE INGENIERÍA: Forzar al navegador a leer siempre la última versión de los scripts -->
+    <script>
+        (function() {
+            var token = new Date().getTime();
+            var scripts = ["db.js", "app-core.js", "app-executive.js", "app-admin-users.js", "app-admin-assign.js", "app-admin-roles.js", "app-admin-managements.js", "app-admin-logs.js"];
+            scripts.forEach(function(src) {
+                var s = document.createElement("script");
+                s.src = src + "?v=" + token;
+                s.async = false;
+                document.body.appendChild(s);
+            });
+        })();
+    </script>
 </body>
 </html>
