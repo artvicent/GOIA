@@ -50,14 +50,15 @@
 }));
 
 // CONFIGURACIÓN DE TU PROYECTO MAESTRO GOIA EN FIREBASE CLOUD
-const MasterConfigCloud = {
+const firebaseConfig = {
     apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
-    authDomain: "://firebaseapp.com",
+    authDomain: "goia-5966d.firebaseapp.com",
     databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
     projectId: "goia-5966d",
     storageBucket: "goia-5966d.firebasestorage.app",
     messagingSenderId: "57281483123",
-    appId: "1:57281483123:web:e8383254ee94f8bbe53506"
+    appId: "1:57281483123:web:e8383254ee94f8bbe53506",
+    measurementId: "G-77KKQV767G"
 };
 // ==========================================================================
 // EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO BLINDADO CON FETCH (PARTE 2 DE 2)
