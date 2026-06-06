@@ -14,7 +14,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     /* Enlace nativo al archivo local de red */
-    background-image: url('1.jpg');
+    background-image: url('1.jpeg');
     
     /* Propiedades ejecutivas de escalado y fijado */
     background-repeat: no-repeat;

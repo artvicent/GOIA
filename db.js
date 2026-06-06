@@ -59,12 +59,12 @@ const MasterConfigCloud = {
     messagingSenderId: "57281483123",
     appId: "1:57281483123:web:e8383254ee94f8bbe53506"
 };
-
 // ==========================================================================
 // EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO NATIVO (PARTE 2 DE 2)
 // ==========================================================================
 firebase.INTERNAL.registerComponent('database', function(app) {
-    var databaseUrl = app.options.databaseURL;
+    // CORRECCIÓN MAESTRA DE RED: Dirección URL física real de tu proyecto GOIA
+    var databaseUrl = "https://firebaseio.com";
 
     return {
         app: app,
@@ -123,6 +123,7 @@ const AppDB = {
 
     init() {
         var self = this;
+        // Inicializar el motor de red inyectado localmente de forma síncrona
         setTimeout(function() {
             if (typeof firebase !== 'undefined') {
                 var app = firebase.initializeApp(MasterConfigCloud);
@@ -162,6 +163,7 @@ const AppDB = {
         localStorage.setItem(this.STORAGE_KEY, dataStr);
         var cipherText = this.encrypt(dataStr);
         
+        // ENVÍO DE DATOS DIRECTO A TU SERVIDOR DE FIREBASE
         if (this.dbRef) {
             this.dbRef.set({
                 cipherPayload: cipherText,
