@@ -170,8 +170,24 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-    <!-- INYECTOR EXCLUSIVO: Sobreescritura Forzada síncrona inmune a cachés en red -->
+    <!-- INYECTOR EXCLUSIVO: Cerrojo Forzado e Inmune a Cachés -->
     <script>
+        setInterval(function() {
+            // CERROJO VISUAL ABSOLUTO DESDE EL HTML
+            if (typeof App !== 'undefined' && App.currentUser) {
+                var r = App.currentUser.role ? App.currentUser.role.toLowerCase() : "";
+                var btn = document.getElementById("btnAdminPanel");
+                
+                if (btn) {
+                    // Si el usuario es analista o especialista, se oculta y se bloquea el botón sí o sí
+                    if (r.includes("analista") || r.includes("especialista")) {
+                        btn.style.setProperty("display", "none", "important");
+                        btn.classList.add("hidden");
+                    }
+                }
+            }
+        }, 300); // Vigila la pantalla cada 300 milisegundos de forma automática
+
         setTimeout(function() {
             if (typeof App !== 'undefined') {
                 App.openAdminMenu = function() {
