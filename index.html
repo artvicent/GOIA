@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Gestiones Ejecutivas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- CAPA INTEGRADA DE FONDO NATIVO: Inmune a bloqueos de políticas de Windows -->
+    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
+
+    <!-- 1. BIENVENIDA Y RECONOCIMIENTO TOP COLABORADOR -->
+    <header id="topBanner" class="hidden" style="position: relative; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Gerencia:</span>
+            <span id="displayGerenciaName" style="font-size: 0.75rem; font-weight: 700;">Cargando...</span>
+        </div>
+        <div id="meritPodium" class="merit-podium">
+            <span style="font-size: 0.75rem; font-weight: 700; color: #34d399; text-transform: uppercase;">🏆 Top Eficiencia:</span>
+            <span id="topUserWorker" style="font-size: 0.75rem; color: #ecfdf5;">Evaluando métricas...</span>
+        </div>
+    </header>
+
+    <!-- 2. CONTENEDOR PRINCIPAL DINÁMICO (SPA) -->
+    <main style="position: relative; z-index: 10; background: transparent !important; background-color: transparent !important;">
+        <!-- ================= VISTA A: LOGIN CONTROLADO ================= -->
+        <section id="viewLogin" class="view-card max-w-md" style="padding: 2rem; background-color: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(8px);">
+            <div class="login-header">
+                <div style="width: 7.5rem; height: 3.5rem; margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center;">
+                    <img id="appLogoImg" src="logo_gerencia.png" onerror="this.style.display='none'; document.getElementById('appLogoFallback').style.display='flex';" style="width: 100%; height: 100%; object-fit: contain; display: block;" alt="Logo">
+                    <div id="appLogoFallback" style="display: none; width: 3.5rem; height: 3.5rem; background-color: #f1f5f9; border-radius: 50%; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid #e2e8f0;">🏢</div>
+                </div>
+                <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0;">Control de Gestiones</h1>
+                <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-top: 0.25rem;">Acceso Corporativo</p>
+            </div>
+
+            <form id="formLogin" onsubmit="App.handleLogin(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.25rem;">Usuario</label>
+                    <input type="text" id="loginUser" required class="form-control" placeholder="Ej: jperez">
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Contraseña</label>
+                        <button type="button" onclick="App.showRecoveryFormGlobal()" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; font-weight: 600;">¿Olvidó su clave / Bloqueado?</button>
+                    </div>
+                    <input type="password" id="loginPass" required class="form-control" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 0.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; margin-top: 0.5rem;">
+                    Ingresar al Sistema
+                </button>
+            </form>
+        </section>
+
+        <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
+        <section id="viewDashboard" class="view-card max-w-7xl hidden" style="padding: 1.5rem; box-sizing: border-box; background-color: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(10px);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" style="width: 3rem; height: 3rem; background-color: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid #e2e8f0; cursor: pointer; overflow: hidden; background-size: cover; background-position: center;">👤</div>
+                    <div>
+                        <h2 id="dashWelcomeName" style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0;">Colaborador</h2>
+                        <p id="dashUserRole" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin: 0;">Rol</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="App.openReportsMenu()" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">📊 Reportes Consolidados</button>
+                    <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">⚙️ Ajustes y Usuarios</button>
+                    <button onclick="App.openAboutModal()" class="btn-secondary" style="background-color: #f8fafc; border-color: #cbd5e1; color: #475569; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">ℹ️ Acerca de</button>
+                    <button onclick="App.logout()" class="btn-secondary" style="color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">Cerrar Sesión</button>
+                </div>
+            </div>
+            <!-- CONTADORES DE ESTADO GENERAL -->
+            <div class="grid-counters">
+                <div class="counter-card bg-total">
+                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin: 0;">Total Realizadas</p>
+                    <p id="countTotal" class="counter-num">0</p>
+                </div>
+                <div class="counter-card bg-warning">
+                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Por Vencer (&lt; 30 min)</p>
+                    <p id="countWarning" class="counter-num">0</p>
+                </div>
+                <div class="counter-card bg-danger">
+                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Gestiones Vencidas</p>
+                    <p id="countDanger" class="counter-num">0</p>
+                </div>
+                <div class="counter-card bg-ied">
+                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Índice IED (Mensual)</p>
+                    <p id="countPerformance" class="counter-num">0%</p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN CENTRAL SPLIT -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;" id="dashboardSplitLayout">
+                <div style="overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0;">Filtros de Auditoría:</h3>
+                            <select id="filterAuditMonth" onchange="App.renderDashboardData()" class="filter-select" style="background: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
+                                <option value="current">📅 Ciclo Activo (Mes en Curso)</option>
+                                <option value="1">📅 Enero 2026</option>
+                                <option value="2">📅 Febrero 2026</option>
+                                <option value="3">📅 Marzo 2026</option>
+                                <option value="4">📅 Abril 2026</option>
+                                <option value="5">📅 Mayo 2026</option>
+                                <option value="6">📅 Junio 2026</option>
+                                <option value="7">📅 Julio 2025</option>
+                                <option value="8">📅 Agosto 2025</option>
+                                <option value="9">📅 Septiembre 2025</option>
+                                <option value="10">📅 Octubre 2025</option>
+                                <option value="11">📅 Noviembre 2025</option>
+                                <option value="12">📅 Diciembre 2025</option>
+                            </select>
+                            <select id="filterAssignmentStatus" onchange="App.renderDashboardData()" class="filter-select">
+                                <option value="all">🔍 Todas las Cargas</option>
+                                <option value="pending">⏳ Pendientes</option>
+                                <option value="completed">🏁 Culminadas</option>
+                                <option value="expired">🚨 Vencidas</option>
+                            </select>
+                        </div>
+                        <button id="btnNewAssignment" onclick="App.openAssignmentModal()" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 12px; cursor: pointer; display: none;">+ Asignar Actividad</button>
+                    </div>
+                    
+                    <div class="table-container custom-scrollbar">
+                        <table class="executive-table">
+                            <thead>
+                                <tr>
+                                    <th>Actividad / Item</th>
+                                    <th style="text-align: center;">Meta / Carga</th>
+                                    <th style="text-align: center;">Procesadas</th>
+                                    <th style="text-align: center;">Origen / Ref.</th>
+                                    <th style="text-align: center;">Tiempo Restante</th>
+                                    <th style="text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableAssignmentsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; margin-top: 0;">Monitor de Desempeño y Alertas</h3>
+                    <div id="monitorContainer" class="monitor-panel custom-scrollbar"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        ENTORNO DE EJECUCIÓN LOCAL PROTEGIDO &copy; 2026 - SISTEMA DE INTEGRIDAD DE DATOS MÁXIMA
+    </footer>
+
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div id="modalContent" class="modal-content custom-scrollbar"></div>
+    </div>
+
+    <!-- MOTOR INYECTOR DE LECTURA DIRECTA DE ARCHIVO JSON SIN LÍMITE DE CARACTERES -->
+    <script>
+        var JSON_NETWORK_DATA_INPUT = null;
+        try {
+            // Invocar el componente ActiveX nativo de Windows de forma directa y síncrona
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            // Calcular la ruta física real donde se encuentra la aplicación en la carpeta compartida
+            var currentPath = window.location.href.replace("file:///", "").replace(/\//g, "\\");
+            currentPath = decodeURIComponent(currentPath.substring(0, currentPath.lastIndexOf("\\") + 1));
+            
+            var jsonFilePath = currentPath + "db_storage.json";
+            
+            if (fso.FileExists(jsonFilePath)) {
+                var file = fso.OpenTextFile(jsonFilePath, 1);
+                var rawText = file.ReadAll();
+                file.Close();
+                if (rawText && rawText.trim() !== "") {
+                    JSON_NETWORK_DATA_INPUT = JSON.parse(rawText);
+                }
+            }
+        } catch(e) {
+            console.log("Modo standalone o restricción de red mitigada de forma segura.");
+        }
+
+        // Carga secuencial obligatoria de los scripts lógicos
+        (function() {
+            var token = new Date().getTime();
+            var scripts = ["db.js", "app-core.js", "app-executive.js", "app-admin-users.js", "app-admin-assign.js", "app-admin-roles.js", "app-admin-managements.js", "app-admin-logs.js"];
+            scripts.forEach(function(src) {
+                var s = document.createElement("script");
+                s.src = src + "?v=" + token;
+                s.async = false;
+                document.body.appendChild(s);
+            });
+        })();
+    </script>
+    <!-- CAJA DE INTERCAMBIO SILENCIOSA: Inmune a bloqueos de Windows y del navegador -->
+    <textarea id="networkDatabaseBuffer" style="display:none;"></textarea>
+
+    <!-- CARGA DE SCRIPTS MAESTROS PARA ENTORNOS WEB CLOUD (GITHUB PAGES) -->
+    <script src="db.js"></script>
+    <script src="app-core.js"></script>
+    <script src="app-executive.js"></script>
+    <script src="app-admin-users.js"></script>
+    <script src="app-admin-assign.js"></script>
+    <script src="app-admin-roles.js"></script>
+    <script src="app-admin-managements.js"></script>
+    <script src="app-admin-logs.js"></script>
+</body>
+</html>
