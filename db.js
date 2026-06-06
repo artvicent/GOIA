@@ -59,7 +59,8 @@ const MasterConfigCloud = {
     projectId: "goia-5966d",
     storageBucket: "goia-5966d.firebasestorage.app",
     messagingSenderId: "57281483123",
-    appId: "1:57281483123:web:e8383254ee94f8bbe53506"
+    appId: "1:57281483123:web:e8383254ee94f8bbe53506",
+    measurementId: "G-77KKQV767G"
 };
 // ==========================================================================
 // EXPANSION DE ENLACE REALTIME CLOUD INTEGRADO NATIVO (PARTE 2 DE 2)
