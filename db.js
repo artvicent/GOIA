@@ -1,33 +1,64 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - MOTOR WEB ESTÁNDAR PURE (db.js)
- * Optimizado para Despliegue en GitHub Pages - Máxima Persistencia Inmune
+ * SISTEMA DE CONTROL DE GESTIONES - MOTOR CLUID REALTIME DATABASE (db.js)
+ * Sincronización Directa en Servidor Firebase - Cero Almacenamiento Local
  */
 const AppDB = {
-    STORAGE_KEY: "GESTION_GERENCIA_DATA",
-    CRYPTO_KEY: 126, 
-
+    CRYPTO_KEY: 126,
     data: { config: { title: "Gerencia General de Adquirencia", logo: "🏢", passwordExpiryDays: 90 }, roles: {}, users: {}, managements: [], assignments: [], logs: [] },
 
+    // CONFIGURACIÓN OFICIAL: Credenciales de tu proyecto GOIA inyectadas en formato estándar
+    firebaseConfig: {
+        apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
+        authDomain: "goia-5966d.firebaseapp.com",
+        databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
+        projectId: "goia-5966d",
+        storageBucket: "goia-5966d.firebasestorage.app",
+        messagingSenderId: "57281483123",
+        appId: "1:57281483123:web:e8383254ee94f8bbe53506"
+    },
+
     init() {
-        // Carga web estándar directa de alta velocidad protegida por HTTPS
-        var storedData = localStorage.getItem(this.STORAGE_KEY);
-        if (storedData && storedData !== "{}") {
-            try { 
-                this.data = JSON.parse(storedData); 
-            } catch (e) { this.seedInitialData(); }
-        } else {
-            this.seedInitialData();
+        // Inicializar Firebase SDK de forma síncrona en el entorno de GitHub
+        if (!firebase.apps.length) {
+            firebase.initializeApp(this.firebaseConfig);
         }
-        
-        if (!this.data.logs) this.data.logs = [];
-        if (!this.data.assignments) this.data.assignments = [];
+        this.dbRef = firebase.database().ref("gerencia_database_branch");
+
+        // ESCUCHA EN TIEMPO REAL CLOUD: Descarga los datos cifrados ignorando la caché local de la PC
+        this.dbRef.on("value", (snapshot) => {
+            var cloudData = snapshot.val();
+            if (cloudData && cloudData.cipherPayload) {
+                try {
+                    var decryptedRaw = this.decrypt(cloudData.cipherPayload);
+                    var parsed = JSON.parse(decryptedRaw);
+                    if (parsed && parsed.users) {
+                        this.data = parsed;
+                        // Forzar refresco visual inmediato si el usuario ya inició sesión en la pestaña
+                        if (typeof App !== 'undefined' && App.currentUser) {
+                            App.renderDashboardData();
+                        }
+                    }
+                } catch(e) { 
+                    console.error("Error interpretando los datos cifrados de Firebase."); 
+                }
+            } else {
+                // Si tu servidor de Firebase está vacío, sembrar la configuración inicial de producción
+                this.seedInitialData();
+            }
+        });
     },
     
     save() {
         var dataStr = JSON.stringify(this.data);
-        // Guardado persistente nativo inmune en dominio web real
-        localStorage.setItem(this.STORAGE_KEY, dataStr);
-        window.dispatchEvent(new Event('storage'));
+        var cipherText = this.encrypt(dataStr);
+        
+        // ENVÍO DIRECTO AL SERVIDOR (Se elimina por completo el localStorage del flujo)
+        if (this.dbRef) {
+            this.dbRef.set({
+                cipherPayload: cipherText,
+                lastUpdate: new Date().toISOString()
+            });
+        }
     },
 
     encrypt(text) {
