@@ -50,7 +50,7 @@
 }));
 
 // CONFIGURACIÓN DE TU PROYECTO MAESTRO GOIA EN FIREBASE CLOUD
-const firebaseConfig = {
+const MasterConfigCloud = {
     apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
     authDomain: "goia-5966d.firebaseapp.com",
     databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
