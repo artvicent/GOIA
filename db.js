@@ -17,36 +17,44 @@ const AppDB = {
         appId: "1:57281483123:web:e8383254ee94f8bbe53506"
     },
 
-    init() {
-        // Inicializar Firebase SDK de forma síncrona en el entorno de GitHub
-        if (!firebase.apps.length) {
-            firebase.initializeApp(this.firebaseConfig);
-        }
-        this.dbRef = firebase.database().ref("gerencia_database_branch");
+    // ... código anterior de firebaseConfig ...
 
-        // ESCUCHA EN TIEMPO REAL CLOUD: Descarga los datos cifrados ignorando la caché local de la PC
-        this.dbRef.on("value", (snapshot) => {
-            var cloudData = snapshot.val();
-            if (cloudData && cloudData.cipherPayload) {
-                try {
-                    var decryptedRaw = this.decrypt(cloudData.cipherPayload);
-                    var parsed = JSON.parse(decryptedRaw);
-                    if (parsed && parsed.users) {
-                        this.data = parsed;
-                        // Forzar refresco visual inmediato si el usuario ya inició sesión en la pestaña
-                        if (typeof App !== 'undefined' && App.currentUser) {
-                            App.renderDashboardData();
-                        }
-                    }
-                } catch(e) { 
-                    console.error("Error interpretando los datos cifrados de Firebase."); 
+    init() {
+        var self = this;
+        // Esperar 800 milisegundos a que el navegador termine de digerir el SDK de Firebase
+        setTimeout(function() {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(self.firebaseConfig);
                 }
+                
+                // CAMBIO MAESTRO: Forzar la conexión al nodo raíz puro del servidor GOIA
+                self.dbRef = firebase.database().ref("/");
+
+                // Escuchar los cambios en la nube en tiempo real
+                self.dbRef.on("value", function(snapshot) {
+                    var cloudData = snapshot.val();
+                    if (cloudData && cloudData.cipherPayload) {
+                        try {
+                            var decryptedRaw = self.decrypt(cloudData.cipherPayload);
+                            var parsed = JSON.parse(decryptedRaw);
+                            if (parsed && parsed.users) {
+                                self.data = parsed;
+                                if (typeof App !== 'undefined' && App.currentUser) {
+                                    App.renderDashboardData();
+                                }
+                            }
+                        } catch(e) { console.error("Error descifrando base cloud"); }
+                    } else {
+                        self.seedInitialData();
+                    }
+                });
             } else {
-                // Si tu servidor de Firebase está vacío, sembrar la configuración inicial de producción
-                this.seedInitialData();
+                self.seedInitialData();
             }
-        });
+        }, 800);
     },
+
     
     save() {
         var dataStr = JSON.stringify(this.data);

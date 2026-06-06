@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- SDK de Firebase v8 Obligatorio para Conexión Web Cloud -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
-    <!-- CAPA INTEGRADA DE FONDO NATIVO: Inmune a bloqueos de políticas de Windows -->
-    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
+    <!-- CAPA INTEGRADA DE FONDO NATIVO -->
+    <img src="1.jpg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
 
     <!-- 1. BIENVENIDA Y RECONOCIMIENTO TOP COLABORADOR -->
     <header id="topBanner" class="hidden" style="position: relative; z-index: 10;">
@@ -98,7 +102,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                             <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0;">Filtros de Auditoría:</h3>
-                            <select id="filterAuditMonth" onchange="App.renderDashboardData()" class="filter-select" style="background: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
+                            <select id="filterAuditMonth" onchange="App.renderDashboardData()" class="filter-select">
                                 <option value="current">📅 Ciclo Activo (Mes en Curso)</option>
                                 <option value="1">📅 Enero 2026</option>
                                 <option value="2">📅 Febrero 2026</option>
@@ -149,53 +153,14 @@
     </main>
 
     <footer>
-        ENTORNO DE EJECUCIÓN LOCAL PROTEGIDO &copy; 2026 - SISTEMA DE INTEGRIDAD DE DATOS MÁXIMA
+        ENTORNO DE EJECUCIÓN CLOUD SEGURO &copy; 2026 - SISTEMA DE INTEGRIDAD DE DATOS MÁXIMA
     </footer>
 
     <div id="modalOverlay" class="modal-overlay hidden">
         <div id="modalContent" class="modal-content custom-scrollbar"></div>
     </div>
 
-    <!-- MOTOR INYECTOR DE LECTURA DIRECTA DE ARCHIVO JSON SIN LÍMITE DE CARACTERES -->
-    <script>
-        var JSON_NETWORK_DATA_INPUT = null;
-        try {
-            // Invocar el componente ActiveX nativo de Windows de forma directa y síncrona
-            var fso = new ActiveXObject("Scripting.FileSystemObject");
-            // Calcular la ruta física real donde se encuentra la aplicación en la carpeta compartida
-            var currentPath = window.location.href.replace("file:///", "").replace(/\//g, "\\");
-            currentPath = decodeURIComponent(currentPath.substring(0, currentPath.lastIndexOf("\\") + 1));
-            
-            var jsonFilePath = currentPath + "db_storage.json";
-            
-            if (fso.FileExists(jsonFilePath)) {
-                var file = fso.OpenTextFile(jsonFilePath, 1);
-                var rawText = file.ReadAll();
-                file.Close();
-                if (rawText && rawText.trim() !== "") {
-                    JSON_NETWORK_DATA_INPUT = JSON.parse(rawText);
-                }
-            }
-        } catch(e) {
-            console.log("Modo standalone o restricción de red mitigada de forma segura.");
-        }
-
-        // Carga secuencial obligatoria de los scripts lógicos
-        (function() {
-            var token = new Date().getTime();
-            var scripts = ["db.js", "app-core.js", "app-executive.js", "app-admin-users.js", "app-admin-assign.js", "app-admin-roles.js", "app-admin-managements.js", "app-admin-logs.js"];
-            scripts.forEach(function(src) {
-                var s = document.createElement("script");
-                s.src = src + "?v=" + token;
-                s.async = false;
-                document.body.appendChild(s);
-            });
-        })();
-    </script>
-    <!-- CAJA DE INTERCAMBIO SILENCIOSA: Inmune a bloqueos de Windows y del navegador -->
-    <textarea id="networkDatabaseBuffer" style="display:none;"></textarea>
-
-    <!-- CARGA DE SCRIPTS MAESTROS PARA ENTORNOS WEB CLOUD (GITHUB PAGES) -->
+    <!-- CARGA ESTÁTICA TRADICIONAL SECUENCIAL COMPLETA (0 ERRORES DE DUPLICIDAD Y TIEMPOS) -->
     <script src="db.js"></script>
     <script src="app-core.js"></script>
     <script src="app-executive.js"></script>
