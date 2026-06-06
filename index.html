@@ -8,8 +8,9 @@
 </head>
 <body>
 
-    <!-- CAPA INTEGRADA DE FONDO NATIVO -->
-    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none;" alt="Fondo">
+    <!-- CAPA INTEGRADA DE FONDO NATIVO CON OPACIDAD SUTIL OSCURA -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -101; background-color: #000000;"></div>
+    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none; opacity: 0.6;" alt="Fondo">
 
     <!-- 1. BIENVENIDA Y RECONOCIMIENTO TOP COLABORADOR -->
     <header id="topBanner" class="hidden" style="position: relative; z-index: 10;">
@@ -64,7 +65,6 @@
                         <p id="dashUserRole" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin: 0;">Rol</p>
                     </div>
                 </div>
-
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button onclick="App.openReportsMenu()" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">📊 Reportes Consolidados</button>
                     <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">⚙️ Ajustes y Usuarios</button>
@@ -72,6 +72,7 @@
                     <button onclick="App.logout()" class="btn-secondary" style="color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">Cerrar Sesión</button>
                 </div>
             </div>
+
             <!-- CONTADORES DE ESTADO GENERAL -->
             <div class="grid-counters">
                 <div class="counter-card bg-total">
