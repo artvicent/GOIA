@@ -1,36 +1,79 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - MOTOR CLOUD DIRECTO (db.js)
- * Conexión Nativa Firebase RTDB - Sincronización Invisible Inmune a Borrados de Caché
+ * SISTEMA DE CONTROL DE GESTIONES - MOTOR WEB CLOUD FIJO (db.js - PARTE 1 DE 2)
+ * Conexión Directa e Inmune a Bloqueos de Memoria Caché Corporativa
  */
+
+// CONFIGURACIÓN REAL DE TU PROYECTO GOIA EN FIREBASE CLOUD
+const MasterConfigCloud = {
+    apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
+    projectId: "goia-5966d",
+    storageBucket: "goia-5966d.firebasestorage.app",
+    messagingSenderId: "57281483123",
+    appId: "1:57281483123:web:e8383254ee94f8bbe53506"
+};
+
+// SIMULADOR COMPATIBLE SÍNCRONO DEL SDK DE FIREBASE PARA ENTORNOS COMPILADOS
+const firebase = {
+    apps: [],
+    initializeApp: function(config) {
+        this.apps = [{ options: config }];
+        return this;
+    },
+    database: function() {
+        // ENLACE DURO ABSOLUTO INMUNE A LA URL INCORRECTA VIEJA
+        var databaseUrl = "https://goia-5966d-default-rtdb.firebaseio.com";
+        
+        return {
+            ref: function(path) {
+                path = path || 'gerencia_database_branch';
+                var endpoint = databaseUrl + "/" + path + ".json";
+                
+                return {
+                    set: function(value) {
+                        return fetch(endpoint, {
+                            method: "PUT",
+                            mode: "cors",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(value)
+                        }).catch(function(err) { console.error("Error guardando en nube:", err); });
+                    },
+                    on: function(eventType, callback) {
+                        var execQuery = function() {
+                            fetch(endpoint, { method: "GET", mode: "cors" })
+                            .then(function(res) { return res.json(); })
+                            .then(function(data) {
+                                callback({
+                                    val: function() { return data; }
+                                });
+                            }).catch(function(err) { console.error("Error de lectura cloud:", err); });
+                        };
+                        execQuery();
+                        setInterval(execQuery, 3000); // Consulta en caliente cada 3 segundos
+                    }
+                };
+            }
+        };
+    }
+};
+// ==========================================================================
+// LÓGICA DE CONTROL OPERACIONAL DE BASE DE DATOS DEL SISTEMA DE GESTIONES
+// ==========================================================================
 const AppDB = {
     CRYPTO_KEY: 126,
     STORAGE_KEY: "GESTION_GERENCIA_DATA",
     data: { config: { title: "Gerencia General de Adquirencia", logo: "🏢", passwordExpiryDays: 90 }, roles: {}, users: {}, managements: [], assignments: [], logs: [] },
 
-    // CONFIGURACIÓN CLOUD: Credenciales de tu proyecto GOIA en Firebase
-    firebaseConfig: {
-        apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
-        authDomain: "://firebaseapp.com",
-        databaseURL: "https://firebaseio.com",
-        projectId: "goia-5966d",
-        storageBucket: "goia-5966d.firebasestorage.app",
-        messagingSenderId: "57281483123",
-        appId: "1:57281483123:web:e8383254ee94f8bbe53506"
-    },
-
     init() {
         var self = this;
-        
-        // Inicializar el SDK nativo cargado por el index.html de forma limpia
+        // Inicializar la conexión directa a la base de datos GOIA en Firebase
         if (typeof firebase !== 'undefined') {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(this.firebaseConfig);
-            }
-            // Conexión al subnodo dedicado del proyecto GOIA
-            this.dbRef = firebase.database().ref("gerencia_database_branch");
+            var app = firebase.initializeApp(MasterConfigCloud);
+            self.dbRef = app.database().ref("gerencia_database_branch");
 
-            // Escuchar cambios en caliente directo de la nube (Ignora el historial local de la PC)
-            this.dbRef.on("value", function(snapshot) {
+            // Escucha activa en la nube para actualizar el tablero de control
+            self.dbRef.on("value", function(snapshot) {
                 var cloudData = snapshot.val();
                 if (cloudData && cloudData.cipherPayload) {
                     try {
@@ -39,19 +82,17 @@ const AppDB = {
                         if (parsed && parsed.users) {
                             self.data = parsed;
                             localStorage.setItem(self.STORAGE_KEY, decryptedRaw);
-                            // Refrescar vistas si el usuario analista ya está logueado
                             if (typeof App !== 'undefined' && App.currentUser) {
                                 App.renderDashboardData();
                             }
                         }
                     } catch(e) { console.error("Error descifrando bloque de red."); }
                 } else {
-                    // Inyectar nómina de fábrica si el servidor de Google está en blanco
+                    // Sembrar nómina inicial si el servidor de Google está completamente limpio
                     self.seedInitialData();
                 }
             });
         } else {
-            // Respaldar en memoria activa local si la red falla catastróficamente
             this.loadBackupLocal();
         }
     },
@@ -70,7 +111,7 @@ const AppDB = {
         localStorage.setItem(this.STORAGE_KEY, dataStr);
         var cipherText = this.encrypt(dataStr);
         
-        // TRANSMISIÓN DIRECTA AL SERVIDOR EN LA NUBE (0% DEPENDENCIAS DE LOCALSTORAGE)
+        // TRANSMISIÓN DIRECTA AL SERVIDOR EN LA NUBE INDESTRUCTIBLE
         if (this.dbRef) {
             this.dbRef.set({
                 cipherPayload: cipherText,
