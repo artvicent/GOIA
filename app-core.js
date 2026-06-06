@@ -83,17 +83,31 @@ const App = {
         const p = roleData.perms || [];
         const isMaster = p.includes("all") || this.currentUser.username === "admin" || this.currentUser.role === "Administrador" || this.currentUser.role === "Gerente";
 
+               // ==========================================================================
+        // FILTRO DE SEGURIDAD ESTRICTO POR NIVEL COGNITIVO JERÁRQUICO (CORREGIDO)
+        // ==========================================================================
         const btnAdmin = document.getElementById("btnAdminPanel");
         const btnNewAsig = document.getElementById("btnNewAssignment");
 
-        if (isMaster || p.includes("crear") || p.includes("modificar")) btnAdmin.classList.remove("hidden");
-        else btnAdmin.classList.add("hidden");
+        // Obtener el rol del usuario actual y buscar su nivel (lvl) real de base de datos
+        var userRole = App.currentUser.role;
+        var roleMeta = AppDB.data.roles[userRole];
+        var userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
 
-        if (isMaster || p.includes("crear")) {
+        // REGLA DE ORO: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
+        if (isMaster || userLevel >= 3) {
+            btnAdmin.classList.remove("hidden");
+        } else {
+            btnAdmin.classList.add("hidden");
+        }
+
+        // CONTROL DE ASIGNACIÓN: Solo niveles autorizados (o permisos explícitos de creación)
+        if (isMaster || userLevel >= 3 || p.includes("crear")) {
             if (btnNewAsig) btnNewAsig.style.display = "inline-block";
         } else {
             if (btnNewAsig) btnNewAsig.style.display = "none";
         }
+
 
         this.renderDashboardData();
         if (typeof this.renderTopWorker === 'function') this.renderTopWorker();
