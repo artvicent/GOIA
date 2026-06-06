@@ -1,6 +1,6 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - LIBRERÍA DE ACCESO CLOUD (db.js - PARTE 1 DE 2)
- * Componente Core de Conexión Segura Inmune a Proxies Corporativos
+ * SISTEMA DE CONTROL DE GESTIONES - LIBRERÍA WEB CLOUD (db.js - PARTE 1 DE 2)
+ * Componente Core de Conexión Segura Adaptado para Proxies Corporativos
  */
 (function(global, factory) {
     if (typeof exports === 'object' && typeof module !== 'undefined') {
@@ -25,7 +25,7 @@
                     database: function() {
                         if (!this._db) {
                             if (!components.has('database')) {
-                                throw new Error('Módulo de base de datos no acoplado.');
+                                throw new Error('Módulo database no acoplado.');
                             }
                             this._db = components.get('database')(this);
                         }
@@ -35,9 +35,8 @@
                 apps[name] = app;
                 return app;
             },
-            apps: Object.defineProperty([], 'length', {
-                get: function() { return Object.keys(apps).length; }
-            }),
+            // CORRECCIÓN MAESTRA: Se elimina el Object.defineProperty estricto que causaba el bloqueo
+            apps: [],
             INTERNAL: {
                 registerComponent: function(name, factory) {
                     components.set(name, factory);
@@ -51,24 +50,22 @@
     return firebase;
 }));
 
-// CONFIGURACIÓN DE CRITERIOS OPERACIONALES DE TU PROYECTO MAESTRO GOIA
+// CONFIGURACIÓN DE TU PROYECTO MAESTRO GOIA EN FIREBASE CLOUD
 const MasterConfigCloud = {
     apiKey: "AIzaSyA7DgxEWiRkY26P7ihu_IxpomZ8wdtXFeI",
-    authDomain: "goia-5966d.firebaseapp.com",
-    databaseURL: "https://goia-5966d-default-rtdb.firebaseio.com",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://firebaseio.com",
     projectId: "goia-5966d",
     storageBucket: "goia-5966d.firebasestorage.app",
     messagingSenderId: "57281483123",
     appId: "1:57281483123:web:e8383254ee94f8bbe53506"
 };
 // ==========================================================================
-// EXPANSION DE ENLACE REALTIME CLOUD INTEGRADO NATIVO (PARTE 2 DE 2)
+// EXPANSIÓN DE ENLACE REALTIME CLOUD INTEGRADO NATIVO (PARTE 2 DE 2)
 // ==========================================================================
 firebase.INTERNAL.registerComponent('database', function(app) {
     var databaseUrl = app.options.databaseURL;
-    var listeners = {};
 
-    // Forzar la creación de la pasarela HTTP REST segura para redes restringidas
     return {
         app: app,
         ref: function(path) {
@@ -117,7 +114,7 @@ firebase.INTERNAL.registerComponent('database', function(app) {
 });
 
 // ==========================================================================
-// LOGICA DE CONTROL OPERACIONAL DE BASE DE DATOS DEL SISTEMA DE GESTIONES
+// LÓGICA DE CONTROL OPERACIONAL DE BASE DE DATOS DEL SISTEMA DE GESTIONES
 // ==========================================================================
 const AppDB = {
     CRYPTO_KEY: 126,
@@ -126,7 +123,6 @@ const AppDB = {
 
     init() {
         var self = this;
-        // Inicializar el motor local integrado de forma síncrona
         setTimeout(function() {
             if (typeof firebase !== 'undefined') {
                 var app = firebase.initializeApp(MasterConfigCloud);
@@ -142,7 +138,6 @@ const AppDB = {
                             if (parsed && parsed.users) {
                                 self.data = parsed;
                                 localStorage.setItem(self.STORAGE_KEY, decryptedRaw);
-                                // Refrescar las grillas numéricas en pantalla si el analista inició sesión
                                 if (typeof App !== 'undefined' && App.currentUser) {
                                     App.renderDashboardData();
                                 }
@@ -154,22 +149,19 @@ const AppDB = {
                     }
                 });
             } else {
-                // Contingencia en caché local activa si no hay red
                 var storedData = localStorage.getItem(self.STORAGE_KEY);
                 if (storedData && storedData !== "{}") {
                     try { self.data = JSON.parse(storedData); } catch (e) {}
                 } else { self.seedInitialData(); }
             }
-        }, 800);
+        }, 500);
     },
     
     save() {
         var dataStr = JSON.stringify(this.data);
         localStorage.setItem(this.STORAGE_KEY, dataStr);
-        
         var cipherText = this.encrypt(dataStr);
         
-        // ENVÍO DE DATOS DIRECTO A TU SERVIDOR DE FIREBASE (0% DEPENDENCIAS DE LOCALSTORAGE)
         if (this.dbRef) {
             this.dbRef.set({
                 cipherPayload: cipherText,
