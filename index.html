@@ -54,7 +54,6 @@
                 </button>
             </form>
         </section>
-
         <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
         <section id="viewDashboard" class="view-card max-w-7xl hidden" style="padding: 1.5rem; box-sizing: border-box; background-color: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(10px);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -65,6 +64,7 @@
                         <p id="dashUserRole" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin: 0;">Rol</p>
                     </div>
                 </div>
+
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button onclick="App.openReportsMenu()" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">📊 Reportes Consolidados</button>
                     <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">⚙️ Ajustes y Usuarios</button>
@@ -148,7 +148,6 @@
             </div>
         </section>
     </main>
-
     <footer>
         ENTORNO DE EJECUCIÓN CLOUD SEGURO &copy; 2026 - SISTEMA DE INTEGRIDAD DE DATOS MÁXIMA
     </footer>
@@ -161,18 +160,80 @@
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
 
-    <!-- TRUCO DE INGENIERÍA: Forzar al navegador a leer siempre la última versión de los scripts -->
+    <!-- Hilo lógico secuencial de carga estructurada -->
+    <script src="db.js"></script>
+    <script src="app-core.js"></script>
+    <script src="app-executive.js"></script>
+    <script src="app-admin-users.js"></script>
+    <script src="app-admin-assign.js"></script>
+    <script src="app-admin-roles.js"></script>
+    <script src="app-admin-managements.js"></script>
+    <script src="app-admin-logs.js"></script>
+
+    <!-- INYECTOR EXCLUSIVO: Sobreescritura Forzada síncrona inmune a cachés en red -->
     <script>
-        (function() {
-            var token = new Date().getTime();
-            var scripts = ["db.js", "app-core.js", "app-executive.js", "app-admin-users.js", "app-admin-assign.js", "app-admin-roles.js", "app-admin-managements.js", "app-admin-logs.js"];
-            scripts.forEach(function(src) {
-                var s = document.createElement("script");
-                s.src = src + "?v=" + token;
-                s.async = false;
-                document.body.appendChild(s);
-            });
-        })();
+        setTimeout(function() {
+            if (typeof App !== 'undefined') {
+                App.openAdminMenu = function() {
+                    document.getElementById("modalOverlay").classList.remove("hidden");
+                    var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
+
+                    document.getElementById("modalContent").innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:0.5rem;margin-bottom:1rem;">
+                            <h3 style="margin:0;font-size:13px;text-transform:uppercase;font-weight:700;color:#1e293b;">Panel de Personal y Políticas</h3>
+                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none;border:none;font-size:18px;cursor:pointer;font-weight:bold;color:#64748b;">&times;</button>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom:1rem;background:#f8fafc;padding:0.75rem;border-radius:8px;display:flex;flex-direction:column;gap:0.4rem;">
+                            <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;display:block;margin-bottom:0.15rem;">Nombre de Gerencia / Programa</label>
+                            <div style="display:flex;gap:0.5rem;">
+                                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title}" style="background:white;margin-bottom:0.25rem;">
+                                <button onclick="App.saveAdministrativeConfig()" class="btn-primary" style="padding:0 0.75rem;border-radius:6px;font-size:11px;">Aplicar</button>
+                            </div>
+                            
+                            <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;display:block;">Expiración de Contraseñas del Personal</label>
+                            <select id="selectPasswordExpiry" class="form-control" style="background:white; width:100%;">
+                                <option value="30" ${currentExpiry==30?'selected':''}>Vencimiento cada 30 Días</option>
+                                <option value="60" ${currentExpiry==60?'selected':''}>Vencimiento cada 60 Días</option>
+                                <option value="90" ${currentExpiry==90?'selected':''}>Vencimiento cada 90 Días</option>
+                            </select>
+                        </div>
+
+                        <!-- MÓDULO DE REINICIO DE FÁBRICA SÍNCRONO CON FIREBASE -->
+                        <div style="background:#fef2f2;padding:0.6rem;border-radius:8px;border:1px solid #fee2e2;margin-bottom:1rem;">
+                            <label style="font-size:9px;font-weight:700;color:#991b1b;text-transform:uppercase;display:block;margin-bottom:0.25rem;">🚨 Mantenimiento Crítico de Servidor</label>
+                            <p style="font-size:10px;color:#7f1d1d;margin:0 0 0.4rem 0;line-height:1.2;">Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
+                            <button onclick="App.executeHardResetDatabaseCloud()" class="btn-primary" style="background:#dc2626;border-color:#b91c1c;width:100%;padding:0.5rem;font-size:10px;font-weight:700;text-transform:uppercase;border-radius:6px;">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
+                            <button onclick="App.openRolesMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:10px;font-weight:bold;background:#1e293b;">🔑 ROLES Y PERMISOS</button>
+                            <button onclick="App.openManagementsMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:10px;font-weight:bold;background:#0369a1;">📋 CATALOGO GESTIONES</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
+                            <button onclick="App.openCreateUserForm()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;">➕ Crear Usuario</button>
+                            <button onclick="App.listUsersAdmin()" class="btn-secondary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;">👥 Nómina Personal</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;">
+                            <button onclick="App.openAuditLogsMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;background:#be123c;">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
+                        </div>`;
+                };
+
+                App.executeHardResetDatabaseCloud = function() {
+                    var check = confirm("⚠️ ATENCIÓN SUPERVISOR: ¿Está completamente seguro de que desea REINICIAR LA BASE DE DATOS?\n\nEsta operación borrará todas las actividades de las computadoras y restablecerá la nómina al administrador original.");
+                    if (check) {
+                        var safetyToken = prompt("Para confirmar la purga del servidor, digite la palabra: REINICIAR");
+                        if (safetyToken === "REINICIAR" || safetyToken === "reiniciar") {
+                            AppDB.seedInitialData();
+                            alert("¡SERVIDOR PURGADO! La base de datos en la nube de Firebase ha regresado a cero absoluto.");
+                            location.reload();
+                        } else {
+                            alert("Confirmación incorrecta. Operación abortada de forma segura.");
+                        }
+                    }
+                };
+            }
+        }, 1500);
     </script>
 </body>
 </html>
