@@ -587,6 +587,52 @@ footer {
 .bg-crimson:hover { background: #9f1239 !important; }
 .font-bold { font-weight: bold !important; }
 
+/* --- CORRECCIÓN DE ALINEACIÓN DE IDENTIDAD DE PERFIL (GERENCIA) --- */
+.dashboard-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color-soft);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Forzar a que el bloque del avatar y el nombre se mantengan pegados a la izquierda */
+.profile-identity-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    justify-content: flex-start; /* Alineación estricta a la izquierda */
+    text-align: left;
+}
+
+/* Estilo para los textos internos del perfil */
+.profile-identity-block div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* --- REORDENAMIENTO DEL BANNER SUPERIOR (ICONOS) --- */
+#topBanner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    color: white;
+}
+
+.gerencia-meta-label, .merit-podium {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
 /* SCROLLBAR PERSONALIZADO INTERNO */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
