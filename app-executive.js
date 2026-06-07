@@ -1,268 +1,270 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - MÓDULO EXECUTIVO (app-executive.js)
- * Reportes Consolidados, Monitores de Alertas y Autodesbloqueo por Preguntas
+ * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
+ * PARTE 1 DE 3: PROCESAMIENTO DE TIEMPOS, CONTROL DE ALERTAS Y RENDER DE METAS CLOUD
  */
 
-App.renderMonitorPanel = function(warningCount, dangerCount, totalRealizadas, onTimeCount) {
+// Función Maestra: Renderizar y procesar la matriz de datos numéricos en pantalla
+App.renderDashboardData = function() {
+    if (!AppDB.data || !AppDB.data.assignments) return;
+
+    const currentMonthFilter = document.getElementById("filterAuditMonth").value;
+    const currentStatusFilter = document.getElementById("filterAssignmentStatus").value;
+    const tableBody = document.getElementById("tableAssignmentsBody");
     const monitorContainer = document.getElementById("monitorContainer");
-    if (!monitorContainer) return;
-    monitorContainer.innerHTML = "";
-    
-    const roleData = AppDB.data.roles[this.currentUser.role] || { perms: [] };
-    const p = roleData.perms || [];
-    const isSupervisor = p.includes("all") || p.includes("crear") || this.currentUser.username === "admin" || this.currentUser.role === "Gerente";
 
-    AppDB.data.assignments.forEach((asig, index) => {
-        const tDiff = new Date(asig.deadline) - new Date();
-        const minLeft = Math.floor(tDiff / 60000);
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+
+    let totalAssignments = 0;
+    let totalWarning = 0;
+    let totalDanger = 0;
+    let processedTotalCount = 0;
+    let metaTotalCount = 0;
+
+    let monitorHtml = "";
+    const now = new Date();
+
+    // Filtrar y evaluar las actividades vigentes del ciclo operacional
+    AppDB.data.assignments.forEach(function(item, index) {
+        if (currentMonthFilter !== "all" && currentMonthFilter !== "current") {
+            const itemDate = new Date(item.createdAt || item.timestamp);
+            if ((itemDate.getMonth() + 1).toString() !== currentMonthFilter) return;
+        }
+
+        let timeRemainingStr = "⏳ Evaluando...";
+        let statusClass = "pending";
+        let cardAlertClass = "bg-total";
+
+        if (item.status === "completed") {
+            timeRemainingStr = "🏁 Culminada";
+            statusClass = "completed";
+            processedTotalCount += parseInt(item.processed || 0);
+            metaTotalCount += parseInt(item.meta || 0);
+        } else {
+            const deadline = new Date(item.deadline);
+            const diffMs = deadline - now;
+            const diffMin = Math.ceil(diffMs / 60000);
+
+            metaTotalCount += parseInt(item.meta || 0);
+            processedTotalCount += parseInt(item.processed || 0);
+
+            if (diffMin <= 0) {
+                timeRemainingStr = "🚨 Vencida";
+                statusClass = "expired";
+                cardAlertClass = "bg-danger";
+                totalDanger++;
+            } else if (diffMin <= 30) {
+                timeRemainingStr = `⏳ ${diffMin} min restante(s)`;
+                statusClass = "warning";
+                cardAlertClass = "bg-warning";
+                totalWarning++;
+            } else {
+                const hours = Math.floor(diffMin / 60);
+                const mins = diffMin % 60;
+                timeRemainingStr = `⏳ ${hours}h ${mins}m`;
+                statusClass = "pending";
+            }
+        }
+
+        if (currentStatusFilter !== "all" && currentStatusFilter !== statusClass) return;
+
+        totalAssignments++;
+
+        let tr = document.createElement("tr");
+        tr.className = `status-row-${statusClass}`;
         
-        if (asig.alertDismissed) return;
-        if (!isSupervisor && asig.assignedTo.toLowerCase().trim() !== this.currentUser.username.toLowerCase().trim()) return;
+        tr.innerHTML = `
+            <td><b>${item.name}</b><br><small class="text-muted-blue">${item.managementName || "Caso General"}</small></td>
+            <td class="text-center font-bold">${item.meta}</td>
+            <td class="text-center">${item.processed}</td>
+            <td class="text-center"><span class="badge-reference">${item.reference || "S/R"}</span></td>
+            <td class="text-center"><span class="time-label-${statusClass}">${timeRemainingStr}</span></td>
+            <td class="text-center">
+                <button onclick="App.openUpdateProgressModal(${index})" class="btn-secondary">Progreso</button>
+                ${AppDB.data.roles[App.currentUser.role].lvl >= 3 ? `<button onclick="App.deleteAssignmentCloud(${index})" class="btn-secondary btn-logout">Eliminar</button>` : ""}
+            </td>
+        `;
+        tableBody.appendChild(tr);
 
-        if (minLeft <= 30) {
-            const label = minLeft <= 0 ? "VENCIDO" : "CRÍTICO";
-            const modifierClass = minLeft <= 0 ? "vencido" : "critico";
-            const dismissBtn = isSupervisor ? `<button onclick="App.dismissAlertAdmin(${index})" class="btn-dismiss">&times;</button>` : "";
-
-            monitorContainer.innerHTML += `
-                <div class="monitor-card">
-                    <div style="flex:1;">
-                        <strong>${asig.assignedTo.toUpperCase()}</strong>
-                        <p style="margin:0; font-size:10px; color:#64748b;">${asig.activityName.substring(0,35)}...</p>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        <span class="badge-alert ${modifierClass}">${label}</span>
-                        ${dismissBtn}
-                    </div>
+        // CORRECCIÓN: Alertas limpias sin inyecciones de margen o padding en línea
+        if (statusClass === "expired" || statusClass === "warning") {
+            monitorHtml += `
+                <div class="counter-card ${cardAlertClass} monitor-alert-item">
+                    <p class="alert-item-title">⚠️ ALERTA OPERACIONAL</p>
+                    <p class="alert-item-body">La actividad <b>${item.name}</b> asignada a la referencia <b>${item.reference || "S/R"}</b> se encuentra en estado crítico.</p>
                 </div>`;
         }
     });
 
-    if(monitorContainer.innerHTML === "") {
-        monitorContainer.innerHTML = `<p style="text-align:center; font-size:11px; color:#94a3b8; font-style:italic; padding-top:1rem;">Todo el equipo trabaja a tiempo.</p>`;
-    }
+    document.getElementById("countTotal").innerText = totalAssignments;
+    document.getElementById("countWarning").innerText = totalWarning;
+    document.getElementById("countDanger").innerText = totalDanger;
 
-    let ied = totalRealizadas > 0 ? Math.round((onTimeCount / totalRealizadas) * 100) : 0;
-    document.getElementById("countTotal").innerText = totalRealizadas.toLocaleString();
-    document.getElementById("countWarning").innerText = warningCount;
-    document.getElementById("countDanger").innerText = dangerCount;
+    let ied = 0;
+    if (metaTotalCount > 0) {
+        ied = Math.round((processedTotalCount / metaTotalCount) * 100);
+    }
     document.getElementById("countPerformance").innerText = `${ied}%`;
-};
 
-App.dismissAlertAdmin = function(index) {
-    AppDB.data.assignments[index].alertDismissed = true; AppDB.save(); this.renderDashboardData();
-};
-
-// 1. APERTURA DEL MENÚ DE SELECCIÓN DE REPORTES CON CIERRE DIRECTO
-App.openReportsMenu = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    document.getElementById("modalContent").innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:1rem;">
-            <h3 style="margin:0; font-size:13px; text-transform:uppercase; font-weight:700;">Reportes de Cumplimiento</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none; border:none; font-size:18px; cursor:pointer; font-weight:bold; color:#64748b;">&times;</button>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:0.5rem;">
-            <button onclick="App.generateReport('semanal')" class="btn-primary" style="padding:0.7rem; border-radius:8px; font-size:11px; font-weight:bold; text-transform:uppercase;">Reporte Semanal Consolidado</button>
-            <button onclick="App.generateReport('mensual')" class="btn-secondary" style="padding:0.7rem; border-radius:8px; font-size:11px; font-weight:bold; text-transform:uppercase;">Reporte Mensual Consolidado</button>
-        </div>`;
-};
-
-// 2. GENERADOR EJECUTIVO DE MATRICES EXCLUYENDO VALORES CERO (0)
-App.generateReport = function(type) {
-    const roleData = AppDB.data.roles[this.currentUser.role] || { perms: [] };
-    const p = roleData.perms || [];
-    const isSupervisor = p.includes("all") || p.includes("crear") || this.currentUser.username === "admin" || this.currentUser.role === "Gerente";
-
-    let html = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:1rem;">
-            <h3 style="margin:0; font-size:12px; text-transform:uppercase; font-weight:700;">Reporte (${type.toUpperCase()})</h3>
-            <button onclick="App.openReportsMenu()" style="background:none; border:none; font-size:16px; font-weight:bold; color:#64748b; cursor:pointer;">&times;</button>
-        </div>
-        <p style="font-size:10px; color:#64748b; margin-bottom:0.75rem; text-transform:uppercase; font-weight:bold;">
-            Filtro: ${isSupervisor ? "Consolidado de Gerencia" : "Mi Carga (" + this.currentUser.username.toUpperCase() + ")"}
-        </p>
-        <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; font-size:11px;" border="1" bordercolor="#e2e8f0">
-                <thead>
-                    <tr style="background:#f8fafc; font-size:9px; text-transform:uppercase;">
-                        <th style="padding:6px; text-align:center; width:40px;">Ítem</th>
-                        <th style="padding:6px; text-align:left;">Indicadores de Gestión</th>
-                        <th style="padding:6px; text-align:center; width:90px;">Cantidad</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-    let activeRows = 0; let grandTotal = 0;
-    AppDB.data.managements.forEach(m => {
-        const totalProcessed = AppDB.data.assignments
-            .filter(asig => asig.activityName === m.name && (isSupervisor || asig.assignedTo.toLowerCase().trim() === this.currentUser.username.toLowerCase().trim()))
-            .reduce((acc, curr) => acc + curr.processed, 0);
-
-        if (totalProcessed > 0) {
-            activeRows++; grandTotal += totalProcessed;
-            html += `
-                <tr>
-                    <td style="padding:6px; text-align:center; font-weight:bold; color:#64748b;">${activeRows}</td>
-                    <td style="padding:6px; color:#1e293b;">${m.name}</td>
-                    <td style="padding:6px; text-align:center; font-weight:bold;">${totalProcessed.toLocaleString()}</td>
-                </tr>`;
+    if (monitorContainer) {
+        if (monitorHtml) {
+            monitorContainer.innerHTML = monitorHtml;
+        } else {
+            monitorContainer.innerHTML = `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
         }
-    });
-
-    if (activeRows === 0) {
-        html += `<tr><td colspan="3" style="padding:1.5rem; text-align:center; color:#94a3b8; font-style:italic;">No hay gestiones registradas mayores a cero (0).</td></tr>`;
-    } else {
-        html += `
-            <tr style="background:#f8fafc; font-weight:bold;">
-                <td colspan="2" style="padding:8px; text-align:right; font-size:10px;">TOTAL GESTIONES:</td>
-                <td style="padding:8px; text-align:center; font-size:12px;">${grandTotal.toLocaleString()}</td>
-            </tr>`;
     }
-
-    html += `</tbody></table></div>
-        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
-            <button onclick="window.print()" class="btn-primary" style="padding:0.5rem 1rem; font-size:10px; font-weight:bold; text-transform:uppercase;">Imprimir / PDF</button>
-            <button onclick="App.openReportsMenu()" class="btn-secondary" style="padding:0.5rem 1rem; font-size:10px; font-weight:bold; text-transform:uppercase;">Volver</button>
-        </div>`;
-    document.getElementById("modalContent").innerHTML = html;
 };
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
+ * PARTE 2 DE 3: PROGRESO DE ACTIVIDADES, ACTUALIZACIÓN DE LOGS Y REPORTES CONSOLIDADOS
+ */
 
-// 3. MÓDULO DE RECUPERACIÓN Y ASIGNACIÓN DE AVATARES DE DISPOSITIVO
-App.showRecoveryFormGlobal = function() {
+// Desplegar la ventana modal para reportar avances de metas y cargas
+App.openUpdateProgressModal = function(index) {
+    const item = AppDB.data.assignments[index];
+    if (!item) return;
+
     document.getElementById("modalOverlay").classList.remove("hidden");
     document.getElementById("modalContent").innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:1rem;">
-            <h3 style="margin:0; font-size:12px; text-transform:uppercase; font-weight:700;">Autodesbloqueo por Seguridad</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
-        </div>
-        <div style="background:#fffbeb; border:1px solid #fde68a; padding:8px; border-radius:6px; margin-bottom:8px; font-size:10px; color:#b45309; line-height:1.3;">
-            <strong>🔒 NORMATIVA DE CONTRASEÑA OBLIGATORIA:</strong><br>
-            • Mínimo 8 letras, incluir Mayúscula, Minúscula y Número.<br>
-            • Contener al menos un símbolo especial de la lista: <b>!"#$%&/()=.,</b><br>
-            • No se puede parecer a ninguna de sus <b>5 contraseñas anteriores</b>.
-        </div>
-        <div style="display:flex; flex-direction:column; gap:0.75rem;">
-            <input type="text" id="recoveryUser" class="form-control" placeholder="Usuario corporativo">
-            <input type="text" id="recoveryAns" class="form-control" placeholder="Respuesta: mascota">
-            <input type="password" id="recoveryNewPass" class="form-control" placeholder="Nueva contraseña">
-            <button onclick="App.executeRecovery()" class="btn-primary" style="padding:0.6rem; font-size:11px; font-weight:bold;">REESTABLECER</button>
-        </div>`;
-};
-
-App.executeRecovery = async function() {
-    const u = document.getElementById("recoveryUser").value.toLowerCase().trim();
-    const ans = document.getElementById("recoveryAns").value.toLowerCase().trim();
-    const nPass = document.getElementById("recoveryNewPass").value;
-
-    if (!u || !ans || !nPass) return alert("Rellene campos.");
-    const user = AppDB.data.users[u];
-    if (!user) return alert("No registrado.");
-    if (user.status === "blocked_admin") return alert("Bloqueo administrativo. No permitido.");
-
-    if (ans === "mascota" || user.securityQuestions.a === AppDB.hash(ans)) {
-        user.password = AppDB.hash(nPass); user.failedAttempts = 0; user.status = "active";
-        AppDB.save(); alert("Contraseña actualizada."); document.getElementById("modalOverlay").classList.add("hidden");
-    } else { alert("Respuesta incorrecta."); }
-};
-
-// ==========================================================================
-// MÓDULO INTERACTIVO DE AVATARES Y FOTOGRAFÍAS CORPORATIVAS
-// ==========================================================================
-App.openAvatarSelectionModal = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    
-    const genericAvatars = ["👨‍💼", "👩‍💼", "💻", "📊", "🛡️", "🚀"];
-    let avatarHtml = "";
-    
-    genericAvatars.forEach(av => {
-        avatarHtml += `
-            <button onclick="App.saveSelectedAvatar('${av}', true)" 
-                style="font-size:2rem; width:50px; height:50px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s;">
-                ${av}
-            </button>`;
-    });
-
-    document.getElementById("modalContent").innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:1rem;">
-            <h3 style="margin:0; font-size:12px; text-transform:uppercase; font-weight:700;">Personalizar Perfil</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none; border:none; font-size:18px; cursor:pointer; font-weight:bold; color:#64748b;">&times;</button>
+        <div class="modal-inner-header">
+            <h3>Actualizar Progreso de Actividad</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
         </div>
         
-        <div style="margin-bottom:1.5rem;">
-            <label style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:0.5rem;">Avatar Prediseñado</label>
-            <div style="display:flex; gap:10px; justify-content:center; background:#f8fafc; padding:10px; border-radius:8px;">
-                ${avatarHtml}
+        <div class="admin-config-card">
+            <p class="modal-text-bold"><b>Actividad:</b> ${item.name}</p>
+            <p class="modal-text-muted"><b>Meta total asignada:</b> ${item.meta} unidades.</p>
+            <p class="modal-text-muted-spacer"><b>Procesadas actuales:</b> ${item.processed} unidades.</p>
+            
+            <div class="form-group">
+                <label>Cantidad Adicional Procesada</label>
+                <div class="input-inline-row">
+                    <input type="number" id="inputAddQty" class="form-control" placeholder="Ej: 5" min="1">
+                    <button onclick="App.executeUpdateProgress(${index})" class="btn-primary">Sumar</button>
+                </div>
+            </div>
+            
+            <div class="modal-action-row-footer">
+                <button onclick="App.markAssignmentAsCompleted(${index})" class="btn-primary btn-success-finish">🏁 Culminar Actividad</button>
             </div>
         </div>
-
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:0.75rem; border-radius:8px;">
-            <label style="font-size:10px; font-weight:700; color:#166534; text-transform:uppercase; display:block; margin-bottom:0.25rem;">Subir Foto desde PC</label>
-            <input type="file" id="inputLocalPhoto" accept="image/png, image/jpeg, image/jpg" onchange="App.processLocalPhotoUpload(event)" style="font-size:11px; color:#334155;">
-        </div>
-        
-        <div style="margin-top:1.25rem; text-align:right;">
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary" style="padding:0.5rem 1rem; font-size:11px; border-radius:6px;">CANCELAR</button>
-        </div>`;
+    `;
 };
 
-App.saveSelectedAvatar = function(avatarValue, isEmoji) {
-    const username = this.currentUser.username;
-    
-    AppDB.data.users[username].avatar = avatarValue;
-    this.currentUser.avatar = avatarValue;
-    AppDB.save();
-    
-    alert("Fotografía de perfil actualizada.");
-    document.getElementById("modalOverlay").classList.add("hidden");
-    
-    // Forzar refresco en caliente de la barra superior
-    this.showDashboard();
-};
+// Procesar el incremento síncrono de metas y registrar en auditoría cloud
+App.executeUpdateProgress = function(index) {
+    const qtyInput = document.getElementById("inputAddQty");
+    if (!qtyInput) return;
 
-App.processLocalPhotoUpload = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 800000) {
-        return alert("Archivo muy pesado. Suba una foto menor a 800 KB para mantener óptima la velocidad de la red.");
+    const addQty = parseInt(qtyInput.value);
+    if (isNaN(addQty) || addQty <= 0) {
+        return alert("Por favor, ingrese una cantidad numérica superior a cero.");
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        App.saveSelectedAvatar(event.target.result, false);
-    };
-    reader.readAsDataURL(file);
+    const item = AppDB.data.assignments[index];
+    const newProcessed = parseInt(item.processed || 0) + addQty;
+
+    if (newProcessed > parseInt(item.meta)) {
+        return alert("Operación rechazada: La cantidad procesada no puede superar la meta asignada.");
+    }
+
+    item.processed = newProcessed;
+    
+    if (item.processed === parseInt(item.meta)) {
+        item.status = "completed";
+    }
+
+    AppDB.save();
+    AppDB.addLog(App.currentUser.username, "INCREMENTO_META", `Sumó ${addQty} a la actividad: ${item.name}`);
+    
+    document.getElementById("modalOverlay").classList.add("hidden");
+    alert("Progreso sincronizado de forma exitosa en la nube.");
 };
 
-// ==========================================================================
-// CONTROL DE RED SEGURO PARA EL PODIO DE EFICIENCIA SUPERIOR
-// ==========================================================================
-App.renderTopWorker = function() {
-    const topContainer = document.getElementById("topUserWorker");
-    if (!topContainer) return;
+// Forzar la culminación de la tarea de forma manual
+App.markAssignmentAsCompleted = function(index) {
+    const item = AppDB.data.assignments[index];
+    item.status = "completed";
+    item.processed = item.meta;
 
-    // 1. Validar si la base de datos de red ya se cargó por completo
-    if (!AppDB.data || !AppDB.data.assignments || AppDB.data.assignments.length === 0) {
-        topContainer.innerText = "No se registran gestiones eficientes en este ciclo.";
+    AppDB.save();
+    AppDB.addLog(App.currentUser.username, "CULMINAR_TAREA", `Marcó como completada: ${item.name}`);
+    
+    document.getElementById("modalOverlay").classList.add("hidden");
+    alert("Actividad guardada en estado culminado.");
+};
+
+// Abrir el menú ejecutivo de reportes consolidados y auditoría mensual
+App.openReportsMenu = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    let totalMeta = 0;
+    let totalProcessed = 0;
+    
+    AppDB.data.assignments.forEach(function(item) {
+        totalMeta += parseInt(item.meta || 0);
+        totalProcessed += parseInt(item.processed || 0);
+    });
+
+    let eficienciaGeneral = totalMeta > 0 ? Math.round((totalProcessed / totalMeta) * 100) : 0;
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>📊 Reporte Operacional General</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-card report-card-gap">
+            <p class="report-meta-text"><b>Ciclo Evaluado:</b> Año en Curso 2026</p>
+            <p class="report-data-text"><b>Volumen de Metas Cargadas:</b> ${totalMeta} items.</p>
+            <p class="report-data-text"><b>Volumen de Gestiones Procesadas:</b> ${totalProcessed} items.</p>
+            <p class="report-efficiency-text"><b>Índice Neto de Eficiencia (IED):</b> ${eficienciaGeneral}%</p>
+            
+            <div class="modal-divider-line"></div>
+            <p class="report-footer-disclaimer">Este balance consolida todas las actividades de Pin Pagos, desinstalaciones y requerimientos de Help Desk procesados de forma global por el equipo.</p>
+        </div>
+    `;
+};
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
+ * PARTE 3 DE 3: ELIMINACIÓN CLOUD, PODIO DE MÉRITO Y MENÚ DE AVATARES PERSONALIZADOS
+ */
+
+// Eliminar actividad de forma permanente de la nube de Firebase
+App.deleteAssignmentCloud = function(index) {
+    const item = AppDB.data.assignments[index];
+    if (!item) return;
+
+    const check = confirm(`⚠️ ALERTA DE AUDITORÍA:\n¿Está completamente seguro de que desea eliminar permanentemente la actividad "${item.name}" de la nube?`);
+    if (check) {
+        AppDB.addLog(App.currentUser.username, "ELIMINACION_TAREA", `Eliminó la actividad: ${item.name}`);
+        AppDB.data.assignments.splice(index, 1);
+        AppDB.save();
+        alert("Actividad eliminada y sincronizada en la red.");
+    }
+};
+
+// Algoritmo de Evaluación de Desempeño: Calcular y proyectar el Top Colaborador
+App.calculateMeritPodiumPerformance = function() {
+    const topUserField = document.getElementById("topUserWorker");
+    if (!topUserField || !AppDB.data || !AppDB.data.assignments || AppDB.data.assignments.length === 0) {
+        if (topUserField) topUserField.innerText = "Sin registros acumulados";
         return;
     }
 
-    const userScores = {};
-    
-    // 2. Sumar el progreso completado estrictamente dentro del tiempo límite
-    AppDB.data.assignments.forEach(asig => {
-        if (!asig.assignedTo) return;
-        const onTimeCount = (asig.processed || 0) - (asig.overtimeCount || 0);
-        if (onTimeCount > 0) {
-            const userKey = asig.assignedTo.toLowerCase().trim();
-            userScores[userKey] = (userScores[userKey] || 0) + onTimeCount;
+    let userScores = {};
+
+    AppDB.data.assignments.forEach(function(item) {
+        if (item.status === "completed" && item.createdBy) {
+            const user = item.createdBy.toUpperCase();
+            const score = parseInt(item.processed || 0);
+            userScores[user] = (userScores[user] || 0) + score;
         }
     });
 
     let topUser = null;
     let maxScore = -1;
 
-    // 3. Identificar el puntaje de rendimiento más alto del ciclo activo
     for (const [user, score] of Object.entries(userScores)) {
         if (score > maxScore) {
             maxScore = score;
@@ -270,134 +272,84 @@ App.renderTopWorker = function() {
         }
     }
 
-    // 4. Inyectar el nombre del colaborador o inicializar el cartel limpio
-    if (topUser) {
-        const userData = AppDB.data.users[topUser];
-        if (userData && userData.names) {
-            const nombreCompleto = `${userData.names} ${userData.lastnames || ""}`.trim();
-            topContainer.innerText = `${nombreCompleto} (${maxScore} Gestiones a Tiempo)`;
-        } else {
-            topContainer.innerText = `${topUser.toUpperCase()} (${maxScore} Gestiones a Tiempo)`;
-        }
+    if (topUser && maxScore > 0) {
+        topUserField.innerText = `${topUser} (${maxScore} Gestiones)`;
     } else {
-        topContainer.innerText = "No se registran gestiones eficientes en este ciclo.";
+        topUserField.innerText = "Analizando ciclo activo...";
     }
 };
-// INTERFAZ DE ACTUALIZACIÓN MANDATORIA POR EXPIRACIÓN DE PLAZO CORPORATIVO
-App.openForcedPasswordChangeModal = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    document.getElementById("modalContent").innerHTML = `
-        <h3 style="margin:0; font-size:12px; text-transform:uppercase; font-weight:700; color:#b91c1c;">Actualización Obligatoria de Clave</h3>
-        <p style="font-size:11px; color:#475569; margin-top:0.25rem;">Su contraseña ha expirado por políticas de tiempo. Para ingresar al sistema debe configurar una clave nueva que cumpla con los requisitos institucionales.</p>
-        <form onsubmit="App.executeForcedPasswordChange(event)" style="display:flex; flex-direction:column; gap:0.75rem; margin-top:1rem;">
-            <input type="password" id="forcedNewPass1" required class="form-control" placeholder="Nueva Contraseña Segura" style="background:#f8fafc;">
-            <input type="password" id="forcedNewPass2" required class="form-control" placeholder="Repita la Nueva Contraseña" style="background:#f8fafc;">
-            <button type="submit" class="btn-primary" style="padding:0.6rem; font-size:11px; background:#be123c;">ACTUALIZAR CREDENCIALES Y ENTRAR</button>
-        </form>`;
-};
 
-App.executeForcedPasswordChange = function(e) {
-    e.preventDefault();
-    const p1 = document.getElementById("forcedNewPass1").value;
-    const p2 = document.getElementById("forcedNewPass2").value;
-
-    if (p1 !== p2) return alert("Las contraseñas no coinciden.");
-
-    // Evaluar fortaleza
-    const check = App.validatePasswordStrength(p1);
-    if (!check.valid) return alert(check.msg);
-
-    const u = AppDB.data.users[this.currentUser.username];
-    const newHash = AppDB.hash(p1);
-    if (!u.passwordHistory) u.passwordHistory = [];
-
-    // Evaluar historial de las 5 anteriores
-    if (u.passwordHistory.includes(newHash)) {
-        return alert("Rechazado. No puede reutilizar ninguna de sus últimas 5 contraseñas por políticas de integridad de datos.");
-    }
-
-    // Aplicar cambios, resetear estampa de tiempo y salvar
-    u.password = newHash;
-    u.passwordChangedDate = new Date().toISOString();
-    u.passwordHistory.push(newHash);
-    if (u.passwordHistory.length > 5) u.passwordHistory.shift();
-
-    AppDB.save();
-    alert("Contraseña restablecida de forma exitosa. Ya puede acceder a sus tableros de control.");
-    document.getElementById("modalOverlay").classList.add("hidden");
-    
-    // Forzar ingreso al Dashboard saneado
-    this.showDashboard();
-};
-// ==========================================================================
-// CRÉDITOS INSTITUCIONALES DE AUTORÍA (ACERCA DE...)
-// ==========================================================================
+// Abrir modal de créditos e información del entorno cloud seguro
 App.openAboutModal = function() {
     document.getElementById("modalOverlay").classList.remove("hidden");
     document.getElementById("modalContent").innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem; margin-bottom:1rem;">
-            <h3 style="margin:0; font-size:12px; text-transform:uppercase; font-weight:700; color:#1e293b;">Acerca de la Plataforma</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none; border:none; font-size:18px; cursor:pointer; font-weight:bold; color:#64748b;">&times;</button>
+        <div class="modal-inner-header">
+            <h3>ℹ️ Acerca del Sistema</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
         </div>
-        <div style="text-align:center; padding:1rem 0;">
-            <div style="font-size:3rem; margin-bottom:0.5rem;">🛡️</div>
-            <h2 style="font-size:14px; margin:0 0 0.25rem 0; color:#0f172a; font-weight:700;">SISTEMA DE CONTROL DE GESTIONES</h2>
-            <p style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:bold; margin-bottom:1.5rem;">Versión 2.0.2</p>
-            
-            <div style="background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0; text-align:left; font-size:11px; color:#334155;">
-                <strong>Desarrollado y Diseñado por: Arturo Valero</strong><br>
-                • El AI Collaborator (Motor de Ingeniería Web)<br>
-                • En colaboración directa con el Gerente de la Gerencia de Adquirencia.<br><br>
-                <strong>Entorno Operativo:</strong> Cifrado Simétrico Integrado y Persistencia en Búfer Asíncrono de Red.
-            </div>
+        
+        <div class="admin-config-card about-modal-card-labels">
+            <p><b>PLATAFORMA:</b> Control de Gestiones Ejecutivas (GOIA)</p>
+            <p><b>GERENCIA:</b> Gerencia General de Adquirencia</p>
+            <p><b>EDICIÓN:</b> v2.0.3 - Cloud Integrado Blindado</p>
+            <p><b>SEGURIDAD:</b> Arquitectura de datos externa síncrona enlazada con Firebase Realtime Database y protección de token anónimo de Google.</p>
+            <div class="modal-divider-line"></div>
+            <p class="about-modal-footer">Desarrollado para la automatización de cargas de trabajo corporativas y cumplimiento estricto de ANS. &copy; 2026 Todos los derechos reservados.</p>
         </div>
-        <div style="margin-top:0.5rem; text-align:right;">
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary" style="padding:0.5rem 1rem; font-size:11px; border-radius:6px;">CERRAR</button>
-        </div>`;
+    `;
 };
 
-// ==========================================================================
-// CONTROL DE RED SEGURO PARA EL PODIO DE EFICIENCIA SUPERIOR
-// ==========================================================================
-App.renderTopWorker = function() {
-    const topContainer = document.getElementById("topUserWorker");
-    if (!topContainer) return;
+// Abrir el selector dinámico de avatares e insignias del perfil
+App.openAvatarSelectionModal = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    const avatares = ["👤", "💼", "🏢", "📈", "💻", "🚀", "🛡️", "👑", "🔥", "⚡"];
+    let htmlAvatares = "";
 
-    if (!AppDB.data || !AppDB.data.assignments || AppDB.data.assignments.length === 0) {
-        topContainer.innerText = "No se registran gestiones eficientes en este ciclo.";
-        return;
-    }
-
-    const userScores = {};
-    AppDB.data.assignments.forEach(asig => {
-        if (!asig.assignedTo) return;
-        const onTimeCount = (asig.processed || 0) - (asig.overtimeCount || 0);
-        if (onTimeCount > 0) {
-            const userKey = asig.assignedTo.toLowerCase().trim();
-            userScores[userKey] = (userScores[userKey] || 0) + onTimeCount;
-        }
+    avatares.forEach(function(avatar) {
+        htmlAvatares += `
+            <button onclick="App.executeChangeAvatarCloud('${avatar}')" class="btn-secondary avatar-selector-grid-item">
+                ${avatar}
+            </button>`;
     });
 
-    let topUser = null; let maxScore = -1;
-    for (const [user, score] of Object.entries(userScores)) {
-        if (score > maxScore) { maxScore = score; topUser = user; }
-    }
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>Seleccionar Insignia / Avatar</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <p class="avatar-modal-description">Elija el icono representativo que se desplegará junto a su nombre en la barra del Dashboard principal:</p>
+        
+        <div class="avatar-buttons-grid-layout">
+            ${htmlAvatares}
+        </div>
+    `;
+};
 
-    if (topUser) {
-        const userData = AppDB.data.users[topUser];
-        if (userData && userData.names) {
-            const nombreCompleto = `${userData.names} ${userData.lastnames || ""}`.trim();
-            topContainer.innerText = `${nombreCompleto} (${maxScore} Gestiones a Tiempo)`;
-        } else {
-            topContainer.innerText = `${topUser.toUpperCase()} (${maxScore} Gestiones a Tiempo)`;
-        }
-    } else {
-        topContainer.innerText = "No se registran gestiones eficientes en este ciclo.";
+// Registrar el nuevo icono de identidad en la nube de Google
+App.executeChangeAvatarCloud = function(nuevoAvatar) {
+    if (!App.currentUser) return;
+
+    const username = App.currentUser.username.toLowerCase();
+    if (AppDB.data.users[username]) {
+        AppDB.data.users[username].avatar = nuevoAvatar;
+        App.currentUser.avatar = nuevoAvatar;
+        
+        const frame = document.getElementById("userAvatarFrame");
+        if (frame) frame.innerText = nuevoAvatar;
+
+        AppDB.save();
+        AppDB.addLog(username, "CAMBIO_AVATAR", `Actualizó su insignia a: ${nuevoAvatar}`);
+        
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert("Insignia de perfil actualizada de forma exitosa.");
     }
 };
 
-
-
-
-
-
+// Disparar el recálculo analítico automático de eficiencia cada 5 segundos
+setInterval(function() {
+    if (typeof App !== 'undefined' && App.currentUser) {
+        App.calculateMeritPodiumPerformance();
+    }
+}, 5000);

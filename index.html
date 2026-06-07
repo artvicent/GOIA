@@ -4,101 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <link rel="stylesheet" href="styles.css">
+    <!-- EL TRUCO MAESTRO: Rompe la memoria del emulador local de VS Code -->
+    <link rel="stylesheet" href="custom.css?v=999">
 </head>
 <body>
 
-    <!-- CAPA INTEGRADA DE FONDO NATIVO CON OPACIDAD SUTIL OSCURA -->
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -101; background-color: #000000;"></div>
-    <img src="1.jpeg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -100; pointer-events: none; opacity: 0.6;" alt="Fondo">
+    <!-- CAPA INTEGRADA DE FONDO CLASE CSS CON OPACIDAD -->
+    <div class="background-master-container"></div>
+    <img src="1.jpeg" class="background-image-canvas" alt="Fondo">
 
-    <!-- 1. BIENVENIDA Y RECONOCIMIENTO TOP COLABORADOR -->
-    <header id="topBanner" class="hidden" style="position: relative; z-index: 10;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Gerencia:</span>
-            <span id="displayGerenciaName" style="font-size: 0.75rem; font-weight: 700;">Cargando...</span>
+    <!-- 1. ENCABEZADO SUPERIOR DE CONTROL -->
+    <header id="topBanner" class="hidden">
+        <div class="gerencia-meta-label">
+            <span>Gerencia:</span>
+            <span id="displayGerenciaName">Cargando...</span>
         </div>
         <div id="meritPodium" class="merit-podium">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #34d399; text-transform: uppercase;">🏆 Top Eficiencia:</span>
-            <span id="topUserWorker" style="font-size: 0.75rem; color: #ecfdf5;">Evaluando métricas...</span>
+            <span>🏆 Top Eficiencia:</span>
+            <span id="topUserWorker">Evaluando métricas...</span>
         </div>
     </header>
 
-    <!-- 2. CONTENEDOR PRINCIPAL DINÁMICO (SPA) -->
-    <main style="position: relative; z-index: 10; background: transparent !important; background-color: transparent !important;">
-        <!-- ================= VISTA A: LOGIN CONTROLADO ================= -->
-        <section id="viewLogin" class="view-card max-w-md" style="padding: 2rem; background-color: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(8px);">
+    <!-- 2. CONTENEDOR PRINCIPAL SPA COMPACTO -->
+    <main>
+        <!-- ================= VISTA A: FORMULARIO DE ACCESO CONTROLADO ================= -->
+        <section id="viewLogin" class="view-card max-w-md">
             <div class="login-header">
-                <div style="width: 7.5rem; height: 3.5rem; margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center;">
-                    <img id="appLogoImg" src="logo_gerencia.png" onerror="this.style.display='none'; document.getElementById('appLogoFallback').style.display='flex';" style="width: 100%; height: 100%; object-fit: contain; display: block;" alt="Logo">
-                    <div id="appLogoFallback" style="display: none; width: 3.5rem; height: 3.5rem; background-color: #f1f5f9; border-radius: 50%; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid #e2e8f0;">🏢</div>
+                <div class="logo-wrapper">
+                    <img id="appLogoImg" src="logo_gerencia.png" onerror="this.style.display='none'; document.getElementById('appLogoFallback').style.display='flex';" alt="Logo">
+                    <div id="appLogoFallback" class="logo-fallback-badge">🏢</div>
                 </div>
-                <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0;">Control de Gestiones</h1>
-                <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-top: 0.25rem;">Acceso Corporativo</p>
+                <h1>Control de Gestiones</h1>
+                <p>Acceso Corporativo</p>
             </div>
 
-            <form id="formLogin" onsubmit="App.handleLogin(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+            <form id="formLogin" onsubmit="App.handleLogin(event)" autocomplete="off">
                 <div class="form-group">
-                    <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.25rem;">Usuario</label>
+                    <label>Usuario</label>
                     <input type="text" id="loginUser" required class="form-control" placeholder="Ej: jperez">
                 </div>
                 <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Contraseña</label>
-                        <button type="button" onclick="App.showRecoveryFormGlobal()" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; font-weight: 600;">¿Olvidó su clave / Bloqueado?</button>
+                    <div class="form-group-header-row">
+                        <label>Contraseña</label>
+                        <button type="button" onclick="App.showRecoveryFormGlobal()">¿Olvidó su clave / Bloqueado?</button>
                     </div>
                     <input type="password" id="loginPass" required class="form-control" placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn-primary" style="padding: 0.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; margin-top: 0.5rem;">
+                <button type="submit" class="btn-primary-login">
                     Ingresar al Sistema
                 </button>
             </form>
         </section>
         <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
-        <section id="viewDashboard" class="view-card max-w-7xl hidden" style="padding: 1.5rem; box-sizing: border-box; background-color: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(10px);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" style="width: 3rem; height: 3rem; background-color: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid #e2e8f0; cursor: pointer; overflow: hidden; background-size: cover; background-position: center;">👤</div>
-                    <div>
-                        <h2 id="dashWelcomeName" style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0;">Colaborador</h2>
-                        <p id="dashUserRole" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin: 0;">Rol</p>
+        <section id="viewDashboard" class="view-card max-w-7xl hidden">
+            <!-- BARRA TOP ESTRUCTURADA SECUENCIALMENTE -->
+            <div class="dashboard-top-bar">
+                
+                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">👤</div>
+                    <div class="profile-text-labels">
+                        <h2 id="dashWelcomeName">Colaborador</h2>
+                        <p id="dashUserRole">Rol</p>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button onclick="App.openReportsMenu()" class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">📊 Reportes Consolidados</button>
-                    <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden" style="padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">⚙️ Ajustes y Usuarios</button>
-                    <button onclick="App.openAboutModal()" class="btn-secondary" style="background-color: #f8fafc; border-color: #cbd5e1; color: #475569; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">ℹ️ Acerca de</button>
-                    <button onclick="App.logout()" class="btn-secondary" style="color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase;">Cerrar Sesión</button>
+                <div class="action-buttons-group">
+                    <button onclick="App.openReportsMenu()" class="btn-secondary">📊 Reportes Consolidados</button>
+                    <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden">⚙️ Ajustes y Usuarios</button>
+                    <button onclick="App.openAboutModal()" class="btn-secondary">ℹ️ Acerca de</button>
+                    <button onclick="App.logout()" class="btn-secondary btn-logout">Cerrar Sesión</button>
                 </div>
             </div>
 
             <!-- CONTADORES DE ESTADO GENERAL -->
             <div class="grid-counters">
                 <div class="counter-card bg-total">
-                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin: 0;">Total Realizadas</p>
+                    <p>Total Realizadas</p>
                     <p id="countTotal" class="counter-num">0</p>
                 </div>
                 <div class="counter-card bg-warning">
-                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Por Vencer (&lt; 30 min)</p>
+                    <p>Por Vencer (&lt; 30 min)</p>
                     <p id="countWarning" class="counter-num">0</p>
                 </div>
                 <div class="counter-card bg-danger">
-                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Gestiones Vencidas</p>
+                    <p>Gestiones Vencidas</p>
                     <p id="countDanger" class="counter-num">0</p>
                 </div>
                 <div class="counter-card bg-ied">
-                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0;">Índice IED (Mensual)</p>
+                    <p>Índice IED (Mensual)</p>
                     <p id="countPerformance" class="counter-num">0%</p>
                 </div>
             </div>
 
-            <!-- SECCIÓN CENTRAL SPLIT -->
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;" id="dashboardSplitLayout">
-                <div style="overflow: hidden;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0;">Filtros de Auditoría:</h3>
+            <!-- SECCIÓN CENTRAL SPLIT LAYOUT -->
+            <div class="dashboard-split-layout">
+                <div class="split-main-panel">
+                    <div class="panel-header-row">
+                        <div class="filters-wrapper">
+                            <h3>Filtros de Auditoría:</h3>
                             <select id="filterAuditMonth" onchange="App.renderDashboardData()" class="filter-select">
                                 <option value="current">📅 Ciclo Activo (Mes en Curso)</option>
                                 <option value="1">📅 Enero 2026</option>
@@ -121,7 +123,7 @@
                                 <option value="expired">🚨 Vencidas</option>
                             </select>
                         </div>
-                        <button id="btnNewAssignment" onclick="App.openAssignmentModal()" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 12px; cursor: pointer; display: none;">+ Asignar Actividad</button>
+                        <button id="btnNewAssignment" onclick="App.openAssignmentModal()">+ Asignar Actividad</button>
                     </div>
                     
                     <div class="table-container custom-scrollbar">
@@ -129,11 +131,11 @@
                             <thead>
                                 <tr>
                                     <th>Actividad / Item</th>
-                                    <th style="text-align: center;">Meta / Carga</th>
-                                    <th style="text-align: center;">Procesadas</th>
-                                    <th style="text-align: center;">Origen / Ref.</th>
-                                    <th style="text-align: center;">Tiempo Restante</th>
-                                    <th style="text-align: center;">Acciones</th>
+                                    <th>Meta / Carga</th>
+                                    <th>Procesadas</th>
+                                    <th>Origen / Ref.</th>
+                                    <th>Tiempo Restante</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tableAssignmentsBody"></tbody>
@@ -141,8 +143,8 @@
                     </div>
                 </div>
 
-                <div>
-                    <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; margin-top: 0;">Monitor de Desempeño y Alertas</h3>
+                <div class="split-side-panel">
+                    <h3>Monitor de Desempeño y Alertas</h3>
                     <div id="monitorContainer" class="monitor-panel custom-scrollbar"></div>
                 </div>
             </div>
@@ -159,6 +161,7 @@
     <!-- INYECTOR MAESTRO COMPATIBLE: Carga directa e inmune al Firewall corporativo -->
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
 
     <!-- Hilo lógico secuencial de carga estructurada -->
     <script src="db.js"></script>
@@ -170,23 +173,31 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-    <!-- INYECTOR EXCLUSIVO: Cerrojo Forzado e Inmune a Cachés -->
+    <!-- INYECTOR AUTOMATIZADO: Sincronizador de Título en Vivo y Cerrojo de Analistas -->
     <script>
         setInterval(function() {
-            // CERROJO VISUAL ABSOLUTO DESDE EL HTML
+            // 1. SINCRONIZADOR INDESTRUCTIBLE DEL NOMBRE DE LA GERENCIA DESDE FIREBASE
+            if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
+                var elTituloCloud = AppDB.data.config.title;
+                var bannerGerencia = document.getElementById("displayGerenciaName");
+                if (bannerGerencia && bannerGerencia.innerText !== elTituloCloud) {
+                    bannerGerencia.innerText = elTituloCloud;
+                }
+            }
+
+            // 2. CERROJO VISUAL ABSOLUTO DE SEGURIDAD PARA ANALISTAS / ESPECIALISTAS
             if (typeof App !== 'undefined' && App.currentUser) {
                 var r = App.currentUser.role ? App.currentUser.role.toLowerCase() : "";
                 var btn = document.getElementById("btnAdminPanel");
                 
                 if (btn) {
-                    // Si el usuario es analista o especialista, se oculta y se bloquea el botón sí o sí
                     if (r.includes("analista") || r.includes("especialista")) {
                         btn.style.setProperty("display", "none", "important");
                         btn.classList.add("hidden");
                     }
                 }
             }
-        }, 300); // Vigila la pantalla cada 300 milisegundos de forma automática
+        }, 300);
 
         setTimeout(function() {
             if (typeof App !== 'undefined') {
@@ -195,20 +206,20 @@
                     var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
 
                     document.getElementById("modalContent").innerHTML = `
-                        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:0.5rem;margin-bottom:1rem;">
-                            <h3 style="margin:0;font-size:13px;text-transform:uppercase;font-weight:700;color:#1e293b;">Panel de Personal y Políticas</h3>
-                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" style="background:none;border:none;font-size:18px;cursor:pointer;font-weight:bold;color:#64748b;">&times;</button>
+                        <div class="modal-inner-header">
+                            <h3>Panel de Personal y Políticas</h3>
+                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
                         </div>
                         
-                        <div class="form-group" style="margin-bottom:1rem;background:#f8fafc;padding:0.75rem;border-radius:8px;display:flex;flex-direction:column;gap:0.4rem;">
-                            <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;display:block;margin-bottom:0.15rem;">Nombre de Gerencia / Programa</label>
-                            <div style="display:flex;gap:0.5rem;">
-                                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title}" style="background:white;margin-bottom:0.25rem;">
-                                <button onclick="App.saveAdministrativeConfig()" class="btn-primary" style="padding:0 0.75rem;border-radius:6px;font-size:11px;">Aplicar</button>
+                        <div class="form-group admin-config-card">
+                            <label>Nombre de Gerencia / Programa</label>
+                            <div class="input-inline-row">
+                                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title}">
+                                <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
                             </div>
                             
-                            <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;display:block;">Expiración de Contraseñas del Personal</label>
-                            <select id="selectPasswordExpiry" class="form-control" style="background:white; width:100%;">
+                            <label class="mt-2">Expiración de Contraseñas del Personal</label>
+                            <select id="selectPasswordExpiry" class="form-control full-width">
                                 <option value="30" ${currentExpiry==30?'selected':''}>Vencimiento cada 30 Días</option>
                                 <option value="60" ${currentExpiry==60?'selected':''}>Vencimiento cada 60 Días</option>
                                 <option value="90" ${currentExpiry==90?'selected':''}>Vencimiento cada 90 Días</option>
@@ -216,22 +227,22 @@
                         </div>
 
                         <!-- MÓDULO DE REINICIO DE FÁBRICA SÍNCRONO CON FIREBASE -->
-                        <div style="background:#fef2f2;padding:0.6rem;border-radius:8px;border:1px solid #fee2e2;margin-bottom:1rem;">
-                            <label style="font-size:9px;font-weight:700;color:#991b1b;text-transform:uppercase;display:block;margin-bottom:0.25rem;">🚨 Mantenimiento Crítico de Servidor</label>
-                            <p style="font-size:10px;color:#7f1d1d;margin:0 0 0.4rem 0;line-height:1.2;">Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
-                            <button onclick="App.executeHardResetDatabaseCloud()" class="btn-primary" style="background:#dc2626;border-color:#b91c1c;width:100%;padding:0.5rem;font-size:10px;font-weight:700;text-transform:uppercase;border-radius:6px;">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button>
+                        <div class="maintenance-critical-card">
+                            <label>🚨 Mantenimiento Crítico de Servidor</label>
+                            <p>Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
+                            <button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button>
                         </div>
 
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
-                            <button onclick="App.openRolesMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:10px;font-weight:bold;background:#1e293b;">🔑 ROLES Y PERMISOS</button>
-                            <button onclick="App.openManagementsMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:10px;font-weight:bold;background:#0369a1;">📋 CATALOGO GESTIONES</button>
+                        <div class="modal-grid-buttons">
+                            <button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button>
+                            <button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
-                            <button onclick="App.openCreateUserForm()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;">➕ Crear Usuario</button>
-                            <button onclick="App.listUsersAdmin()" class="btn-secondary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;">👥 Nómina Personal</button>
+                        <div class="modal-grid-buttons">
+                            <button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button>
+                            <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;">
-                            <button onclick="App.openAuditLogsMenu()" class="btn-primary" style="padding:0.75rem;border-radius:8px;font-size:11px;font-weight:bold;background:#be123c;">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
+                        <div class="modal-grid-buttons modal-single-row">
+                            <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
                         </div>`;
                 };
 
