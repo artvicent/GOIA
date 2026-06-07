@@ -76,7 +76,7 @@ main {
 .max-w-7xl { max-width: 80rem; }
 .hidden { display: none !important; }
 
-/* --- SECCIÓN A: ACCESO CORPORATIVO SANADO --- */
+/* --- SECCIÓN A: ACCESO CORPORATIVO --- */
 #viewLogin {
     padding: 2rem;
     background-color: var(--card-bg-white);
@@ -94,7 +94,7 @@ main {
     margin: 0;
 }
 
-/* BLINDAJE ANTI BARRA BLANCA: Fuerza la transparencia del subtítulo del acceso */
+/* BLINDAJE ABSOLUTO ANTI BARRA BLANCA: Fuerza la transparencia total del subtítulo */
 .login-header p {
     font-size: 10px !important;
     color: var(--text-muted-blue) !important;
@@ -113,7 +113,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 3 DE 6: CONTENEDOR LOGO, BOTÓN DE INGRESO MAESTRO AZUL Y BANNER OSCURO NATIVO
+ * PARTE 3 DE 6: LOGO WRAPPER, BOTÓN DE INGRESO PREMIUM AZUL Y BANNER OSCURO NATIVO
  */
 
 .logo-wrapper {
@@ -144,7 +144,7 @@ main {
     border: 1px solid var(--border-color-light);
 }
 
-/* --- DISEÑO DEL BOTÓN MAESTRO DE ACCESO AZUL --- */
+/* --- DISEÑO EXCLUSIVO PARA EL BOTÓN DE INGRESO MAESTRO AZUL --- */
 .btn-primary-login {
     background-color: var(--btn-blue-primary) !important;
     color: #ffffff !important;
@@ -210,7 +210,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 4 DE 6: BARRA DE CONTROL CORPORATIVA, IDENTIDAD A LA IZQUIERDA Y BOTONES A LA DERECHA
+ * PARTE 4 DE 6: BARRA TOP DASHBOARD, AVATAR A LA IZQUIERDA CON NOMBRE A LA DERECHA y BOTONES
  */
 
 /* --- SECCIÓN C: BARRA TOP DEL DASHBOARD --- */
@@ -222,7 +222,7 @@ main {
     margin-top: 1rem;
 }
 
-/* CERROJO DE DISTRIBUCIÓN HORIZONTAL: Fuerza la separación de los bloques a los extremos */
+/* Distribución horizontal rígida de extremos para la barra superior interna */
 .dashboard-top-bar {
     display: flex !important;
     flex-direction: row !important;
@@ -235,10 +235,10 @@ main {
     gap: 1rem;
 }
 
-/* Bloque de identidad agrupado horizontalmente anclado a la extrema izquierda */
+/* CERROJO LINEAL INDESTRUCTIBLE: El avatar va primero (izquierda) y el nombre a su derecha */
 .profile-identity-block {
     display: flex !important;
-    flex-direction: row !important;
+    flex-direction: row !important; /* Fuerza orden horizontal continuo */
     align-items: center !important;
     justify-content: flex-start !important;
     gap: 1rem !important;
@@ -257,13 +257,16 @@ main {
     border: 1px solid var(--border-color-light);
     cursor: pointer;
     overflow: hidden;
+    order: 1 !important; /* Fuerza al logo a posicionarse de primero a la izquierda */
 }
 
+/* Contenedor del nombre fijado exactamente al lado derecho del avatar */
 .profile-text-labels {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     text-align: left !important;
+    order: 2 !important; /* Fuerza a tus textos a renderizarse a la derecha del logo */
 }
 
 .profile-text-labels h2 {
@@ -283,21 +286,21 @@ main {
     text-align: left !important;
 }
 
-/* Bloque de los 4 botones ejecutivos anclados a la extrema derecha superior */
+/* Botonera ejecutiva de control empujada simétricamente a la extrema derecha */
 .action-buttons-group {
     display: flex !important;
     flex-direction: row !important;
     justify-content: flex-end !important;
     align-items: center !important;
     gap: 0.5rem !important;
-    margin-left: auto !important; /* Fuerza el empuje magnético al borde derecho */
+    margin-left: auto !important;
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 5 DE 6: CONTADORES SEGMENTADOS, SPLIT VERTICAL (ALERTA INFERIOR) Y FILTROS
+ * PARTE 5 DE 6: CONTADORES DE MÉTRICAS, APILADO VERTICAL Y ELEMENTOS FORMULARIOS
  */
 
-/* --- COMPONENTES BÁSICOS DE FORMULARIO Y ENTRADAS --- */
+/* --- BOTONES COMPLEMENTARIOS Y COMPONENTES FORMULARIOS --- */
 .form-group { display: flex; flex-direction: column; }
 .form-group-header-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
 .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-label-gray); margin-bottom: 0.25rem; }
@@ -326,7 +329,7 @@ main {
     box-sizing: border-box !important;
 }
 
-/* CERROJO ESTRICTO: Estas propiedades evitan que el fondo blanco de métricas salte al Login */
+/* SEGMENTACIÓN ABSOLUTA: Estas propiedades solo aplican dentro de las tarjetas de métricas */
 .grid-counters .counter-card p {
     font-size: 11px !important;
     font-weight: 700 !important;
@@ -350,31 +353,31 @@ main {
 }
 
 .bg-total { background-color: #f8fafc; border: 1px solid #e2e8f0; }
-.bg-total p { color: var(--text-label-gray); }
-.bg-total .counter-num { color: var(--text-main-slate); }
+.bg-total p { color: var(--text-label-gray) !important; }
+.bg-total .counter-num { color: var(--text-main-slate) !important; }
 
 .bg-warning { background-color: #fffbeb; border: 1px solid #fef3c7; }
-.bg-warning p { color: #b45309; }
-.bg-warning .counter-num { color: #d97706; }
+.bg-warning p { color: #b45309 !important; }
+.bg-warning .counter-num { color: #d97706 !important; }
 
 .bg-danger { background-color: #fef2f2; border: 1px solid #fee2e2; }
-.bg-danger p { color: #991b1b; }
-.bg-danger .counter-num { color: #dc2626; }
+.bg-danger p { color: #991b1b !important; }
+.bg-danger .counter-num { color: #dc2626 !important; }
 
 .bg-ied { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
-.bg-ied p { color: #166534; }
-.bg-ied .counter-num { color: var(--accent-emerald); }
+.bg-ied p { color: #166534 !important; }
+.bg-ied .counter-num { color: var(--accent-emerald) !important; }
 
 /* --- REORGANIZACIÓN VERTICAL: MANDAR MONITOR DE DESEMPEÑO ABAJO --- */
 .dashboard-split-layout {
     display: flex !important;
-    flex-direction: column !important; /* Cambia a bloque lineal y apila los elementos verticalmente */
+    flex-direction: column !important; /* Apila los elementos en bloque vertical */
     gap: 1.5rem !important;
     width: 100% !important;
 }
 
 .split-main-panel {
-    width: 100% !important; /* La tabla central ahora consume todo el espacio horizontal nítido */
+    width: 100% !important; /* Ocupa el 100% del ancho horizontal nítido */
 }
 
 .panel-header-row {
@@ -402,7 +405,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6 DE 6: FILTROS SELECTS, TABLA ANCHO COMPLETO, MONITOR INFERIOR Y MODALES
+ * PARTE 6 DE 6: FILTROS SELECTS, MONITOR INFERIOR, MODALES Y BOTONES DE REPORTE PDF
  */
 
 .filter-select {
@@ -478,152 +481,95 @@ main {
     border: 1px solid var(--border-color-soft);
     border-radius: 0.5rem;
     padding: 1rem;
-    min-height: 100px !important; /* Más compacto al estar abajo */
+    min-height: 100px !important;
     max-height: 200px !important;
     overflow-y: auto;
     box-sizing: border-box;
     width: 100% !important;
 }
 
-/* --- FOOTER Y CAPAS MODALES GENERALES --- */
-footer {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-    padding: 1rem;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
+/* --- CAPAS MODALES GENERALES --- */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1000;
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .modal-content {
-    background-color: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    width: 100%;
-    max-width: 32rem;
-    max-height: 85vh;
+    background-color: white !important;
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
+    max-width: 32rem !important;
+    max-height: 85vh !important;
     overflow-y: auto;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    box-sizing: border-box;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    box-sizing: border-box !important;
 }
 
 /* --- CLASES COMPLEMENTARIAS MODALES ADM --- */
-.modal-inner-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 0.5rem; margin-bottom: 1rem; }
-.modal-inner-header h3 { margin: 0; font-size: 13px; text-transform: uppercase; font-weight: 700; color: #1e293b; }
-.modal-inner-header button { background: none; border: none; font-size: 18px; cursor: pointer; font-weight: bold; color: #64748b; }
-.admin-config-card { margin-bottom: 1rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.4rem; }
-.input-inline-row { display: flex; gap: 0.5rem; }
-.input-inline-row input { background: white; margin-bottom: 0.25rem; flex: 1; }
-.input-inline-row button { padding: 0 0.75rem; border-radius: 6px; font-size: 11px; }
-.full-width { width: 100%; }
-.mt-2 { margin-top: 0.5rem; }
-.maintenance-critical-card { background: #fef2f2; padding: 0.6rem; border-radius: 8px; border: 1px solid #fee2e2; margin-bottom: 1rem; }
-.maintenance-critical-card label { font-size: 9px; font-weight: 700; color: #991b1b; text-transform: uppercase; display: block; margin-bottom: 0.25rem; }
-.maintenance-critical-card p { font-size: 10px; color: #7f1d1d; margin: 0 0 0.4rem 0; line-height: 1.2; }
-.btn-danger-reset { background: #dc2626; border: 1px solid #b91c1c; color: white; width: 100%; padding: 0.5rem; font-size: 10px; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; }
-.modal-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
-.modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-.modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
-.modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-.bg-navy { background: #1e293b; border-color: #1e293b; }
-.bg-navy:hover { background: #0f172a; }
-.bg-sky { background: #0369a1; border-color: #0369a1; }
-.bg-sky:hover { background: #0284c7; }
-.bg-crimson { background: #be123c; border-color: #be123c; }
-.bg-crimson:hover { background: #9f1239; }
-.font-bold { font-weight: bold; }
+.modal-inner-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 1px solid var(--border-color-light) !important; padding-bottom: 0.5rem !important; margin-bottom: 1rem !important; }
+.modal-inner-header h3 { margin: 0 !important; font-size: 13px !important; text-transform: uppercase !important; font-weight: 700 !important; color: #1e293b !important; }
+.modal-inner-header button { background: none !important; border: none !important; font-size: 18px !important; cursor: pointer !important; font-weight: bold !important; color: #64748b !important; }
+.admin-config-card { margin-bottom: 1rem !important; background: #f8fafc !important; padding: 0.75rem !important; border-radius: 8px !important; display: flex !important; flex-direction: column !important; gap: 0.4rem !important; }
+.input-inline-row { display: flex !important; gap: 0.5rem !important; }
+.input-inline-row input { background: white !important; margin-bottom: 0.25rem !important; flex: 1 !important; }
+.input-inline-row button { padding: 0 0.75rem !important; border-radius: 6px !important; font-size: 11px !important; }
+.full-width { width: 100% !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.maintenance-critical-card { background: #fef2f2 !important; padding: 0.6rem !important; border-radius: 8px !important; border: 1px solid #fee2e2 !important; margin-bottom: 1rem !important; }
+.maintenance-critical-card label { font-size: 9px !important; font-weight: 700 !important; color: #991b1b !important; text-transform: uppercase !important; display: block !important; margin-bottom: 0.25rem !important; }
+.maintenance-critical-card p { font-size: 10px !important; color: #7f1d1d !important; margin: 0 0 0.4rem 0 !important; line-height: 1.2 !important; }
+.btn-danger-reset { background: #dc2626 !important; border: 1px solid #b91c1c !important; color: white !important; width: 100%; padding: 0.5rem !important; font-size: 10px !important; font-weight: 700 !important; text-transform: uppercase !important; border-radius: 6px !important; cursor: pointer !important; }
+.modal-grid-buttons { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; margin-bottom: 0.5rem !important; }
+.modal-grid-buttons button { padding: 0.75rem !important; border-radius: 8px !important; font-size: 10px !important; font-weight: bold !important; text-transform: uppercase !important; }
+.modal-single-row { display: grid !important; grid-template-columns: 1fr !important; gap: 0.5rem !important; }
+.modal-single-row button { padding: 0.75rem !important; border-radius: 8px !important; font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; }
+.bg-navy { background: #1e293b !important; border-color: #1e293b !important; }
+.bg-sky { background: #0369a1 !important; border-color: #0369a1 !important; }
+.bg-crimson { background: #be123c !important; border-color: #be123c !important; }
+.font-bold { font-weight: bold !important; }
 
-/* --- ADAPTATIVOS DE LOGICA JAVASCRIPT --- */
-.monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; }
-.alert-item-title { font-size: 10px; font-weight: bold; }
-.alert-item-body { font-size: 11px; margin-top: 0.25rem; }
-.monitor-empty-text { font-size: 12px; text-align: center; margin-top: 2rem; color: var(--text-muted-blue); }
-.modal-text-bold { font-size: 13px; margin: 0 0 0.5rem 0; }
-.modal-text-muted { font-size: 12px; margin: 0 0 0.5rem 0; color: #475569; }
-.modal-text-muted-spacer { font-size: 12px; margin: 0 0 1rem 0; color: #475569; }
-.modal-action-row-footer { margin-top: 1rem; display: flex; gap: 0.5rem; }
-.report-card-gap { gap: 0.75rem; }
-.report-meta-text { font-size: 13px; margin: 0; }
-.report-data-text { font-size: 12px; margin: 0; }
-.report-efficiency-text { font-size: 13px; margin: 0; color: #166534; font-weight: 700; }
-.modal-divider-line { border: none; border-top: 1px solid #e2e8f0; margin: 0.5rem 0; height: 1px; width: 100%; }
-.report-footer-disclaimer { font-size: 10px; color: #64748b; line-height: 1.3; margin: 0; }
-.about-modal-card-labels { gap: 0.5rem; line-height: 1.4; font-size: 12px; color: #334155; }
-.about-modal-card-labels p { margin: 0; }
-.about-modal-footer { font-size: 11px; color: #64748b; text-align: center; margin: 0; }
-.avatar-modal-description { font-size: 12px; color: #475569; margin: 0 0 1rem 0; }
-.avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
-.avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; }
-.avatar-selector-grid-item:hover { background: #f1f5f9; }
-.btn-primary-submit { background-color: var(--btn-blue-primary) !important; color: white !important; border: 1px solid var(--btn-blue-primary) !important; padding: 0.65rem 1.2rem !important; border-radius: 0.5rem !important; font-size: 13px !important; font-weight: 600 !important; font-family: inherit !important; cursor: pointer; flex: 2; }
-.btn-secondary-cancel { background-color: white !important; color: #475569 !important; border: 1px solid var(--border-color-light) !important; padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
-.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
-.bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px; }
-.text-emerald-dark { color: #166534; }
-
-/* --- COMPONENTES DE EXPORTACIÓN DE REPORTES (custom.css) --- */
-.report-export-label-title {
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    color: var(--text-label-gray) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    display: block !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.report-buttons-grid-layout {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.btn-primary-export {
-    color: #ffffff !important;
-    padding: 0.75rem 0.5rem !important;
-    border-radius: 0.5rem !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    font-family: inherit !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.02em !important;
-    cursor: pointer !important;
-    border: none !important;
-    transition: filter 0.2s ease !important;
-}
-
-.btn-primary-export:hover {
-    filter: brightness(1.1) !important;
-}
-
+/* --- COMPONENTES DE EXPORTACIÓN DE REPORTES PDF --- */
+.report-export-label-title { font-size: 10px !important; font-weight: 700 !important; color: var(--text-label-gray) !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; margin-bottom: 0.5rem !important; }
+.report-buttons-grid-layout { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; width: 100% !important; margin-bottom: 0.5rem !important; }
+.btn-primary-export { color: #ffffff !important; padding: 0.75rem 0.5rem !important; border-radius: 0.5rem !important; font-size: 10px !important; font-weight: 700 !important; font-family: inherit !important; text-transform: uppercase !important; letter-spacing: 0.02em !important; cursor: pointer !important; border: none !important; transition: filter 0.2s ease !important; }
+.btn-primary-export:hover { filter: brightness(1.1) !important; }
 .bg-sky-export { background-color: #0284c7 !important; }
 .bg-navy-export { background-color: #1e293b !important; }
 
-/* REGLA DE IMPRESIÓN INTEGRADORA: Optimiza el formato de la hoja de PDF al disparar window.print() */
-@media print {
-    body { background: #ffffff !important; color: #000000 !important; }
-    .background-master-container, .background-image-canvas, #topBanner, .dashboard-top-bar, .action-buttons-group, footer, .modal-inner-header button { display: none !important; }
-    .modal-overlay { position: relative !important; background: transparent !important; backdrop-filter: none !important; }
-    .modal-content { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
-}
+/* --- ADAPTATIVOS GENERALES --- */
+.monitor-alert-item { margin-bottom: 0.5rem !important; padding: 0.75rem !important; }
+.alert-item-title { font-size: 10px !important; font-weight: bold !important; }
+.alert-item-body { font-size: 11px !important; margin-top: 0.25rem !important; }
+.monitor-empty-text { font-size: 12px !important; text-align: center !important; margin-top: 2rem !important; color: var(--text-muted-blue) !important; }
+.modal-text-bold { font-size: 13px !important; margin: 0 0 0.5rem 0 !important; }
+.modal-text-muted { font-size: 12px !important; margin: 0 0 0.5rem 0 !important; color: #475569 !important; }
+.modal-text-muted-spacer { font-size: 12px !important; margin: 0 0 1rem 0 !important; color: #475569 !important; }
+.modal-action-row-footer { margin-top: 1rem !important; display: flex !important; gap: 0.5rem !important; }
+.report-card-gap { gap: 0.75rem !important; }
+.report-meta-text { font-size: 13px !important; margin: 0 !important; }
+.report-data-text { font-size: 12px !important; margin: 0 !important; }
+.report-efficiency-text { font-size: 13px !important; margin: 0 !important; color: #166534 !important; font-weight: 700 !important; }
+.modal-divider-line { border: none !important; border-top: 1px solid #e2e8f0 !important; margin: 0.5rem 0 !important; height: 1px !important; width: 100% !important; }
+.report-footer-disclaimer { font-size: 10px !important; color: #64748b !important; line-height: 1.3 !important; margin: 0 !important; }
+.about-modal-card-labels { gap: 0.5rem !important; line-height: 1.4 !important; font-size: 12px !important; color: #334155 !important; }
+.about-modal-card-labels p { margin: 0 !important; }
+.about-modal-footer { font-size: 11px !important; color: #64748b !important; text-align: center !important; margin: 0 !important; }
+.avatar-modal-description { font-size: 12px !important; color: #475569 !important; margin: 0 0 1rem 0 !important; }
+.avatar-buttons-grid-layout { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 0.75rem !important; margin-bottom: 0.5rem !important; }
+.avatar-selector-grid-item { font-size: 1.75rem !important; padding: 0.5rem !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 0.5rem !important; cursor: pointer !important; background: #ffffff !important; }
+.btn-primary-submit { background-color: var(--btn-blue-primary) !important; color: white !important; border: 1px solid var(--btn-blue-primary) !important; padding: 0.65rem 1.2rem !important; border-radius: 0.5rem !important; font-size: 13px !important; font-weight: 600 !important; font-family: inherit !important; cursor: pointer; flex: 2; }
+.btn-secondary-cancel { background-color: white !important; color: #475569 !important; border: 1px solid var(--border-color-light) !important; padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
+.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }.bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px !important; }.text-emerald-dark { color: #166534 !important; }
 
 /* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS */
 .custom-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
