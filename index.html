@@ -4,30 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <!-- EL TRUCO MAESTRO: Rompe la memoria del emulador local de VS Code -->
-    <link rel="stylesheet" href="custom.css?v=999">
+    <!-- Rompe la caché de tu Live Server local con la versión definitiva -->
+    <link rel="stylesheet" href="custom.css?v=50">
 </head>
 <body>
 
-    <!-- CAPA INTEGRADA DE FONDO CLASE CSS CON OPACIDAD -->
     <div class="background-master-container"></div>
     <img src="1.jpeg" class="background-image-canvas" alt="Fondo">
 
-    <!-- 1. ENCABEZADO SUPERIOR DE CONTROL -->
-    <header id="topBanner" class="hidden">
+    <!-- BANNER SUPERIOR OSCURO INSTITUCIONAL -->
+    <header id="topBanner">
         <div class="gerencia-meta-label">
             <span>Gerencia:</span>
-            <span id="displayGerenciaName">Cargando...</span>
+            <span id="displayGerenciaName">Gerencia General de Adquirencia</span>
         </div>
         <div id="meritPodium" class="merit-podium">
             <span>🏆 Top Eficiencia:</span>
-            <span id="topUserWorker">Evaluando métricas...</span>
+            <span id="topUserWorker">ARTURO NOTO</span>
         </div>
     </header>
 
-    <!-- 2. CONTENEDOR PRINCIPAL SPA COMPACTO -->
     <main>
-        <!-- ================= VISTA A: FORMULARIO DE ACCESO CONTROLADO ================= -->
+        <!-- ================= VISTA A: FORMULARIO DE ACCESO ================= -->
         <section id="viewLogin" class="view-card max-w-md">
             <div class="login-header">
                 <div class="logo-wrapper">
@@ -57,7 +55,7 @@
         </section>
         <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
         <section id="viewDashboard" class="view-card max-w-7xl hidden">
-            <!-- BARRA TOP ESTRUCTURADA SECUENCIALMENTE -->
+            <!-- BARRA TOP INTEGRADA: Perfil amarrado a la izquierda y botones a la derecha -->
             <div class="dashboard-top-bar">
                 
                     <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">👤</div>
@@ -95,8 +93,9 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN CENTRAL SPLIT LAYOUT -->
+            <!-- SECCIÓN CENTRAL CENTRALIZADA EN BLOQUE VERTICAL -->
             <div class="dashboard-split-layout">
+                <!-- PANEL SUPERIOR INTERNO: TABLA DE GESTIONES A ANCHO COMPLETO -->
                 <div class="split-main-panel">
                     <div class="panel-header-row">
                         <div class="filters-wrapper">
@@ -143,6 +142,7 @@
                     </div>
                 </div>
 
+                <!-- PANEL INFERIOR FIJO: MONITOR DE PERFORMANCE ACOPLADO ABAJO -->
                 <div class="split-side-panel">
                     <h3>Monitor de Desempeño y Alertas</h3>
                     <div id="monitorContainer" class="monitor-panel custom-scrollbar"></div>
@@ -173,10 +173,10 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-    <!-- INYECTOR AUTOMATIZADO: Sincronizador de Título en Vivo y Cerrojo de Analistas -->
+    <!-- CONTROL GRÁFICO COMPATIBLE LOCAL SIN INYECTORES DE INTERFERENCIA -->
     <script>
         setInterval(function() {
-            // 1. SINCRONIZADOR INDESTRUCTIBLE DEL NOMBRE DE LA GERENCIA DESDE FIREBASE
+            // Sincronizador indestructible del nombre de la gerencia desde Firebase
             if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
                 var elTituloCloud = AppDB.data.config.title;
                 var bannerGerencia = document.getElementById("displayGerenciaName");
@@ -184,20 +184,7 @@
                     bannerGerencia.innerText = elTituloCloud;
                 }
             }
-
-            // 2. CERROJO VISUAL ABSOLUTO DE SEGURIDAD PARA ANALISTAS / ESPECIALISTAS
-            if (typeof App !== 'undefined' && App.currentUser) {
-                var r = App.currentUser.role ? App.currentUser.role.toLowerCase() : "";
-                var btn = document.getElementById("btnAdminPanel");
-                
-                if (btn) {
-                    if (r.includes("analista") || r.includes("especialista")) {
-                        btn.style.setProperty("display", "none", "important");
-                        btn.classList.add("hidden");
-                    }
-                }
-            }
-        }, 300);
+        }, 500);
 
         setTimeout(function() {
             if (typeof App !== 'undefined') {
