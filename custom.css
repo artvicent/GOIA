@@ -1,6 +1,6 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
- * PARTE 1 DE 3: VARIABLES, LIENZO Y CAPAS DE FONDO CON OPACIDAD NATIVA
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 1 DE 3: VARIABLES, CONFIGURACIÓN DE LIENZO Y CAPAS DE FONDO CON OPACIDAD
  */
 @import url('https://googleapis.com');
 
@@ -75,8 +75,8 @@ main {
 .max-w-7xl { max-width: 80rem; }
 .hidden { display: none !important; }
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
- * PARTE 2 DE 3: LOGIN, BANNER SUPERIOR CON FONDO OSCURO, PERFIL ALINEADO Y BOTONES
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 2 DE 3: ACCESO, CABECERA OSCURA BANCO, PERFIL CON SOLUCIÓN DE REPETICIÓN Y BOTONES
  */
 
 /* --- SECCIÓN A: LOGIN CORPORATIVO --- */
@@ -143,7 +143,7 @@ main {
     justify-content: space-between !important;
     align-items: center !important;
     padding: 0.75rem 2rem !important;
-    background-color: rgba(15, 23, 42, 0.85) !important; /* Capa oscura real */
+    background-color: rgba(15, 23, 42, 0.85) !important;
     backdrop-filter: blur(8px) !important;
     color: white !important;
 }
@@ -178,7 +178,7 @@ main {
     color: #ecfdf5;
 }
 
-/* --- SECCIÓN C: DASHBOARD Y BLINDAJE DE ALINEACIÓN DE IDENTIDAD --- */
+/* --- SECCIÓN C: BARRA TOP REORGANIZADA DE FORMA LINEAL --- */
 #viewDashboard {
     padding: 1.5rem;
     background-color: var(--card-bg-dash) !important;
@@ -189,7 +189,7 @@ main {
 
 .dashboard-top-bar {
     display: flex !important;
-    justify-content: space-between !important; /* Mantiene la separación con los botones */
+    justify-content: space-between !important;
     align-items: center !important;
     border-bottom: 1px solid var(--border-color-soft);
     padding-bottom: 1rem;
@@ -199,7 +199,7 @@ main {
     width: 100%;
 }
 
-/* CERROJO DE FILA: Une el avatar y el texto juntos a la izquierda sin importar el espacio */
+/* DECLARACIÓN ÚNICA SANEADA: Evita herencias contradictorias en cascada */
 .profile-identity-block {
     display: flex !important;
     flex-direction: row !important;
@@ -224,7 +224,6 @@ main {
     background-position: center;
 }
 
-/* Columna de texto pegada estrictamente al avatar */
 .profile-text-labels {
     display: flex !important;
     flex-direction: column !important;
@@ -270,7 +269,7 @@ main {
 .btn-logout { color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; }
 .btn-logout:hover { background-color: #ffe4e6; }
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
  * PARTE 3 DE 3: CONTADORES, DISEÑO EN SPLIT, TABLAS, MONITOR LATERAL Y CLASES MODALES
  */
 
@@ -302,7 +301,7 @@ main {
     line-height: 1;
 }
 
-.bg-total { background-color: #f8fafc; border: 1px solid var(--border-color-soft); }
+.bg-total { background-color: #f8fafc; border: 1px solid #e2e8f0; }
 .bg-total p { color: var(--text-label-gray); }
 .bg-total .counter-num { color: var(--text-main-slate); }
 

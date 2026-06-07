@@ -89,23 +89,22 @@ const App = {
         const btnAdmin = document.getElementById("btnAdminPanel");
         const btnNewAsig = document.getElementById("btnNewAssignment");
 
-        // Obtener el rol del usuario actual y buscar su nivel (lvl) real de base de datos
         var userRole = App.currentUser.role;
         var roleMeta = AppDB.data.roles[userRole];
         var userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
 
-        // REGLA DE ORO: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
         if (isMaster || userLevel >= 3) {
             btnAdmin.classList.remove("hidden");
         } else {
             btnAdmin.classList.add("hidden");
         }
 
-        // CONTROL DE ASIGNACIÓN: Solo niveles autorizados (o permisos explícitos de creación)
-        if (isMaster || userLevel >= 3 || p.includes("crear")) {
-            if (btnNewAsig) btnNewAsig.style.display = "inline-block";
-        } else {
-            if (btnNewAsig) btnNewAsig.style.display = "none";
+        if (btnNewAsig) {
+            if (isMaster || userLevel >= 3 || p.includes("crear")) {
+                btnNewAsig.classList.remove("hidden");
+            } else {
+                btnNewAsig.classList.add("hidden");
+            }
         }
 
 
