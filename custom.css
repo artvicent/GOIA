@@ -1,6 +1,6 @@
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 1 DE 6: VARIABLES DE ENTORNO, FUENTES Y LIENZO BASE SPA
+ * PARTE 1 DE 6: VARIABLES DE LIENZO, FUENTES Y CAPA BASE DE DISEÑO
  */
 @import url('https://googleapis.com');
 
@@ -39,7 +39,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 2 DE 6: CAPAS DE FONDO LIENZO, CONTROL VISTAS Y LOGIN ANTI BARRA BLANCA
+ * PARTE 2 DE 6: FONDOS CANVAS, MARCOS SPA Y ACCESO CORPORATIVO LIBRE DE BARRAS
  */
 
 /* --- CAPAS DE INTEGRIDAD DEL LIENZO DE FONDO (1.jpeg) --- */
@@ -76,7 +76,7 @@ main {
 .max-w-7xl { max-width: 80rem; }
 .hidden { display: none !important; }
 
-/* --- SECCIÓN A: ACCESO CORPORATIVO PURIFICADO --- */
+/* --- SECCIÓN A: ACCESO CORPORATIVO SANADO --- */
 #viewLogin {
     padding: 2rem;
     background-color: var(--card-bg-white);
@@ -94,7 +94,7 @@ main {
     margin: 0;
 }
 
-/* BLINDAJE ABSOLUTO ANTI BARRA BLANCA: Fuerza la transparencia total del subtítulo */
+/* BLINDAJE ANTI BARRA BLANCA: Fuerza la transparencia del subtítulo del acceso */
 .login-header p {
     font-size: 10px !important;
     color: var(--text-muted-blue) !important;
@@ -113,7 +113,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 3 DE 6: LOGO WRAPPER, BOTÓN DE INGRESO PREMIUM AZUL Y BANNER SUPERIOR OSCURO
+ * PARTE 3 DE 6: CONTENEDOR LOGO, BOTÓN DE INGRESO MAESTRO AZUL Y BANNER OSCURO NATIVO
  */
 
 .logo-wrapper {
@@ -144,7 +144,7 @@ main {
     border: 1px solid var(--border-color-light);
 }
 
-/* --- DISEÑO EXCLUSIVO PARA EL BOTÓN DE INGRESO MAESTRO AZUL --- */
+/* --- DISEÑO DEL BOTÓN MAESTRO DE ACCESO AZUL --- */
 .btn-primary-login {
     background-color: var(--btn-blue-primary) !important;
     color: #ffffff !important;
@@ -210,7 +210,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 4 DE 6: BARRA TOP DASHBOARD, PERFIL A LA IZQUIERDA Y BOTONERA A LA DERECHA
+ * PARTE 4 DE 6: BARRA DE CONTROL CORPORATIVA, IDENTIDAD A LA IZQUIERDA Y BOTONES A LA DERECHA
  */
 
 /* --- SECCIÓN C: BARRA TOP DEL DASHBOARD --- */
@@ -222,7 +222,7 @@ main {
     margin-top: 1rem;
 }
 
-/* Distribución horizontal rígida: Separa perfil de botones en los extremos */
+/* CERROJO DE DISTRIBUCIÓN HORIZONTAL: Fuerza la separación de los bloques a los extremos */
 .dashboard-top-bar {
     display: flex !important;
     flex-direction: row !important;
@@ -235,13 +235,14 @@ main {
     gap: 1rem;
 }
 
-/* Anclaje de tu bloque de identidad al inicio izquierdo */
+/* Bloque de identidad agrupado horizontalmente anclado a la extrema izquierda */
 .profile-identity-block {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
     gap: 1rem !important;
+    text-align: left !important;
 }
 
 .avatar-frame {
@@ -282,21 +283,21 @@ main {
     text-align: left !important;
 }
 
-/* CERROJO MAGNÉTICO: Fija tus 4 botones consolidados arriba a la extrema derecha */
+/* Bloque de los 4 botones ejecutivos anclados a la extrema derecha superior */
 .action-buttons-group {
     display: flex !important;
     flex-direction: row !important;
     justify-content: flex-end !important;
     align-items: center !important;
     gap: 0.5rem !important;
-    margin-left: auto !important;
+    margin-left: auto !important; /* Fuerza el empuje magnético al borde derecho */
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 5 DE 6: BOTONES DE NÓMINA, GRIDS Y CONTADORES DE ESTADO SEGMENTADOS
+ * PARTE 5 DE 6: CONTADORES SEGMENTADOS, SPLIT VERTICAL (ALERTA INFERIOR) Y FILTROS
  */
 
-/* --- BOTONES COMPLEMENTARIOS Y COMPONENTES FORMULARIOS --- */
+/* --- COMPONENTES BÁSICOS DE FORMULARIO Y ENTRADAS --- */
 .form-group { display: flex; flex-direction: column; }
 .form-group-header-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
 .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-label-gray); margin-bottom: 0.25rem; }
@@ -313,19 +314,19 @@ main {
 
 /* --- PANEL DE CONTADORES DE MÉTRICA CONTROLADO EN GRID --- */
 .grid-counters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
 }
 
 .counter-card {
-    padding: 1.25rem;
-    border-radius: 0.75rem;
-    box-sizing: border-box;
+    padding: 1.25rem !important;
+    border-radius: 0.75rem !important;
+    box-sizing: border-box !important;
 }
 
-/* SEGMENTACIÓN ABSOLUTA: Estas propiedades solo aplican dentro de las tarjetas de métricas */
+/* CERROJO ESTRICTO: Estas propiedades evitan que el fondo blanco de métricas salte al Login */
 .grid-counters .counter-card p {
     font-size: 11px !important;
     font-weight: 700 !important;
@@ -342,10 +343,10 @@ main {
 }
 
 .counter-num {
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 0.5rem 0 0 0;
-    line-height: 1;
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    margin: 0.5rem 0 0 0 !important;
+    line-height: 1 !important;
 }
 
 .bg-total { background-color: #f8fafc; border: 1px solid #e2e8f0; }
@@ -363,24 +364,18 @@ main {
 .bg-ied { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
 .bg-ied p { color: #166534; }
 .bg-ied .counter-num { color: var(--accent-emerald); }
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6 DE 6: DISPOSICIÓN EN SPLIT, TABLAS, MONITOR, MODALES ADM Y SCROLLBARS
- */
 
-/* --- DISEÑO EN SPLIT Y COMPONENTES TABLAS --- */
+/* --- REORGANIZACIÓN VERTICAL: MANDAR MONITOR DE DESEMPEÑO ABAJO --- */
 .dashboard-split-layout {
-    display: grid !important;
-    grid-template-columns: 2fr 1fr !important;
+    display: flex !important;
+    flex-direction: column !important; /* Cambia a bloque lineal y apila los elementos verticalmente */
     gap: 1.5rem !important;
     width: 100% !important;
 }
 
-@media (max-width: 1024px) {
-    .dashboard-split-layout { grid-template-columns: 1fr !important; }
+.split-main-panel {
+    width: 100% !important; /* La tabla central ahora consume todo el espacio horizontal nítido */
 }
-
-.split-main-panel { overflow: hidden; }
 
 .panel-header-row {
     display: flex;
@@ -405,6 +400,10 @@ main {
     color: #475569;
     margin: 0;
 }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 6 DE 6: FILTROS SELECTS, TABLA ANCHO COMPLETO, MONITOR INFERIOR Y MODALES
+ */
 
 .filter-select {
     padding: 0.4rem 0.5rem;
@@ -427,8 +426,9 @@ main {
     padding: 0;
 }
 
+/* TABLA EXPANDIDA: Ocupa el 100% del ancho horizontal del recuadro */
 .table-container {
-    width: 100%;
+    width: 100% !important;
     overflow-x: auto;
     border-radius: 0.5rem;
     border: 1px solid var(--border-color-soft);
@@ -436,7 +436,7 @@ main {
 }
 
 .executive-table {
-    width: 100%;
+    width: 100% !important;
     border-collapse: collapse;
     text-align: left;
     font-size: 13px;
@@ -458,7 +458,12 @@ main {
     color: #334155;
 }
 
-/* --- COMPONENTE LATERAL DE ALERTAS MONITOR --- */
+/* --- MONITOR EN PARTE INFERIOR: Se despliega abajo de la tabla a ancho completo --- */
+.split-side-panel {
+    width: 100% !important;
+    margin-top: 1rem;
+}
+
 .split-side-panel h3 {
     font-size: 12px;
     font-weight: 700;
@@ -473,13 +478,14 @@ main {
     border: 1px solid var(--border-color-soft);
     border-radius: 0.5rem;
     padding: 1rem;
-    min-height: 250px;
-    max-height: 450px;
+    min-height: 100px !important; /* Más compacto al estar abajo */
+    max-height: 200px !important;
     overflow-y: auto;
     box-sizing: border-box;
+    width: 100% !important;
 }
 
-/* --- FOOTER Y VENTANAS MODALES --- */
+/* --- FOOTER Y CAPAS MODALES GENERALES --- */
 footer {
     position: relative;
     z-index: 10;
@@ -565,14 +571,13 @@ footer {
 .avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
 .avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; }
 .avatar-selector-grid-item:hover { background: #f1f5f9; }
-.btn-primary-submit { background-color: var(--btn-blue-primary); color: white; border: 1px solid var(--btn-blue-primary); padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; flex: 2; }
-.btn-secondary-cancel { background-color: white; color: #475569; border: 1px solid var(--border-color-light); padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
+.btn-primary-submit { background-color: var(--btn-blue-primary) !important; color: white !important; border: 1px solid var(--btn-blue-primary) !important; padding: 0.65rem 1.2rem !important; border-radius: 0.5rem !important; font-size: 13px !important; font-weight: 600 !important; font-family: inherit !important; cursor: pointer; flex: 2; }
+.btn-secondary-cancel { background-color: white !important; color: #475569 !important; border: 1px solid var(--border-color-light) !important; padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
 .admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
-.bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; }
+.bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px; }
 .text-emerald-dark { color: #166534; }
 
 /* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS */
 .custom-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1 !important; border-radius: 4px !important; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8 !important; }
