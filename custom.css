@@ -575,26 +575,32 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6B DE 7: MODALES EN CASCADA NATURAL, REPORTES PDF Y FOOTER CORPORATIVO
+ * PARTE 6B-1: CONFIGURACIÓN DE CAPAS MODALES TRANSPARENTES FLOTANTES AL FRENTE
  */
 
-/* ================= CAPAS MODALES EN CASCADA PURA (SIN IMPORTANT) ================= */
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 6B-1: EXTINCIÓN DE CONTENEDORES OCULTOS (ANTI RECTÁNGULO BLANCO FANTASMA)
+ */
+
+/* TU CONFIGURACIÓN EXACTA: Mantiene la capa externa con z-index 1 y fondo transparente */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1;
-    background-color: transparent;
-    backdrop-filter: blur(6px);
+    z-index: 1; 
+    background-color: transparent; 
+    backdrop-filter: blur(6px); 
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* La tarjeta blanca recupera su independencia y flota de forma nativa al frente */
+/* EL CERROJO OPERATIVO: Oculta por defecto cualquier rectángulo blanco huérfano en la pantalla */
 .modal-content {
+    display: none; /* Extingue el rectángulo blanco fantasma que se queda pegado de fondo */
     background-color: #ffffff;
     color: var(--text-main-slate);
     border-radius: 1rem;
@@ -603,17 +609,27 @@ main {
     max-width: 32rem;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
     position: relative;
-    z-index: 1001;
 }
+
+/* SEÑALIZACIÓN ESTRICTA: Sólo cuando la capa overlay está activa, se da permiso de dibujar la tarjeta blanca al frente */
+.modal-overlay:not(.hidden) .modal-content {
+    display: block; /* Levanta la tarjeta verdadera al frente sólo cuando presionas un botón */
+    z-index: 10; /* La clava adelante del Dashboard de forma limpia */
+}
+
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 6B-2 DE 7: DETALLES INTERNOS ADMINISTRATIVOS DE LA VENTANA MODAL Y REPORTES PDF
+ */
 
 .modal-inner-header { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    border-bottom: 1px solid #e2e8f0; 
+    border-bottom: 1px solid var(--border-color-soft); 
     padding-bottom: 0.75rem; 
     margin-bottom: 1.25rem; 
 }
@@ -623,7 +639,7 @@ main {
     font-size: 14px; 
     text-transform: uppercase; 
     font-weight: 700; 
-    color: #1e293b; 
+    color: var(--text-main-slate); 
 }
 
 .modal-inner-header button { 
@@ -632,10 +648,10 @@ main {
     font-size: 22px; 
     cursor: pointer; 
     font-weight: bold; 
-    color: #94a3b8; 
+    color: var(--text-muted-blue); 
 }
 
-/* TARJETAS ADMINISTRATIVAS INTERNAS DEL MODAL */
+/* Fichas técnicas y formularios internos del panel de ajustes */
 .admin-config-card { 
     margin-bottom: 1.25rem; 
     background: #f8fafc; 
@@ -704,7 +720,7 @@ main {
 .bg-crimson:hover { background: #9f1239; }
 .font-bold { font-weight: bold; }
 
-/* --- ENCAPSULADO PARA REPORTES EXPORTABLES PDF --- */
+/* Botones de reportes exportables semanales y mensuales (.PDF) */
 .report-export-label-title { font-size: 11px; font-weight: 700; color: var(--text-label-gray); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; }
 .report-buttons-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
 .btn-primary-export { color: #ffffff; padding: 0.75rem 0.5rem; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; cursor: pointer; border: none; transition: filter 0.2s ease; }
@@ -712,7 +728,143 @@ main {
 .bg-sky-export { background-color: #0284c7; }
 .bg-navy-export { background-color: #1e293b; }
 
-/* --- ADAPTATIVOS DE LOGICA RECEPTORA --- */
+/* Variables receptoras de eventos e historial JavaScript */
+.monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; border-radius: 6px; background-color: #f8fafc; }
+.alert-item-title { font-size: 11px; font-weight: bold; color: #1e293b; }
+.alert-item-body { font-size: 12px; margin-top: 0.25rem; color: #475569; }
+.monitor-empty-text { font-size: 13px; text-align: center; margin-top: 1.5rem; color: var(--text-muted-blue); }
+.modal-text-bold { font-size: 13px; margin: 0 0 0.5rem 0; font-weight: 700; }
+.modal-text-muted { font-size: 12px; margin: 0 0 0.5rem 0; color: #475569; }
+.modal-text-muted-spacer { font-size: 12px; margin: 0 0 1rem 0; color: #475569; }
+.modal-action-row-footer { margin-top: 1.25rem; display: flex; gap: 0.5rem; }
+.report-card-gap { gap: 0.75rem; }
+.report-meta-text { font-size: 13px; margin: 0; }
+.report-data-text { font-size: 13px; margin: 0; }
+.report-efficiency-text { font-size: 14px; margin: 0; color: #166534; font-weight: 700; }
+.modal-divider-line { border: none; border-top: 1px solid #e2e8f0; margin: 0.75rem 0; height: 1px; width: 100%; }
+.report-footer-disclaimer { font-size: 11px; color: #64748b; line-height: 1.4; margin: 0; }
+.about-modal-card-labels { display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5; font-size: 13px; color: #334155; }
+.about-modal-card-labels p { margin: 0; }
+.about-modal-footer { font-size: 11px; color: #64748b; text-align: center; margin: 1rem 0 0 0; }
+.avatar-modal-description { font-size: 13px; color: #475569; margin: 0 0 1rem 0; }
+.avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
+.avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; border: 1px solid #e2e8f0; }
+.avatar-selector-grid-item:hover { background: #f1f5f9; }
+.btn-primary-submit { background-color: var(--btn-blue-primary); color: #ffffff; border: none; padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; cursor: pointer; flex: 2; }
+.btn-secondary-cancel { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
+.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
+.bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; padding: 0.5rem; border-radius: 6px; }
+.text-emerald-dark { color: #166534; }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 7 DE 7: FILTRO DE DETALLES INTERNOS DEL MODAL Y SECUENCIA DE FOOTER EN CASCADA
+ */
+
+/* Mantiene el diseño limpio de los encabezados internos de tu ventana flotante */
+.modal-inner-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 1px solid var(--border-color-soft); 
+    padding-bottom: 0.75rem; 
+    margin-bottom: 1.25rem; 
+}
+
+.modal-inner-header h3 { 
+    margin: 0; 
+    font-size: 14px; 
+    text-transform: uppercase; 
+    font-weight: 700; 
+    color: var(--text-main-slate); 
+}
+
+.modal-inner-header button { 
+    background: none; 
+    border: none; 
+    font-size: 22px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    color: var(--text-muted-blue); 
+}
+
+/* Fichas técnicas y formularios internos del panel de ajustes */
+.admin-config-card { 
+    margin-bottom: 1.25rem; 
+    background: #f8fafc; 
+    padding: 1rem; 
+    border-radius: 8px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.5rem; 
+}
+
+.input-inline-row { display: flex; gap: 0.5rem; }
+.input-inline-row input { background: #ffffff; flex: 1; }
+.full-width { width: 100%; }
+.mt-2 { margin-top: 0.5rem; }
+
+.maintenance-critical-card { 
+    background: #fef2f2; 
+    padding: 0.85rem; 
+    border-radius: 8px; 
+    border: 1px solid #fee2e2; 
+    margin-bottom: 1.25rem; 
+}
+
+.maintenance-critical-card label { 
+    font-size: 10px; 
+    font-weight: 700; 
+    color: #991b1b; 
+    text-transform: uppercase; 
+    display: block; 
+    margin-bottom: 0.25rem; 
+}
+
+.maintenance-critical-card p { 
+    font-size: 11px; 
+    color: #7f1d1d; 
+    margin: 0 0 0.5rem 0; 
+    line-height: 1.3; 
+}
+
+.btn-danger-reset { 
+    background: #dc2626; 
+    border: none; 
+    color: #ffffff; 
+    width: 100%; 
+    padding: 0.65rem; 
+    font-size: 11px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: background-color 0.2s ease; 
+}
+
+.btn-danger-reset:hover { background-color: #b91c1c; }
+
+.modal-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
+.modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+.modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+.modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+.bg-navy { background: #1e293b; color: #ffffff; border: none; }
+.bg-navy:hover { background: #0f172a; }
+.bg-sky { background: #0369a1; color: #ffffff; border: none; }
+.bg-sky:hover { background: #0284c7; }
+.bg-crimson { background: #be123c; color: #ffffff; border: none; }
+.bg-crimson:hover { background: #9f1239; }
+.font-bold { font-weight: bold; }
+
+/* Botones de reportes exportables semanales y mensuales (.PDF) */
+.report-export-label-title { font-size: 11px; font-weight: 700; color: var(--text-label-gray); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; }
+.report-buttons-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
+.btn-primary-export { color: #ffffff; padding: 0.75rem 0.5rem; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; cursor: pointer; border: none; transition: filter 0.2s ease; }
+.btn-primary-export:hover { filter: brightness(1.1); }
+.bg-sky-export { background-color: #0284c7; }
+.bg-navy-export { background-color: #1e293b; }
+
+/* Variables receptoras de eventos e historial JavaScript */
 .monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; border-radius: 6px; background-color: #f8fafc; }
 .alert-item-title { font-size: 11px; font-weight: bold; color: #1e293b; }
 .alert-item-body { font-size: 12px; margin-top: 0.25rem; color: #475569; }
@@ -740,7 +892,7 @@ main {
 .bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; padding: 0.5rem; border-radius: 6px; }
 .text-emerald-dark { color: #166534; }
 
-/* ================= CENTRADO ABSOLUTO DEL FOOTER SIN INTERFERENCIAS ================= */
+/* ================= CENTRADO EN CASCADA DEL PIE DE PÁGINA (FOOTER) ================= */
 footer {
     position: relative;
     z-index: 10;
@@ -757,30 +909,7 @@ footer {
     letter-spacing: 0.08em;
 }
 
-/* BARRAS DE DESPLAZAMIENTO NATURALEZAS */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-/* ================= SECUENCIA DE CENTRADO ABSOLUTO PARA EL FOOTER ================= */
-footer {
-    position: relative;
-    z-index: 10;
-    text-align: center; /* Alinea el texto en el centro horizontal exacto */
-    width: 100%;
-    display: block;
-    clear: both;
-    margin: 2rem auto 1rem auto; /* Separa el footer de las tarjetas simétricamente */
-    padding: 1rem 0;
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.75); /* Incrementa la opacidad para legibilidad corporativa */
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-/* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS SUTILES */
+/* Canales de barras de desplazamiento sutiles */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
