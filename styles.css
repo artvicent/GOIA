@@ -204,11 +204,29 @@ main {
     gap: 1rem;
 }
 
+/* --- ENLACE DIRECTO DE IDENTIDAD DE PERFIL (styles.css) --- */
 .profile-identity-block {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    display: flex !important;
+    flex-direction: row !important; /* Fuerza a colocar el texto al lado del avatar */
+    align-items: center !important;
+    gap: 1rem !important;
+    text-align: left !important;
 }
+
+.profile-text-labels {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    text-align: left !important;
+}
+
+/* Evita que los textos hereden alineaciones secundarias */
+.profile-text-labels h2, 
+.profile-text-labels p {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
 
 .avatar-frame {
     width: 3rem;
