@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <link rel="stylesheet" href="styles.css">
+    <!-- CERROJO DE ESTILOS: Fuerza al navegador a leer el diseño nuevo de inmediato -->
+    <link rel="stylesheet" href="styles.css?v=124">
 </head>
 <body>
 
@@ -196,7 +197,7 @@
                     }
                 }
             }
-        }, 300); // Sincroniza y vigila la interfaz de forma síncrona cada 300 milisegundos
+        }, 300);
 
         setTimeout(function() {
             if (typeof App !== 'undefined') {
