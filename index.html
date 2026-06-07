@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <!-- CONEXIÓN COMPACTA CON EL NUEVO ARCHIVO DE DISEÑO -->
+    <!-- CONEXIÓN LIMPIA INDEPENDIENTE DE NUEVO NOMBRE -->
     <link rel="stylesheet" href="custom.css">
 </head>
 <body>
@@ -13,8 +13,8 @@
     <div class="background-master-container"></div>
     <img src="1.jpeg" class="background-image-canvas" alt="Fondo">
 
-    <!-- 1. ENCABEZADO SUPERIOR DE CONTROL -->
-    <header id="topBanner" class="hidden">
+    <!-- 1. ENCABEZADO SUPERIOR DE CONTROL FORCE -->
+    <header id="topBanner">
         <div class="gerencia-meta-label">
             <span>Gerencia:</span>
             <span id="displayGerenciaName">Cargando...</span>
@@ -57,7 +57,7 @@
         </section>
         <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
         <section id="viewDashboard" class="view-card max-w-7xl hidden">
-            <!-- BARRA TOP REORGANIZADA DE FORMA LINEAL -->
+            <!-- BARRA TOP REORGANIZADA DE FORMA LINEAL Y SECUENCIAL -->
             <div class="dashboard-top-bar">
                 
                     <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">👤</div>
@@ -241,7 +241,7 @@
                             <button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button>
                             <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button>
                         </div>
-                        <div class="modal-single-row">
+                        <div class="modal-grid-buttons modal-single-row">
                             <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
                         </div>`;
                 };
