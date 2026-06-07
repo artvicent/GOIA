@@ -1,6 +1,6 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 1 DE 3: VARIABLES, CONFIGURACIÓN DE LIENZO Y CAPAS DE FONDO CON OPACIDAD
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS (custom.css)
+ * PARTE 1 DE 5: VARIABLES DE INTERFAZ, LIENZO Y CAPAS DE FONDO CON OPACIDAD
  */
 @import url('https://googleapis.com');
 
@@ -27,7 +27,7 @@ body {
     box-sizing: border-box;
 }
 
-/* --- CAPAS DE FONDO DEL LIENZO --- */
+/* --- CAPAS DE INTEGRIDAD DEL LIENZO DE FONDO (1.jpeg) --- */
 .background-master-container {
     position: fixed;
     top: 0;
@@ -49,13 +49,15 @@ body {
     pointer-events: none;
     opacity: 0.6;
 }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS (custom.css)
+ * PARTE 2 DE 5: CONTENEDORES SPA, LOGIN DETALLADO (ANTI BARRA BLANCA) Y BANNER
+ */
 
-/* --- DISEÑO DE CONTENEDORES SPA --- */
+/* --- ESTRUCTURA GENERAL DE CONTENEDORES SPA --- */
 main {
     position: relative;
     z-index: 10;
-    background: transparent !important;
-    background-color: transparent !important;
     min-height: calc(100vh - 60px);
     display: flex;
     align-items: center;
@@ -74,15 +76,11 @@ main {
 .max-w-md { max-width: 28rem; }
 .max-w-7xl { max-width: 80rem; }
 .hidden { display: none !important; }
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 2 DE 3: ACCESO, CABECERA OSCURA BANCO, PERFIL CON SOLUCIÓN DE REPETICIÓN Y BOTONES
- */
 
-/* --- SECCIÓN A: LOGIN CORPORATIVO --- */
+/* --- SECCIÓN A: ACCESO CORPORATIVO (FORMULARIO) --- */
 #viewLogin {
     padding: 2rem;
-    background-color: var(--card-bg-white) !important;
+    background-color: var(--card-bg-white);
     backdrop-filter: blur(8px);
 }
 
@@ -126,6 +124,7 @@ main {
     margin: 0;
 }
 
+/* AISLAMIENTO CRÍTICO INDESTRUCTIBLE: Fuerza la transparencia del subtítulo */
 .login-header p {
     font-size: 10px;
     color: var(--text-muted-blue);
@@ -133,25 +132,33 @@ main {
     letter-spacing: 0.1em;
     font-weight: 600;
     margin-top: 0.25rem;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    box-shadow: none !important;
+    display: block !important;
 }
 
-/* --- SECCIÓN B: EFECTO DE BANNER SUPERIOR OSCURO NATIVO --- */
+/* --- SECCIÓN B: ENCABEZADO SUPERIOR OSCURO INSTITUCIONAL --- */
 #topBanner {
     position: relative;
     z-index: 100;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 0.75rem 2rem !important;
-    background-color: rgba(15, 23, 42, 0.85) !important;
-    backdrop-filter: blur(8px) !important;
-    color: white !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    color: white;
 }
 
 .gerencia-meta-label, .merit-podium {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .gerencia-meta-label span:first-child {
@@ -177,20 +184,24 @@ main {
     font-size: 0.75rem;
     color: #ecfdf5;
 }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS (custom.css)
+ * PARTE 3 DE 5: BARRA DEL DASHBOARD, IDENTIDAD DE PERFIL LINEAL Y BOTONES DE CONTROL
+ */
 
-/* --- SECCIÓN C: BARRA TOP REORGANIZADA DE FORMA LINEAL --- */
+/* --- SECCIÓN C: BARRA TOP DEL DASHBOARD --- */
 #viewDashboard {
     padding: 1.5rem;
-    background-color: var(--card-bg-dash) !important;
+    background-color: var(--card-bg-dash);
     backdrop-filter: blur(10px);
     align-self: flex-start;
     margin-top: 1rem;
 }
 
 .dashboard-top-bar {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid var(--border-color-soft);
     padding-bottom: 1rem;
     margin-bottom: 1.5rem;
@@ -199,13 +210,13 @@ main {
     width: 100%;
 }
 
-/* DECLARACIÓN ÚNICA SANEADA: Evita herencias contradictorias en cascada */
+/* CERROJO DE FILA: Une el avatar y el texto juntos a la izquierda sin importar el espacio */
 .profile-identity-block {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    text-align: left !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
 }
 
 .avatar-frame {
@@ -220,23 +231,21 @@ main {
     border: 1px solid var(--border-color-light);
     cursor: pointer;
     overflow: hidden;
-    background-size: cover;
-    background-position: center;
 }
 
 .profile-text-labels {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    text-align: left !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
 }
 
 .profile-text-labels h2 {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-main-slate);
-    margin: 0 !important;
-    text-align: left !important;
+    margin: 0;
+    text-align: left;
 }
 
 .profile-text-labels p {
@@ -244,8 +253,8 @@ main {
     font-weight: 600;
     text-transform: uppercase;
     color: var(--text-muted-blue);
-    margin: 0 !important;
-    text-align: left !important;
+    margin: 0;
+    text-align: left;
 }
 
 .action-buttons-group {
@@ -254,7 +263,7 @@ main {
     flex-wrap: wrap;
 }
 
-/* --- CONTROLADORES DE COMPONENTES BÁSICOS --- */
+/* --- LOGICA GENERAL DE BOTONES CORPORATIVOS --- */
 .form-group { display: flex; flex-direction: column; }
 .form-group-header-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
 .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-label-gray); margin-bottom: 0.25rem; }
@@ -269,11 +278,11 @@ main {
 .btn-logout { color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; }
 .btn-logout:hover { background-color: #ffe4e6; }
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 3 DE 3: CONTADORES, DISEÑO EN SPLIT, TABLAS, MONITOR LATERAL Y CLASES MODALES
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS (custom.css)
+ * PARTE 4 DE 5: CONTADORES SEGMENTADOS, DIVISIÓN EN SPLIT Y TABLAS OPERATIVAS
  */
 
-/* --- PANEL DE CONTADORES DE MÉTRICA --- */
+/* --- PANEL DE CONTADORES DE MÉTRICA CONTROLADO EN GRID --- */
 .grid-counters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -287,11 +296,19 @@ main {
     box-sizing: border-box;
 }
 
-.counter-card p:first-child {
+/* SEGMENTACIÓN ABSOLUTA: Estas propiedades solo aplican dentro de las tarjetas del Dashboard */
+.grid-counters .counter-card p {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     margin: 0;
+    padding: 0;
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    width: auto;
+    display: block;
 }
 
 .counter-num {
@@ -373,7 +390,6 @@ main {
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
-    display: none;
     padding: 0;
 }
 
@@ -407,6 +423,10 @@ main {
     border-bottom: 1px solid var(--border-color-soft);
     color: #334155;
 }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS (custom.css)
+ * PARTE 5 DE 5: MONITOR DE ALERTAS, VENTANAS MODALES ADM Y BARRAS DE SCROLLBAR
+ */
 
 /* --- COMPONENTE LATERAL DE ALERTAS MONITOR --- */
 .split-side-panel h3 {
@@ -429,7 +449,7 @@ main {
     box-sizing: border-box;
 }
 
-/* --- FOOTER Y MODALES --- */
+/* --- FOOTER Y MODALES COBERTURA GENERAL --- */
 footer {
     position: relative;
     z-index: 10;
@@ -447,7 +467,7 @@ footer {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 100;
+    z-index: 1000;
     background-color: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(4px);
     display: flex;
@@ -467,7 +487,7 @@ footer {
     box-sizing: border-box;
 }
 
-/* --- CLASES COMPLEMENTARIAS PARA MODAL INYECTADO ADM --- */
+/* --- CLASES COMPLEMENTARIAS MODALES ADM INYECTADOS --- */
 .modal-inner-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 0.5rem; margin-bottom: 1rem; }
 .modal-inner-header h3 { margin: 0; font-size: 13px; text-transform: uppercase; font-weight: 700; color: #1e293b; }
 .modal-inner-header button { background: none; border: none; font-size: 18px; cursor: pointer; font-weight: bold; color: #64748b; }
@@ -482,19 +502,19 @@ footer {
 .maintenance-critical-card p { font-size: 10px; color: #7f1d1d; margin: 0 0 0.4rem 0; line-height: 1.2; }
 .btn-danger-reset { background: #dc2626; border: 1px solid #b91c1c; color: white; width: 100%; padding: 0.5rem; font-size: 10px; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
 .btn-danger-reset:hover { background-color: #b91c1c; }
-.modal-grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
+.modal-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
 .modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
 .modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
 .modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-.bg-navy { background: #1e293b !important; border-color: #1e293b !important; }
-.bg-navy:hover { background: #0f172a !important; }
-.bg-sky { background: #0369a1 !important; border-color: #0369a1 !important; }
-.bg-sky:hover { background: #0284c7 !important; }
-.bg-crimson { background: #be123c !important; border-color: #be123c !important; }
-.bg-crimson:hover { background: #9f1239 !important; }
-.font-bold { font-weight: bold !important; }
+.bg-navy { background: #1e293b; border-color: #1e293b; }
+.bg-navy:hover { background: #0f172a; }
+.bg-sky { background: #0369a1; border-color: #0369a1; }
+.bg-sky:hover { background: #0284c7; }
+.bg-crimson { background: #be123c; border-color: #be123c; }
+.bg-crimson:hover { background: #9f1239; }
+.font-bold { font-weight: bold; }
 
-/* --- COMPONENTES VISUALES MAESTROS PARA APP-EXECUTIVE (custom.css) --- */
+/* --- ADAPTATIVOS DE LOGICA JAVASCRIPT --- */
 .monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; }
 .alert-item-title { font-size: 10px; font-weight: bold; }
 .alert-item-body { font-size: 11px; margin-top: 0.25rem; }
@@ -503,8 +523,6 @@ footer {
 .modal-text-muted { font-size: 12px; margin: 0 0 0.5rem 0; color: #475569; }
 .modal-text-muted-spacer { font-size: 12px; margin: 0 0 1rem 0; color: #475569; }
 .modal-action-row-footer { margin-top: 1rem; display: flex; gap: 0.5rem; }
-.btn-success-finish { background-color: #059669 !important; border-color: #059669 !important; flex: 1; font-size: 11px; text-transform: uppercase; }
-.btn-success-finish:hover { background-color: #047857 !important; }
 .report-card-gap { gap: 0.75rem; }
 .report-meta-text { font-size: 13px; margin: 0; }
 .report-data-text { font-size: 12px; margin: 0; }
@@ -518,9 +536,36 @@ footer {
 .avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
 .avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; }
 .avatar-selector-grid-item:hover { background: #f1f5f9; }
+.btn-primary-submit { background-color: var(--btn-blue-primary); color: white; border: 1px solid var(--btn-blue-primary); padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; flex: 2; }
+.btn-secondary-cancel { background-color: white; color: #475569; border: 1px solid var(--border-color-light); padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
+.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
+.bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; }
+.text-emerald-dark { color: #166534; }
 
-/* SCROLLBAR PERSONALIZADO INTERNO */
+/* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* --- DISEÑO EXCLUSIVO PARA EL BOTÓN DE INGRESO AL SISTEMA (custom.css) --- */
+.btn-primary-login {
+    background-color: var(--btn-blue-primary) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--btn-blue-primary) !important;
+    padding: 0.75rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    margin-top: 0.5rem !important;
+    width: 100% !important;
+    display: block !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.btn-primary-login:hover {
+    background-color: var(--btn-blue-hover) !important;
+    border-color: var(--btn-blue-hover) !important;
+}

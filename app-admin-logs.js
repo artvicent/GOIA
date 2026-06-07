@@ -1,69 +1,120 @@
 /**
- * ADMINISTRACIÓN PARTE E: VISOR MAESTRO DE LOGS DE AUDITORÍA (app-admin-logs.js)
- * Conexión Directa al Historial Unificado Físico de Red
+ * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+ * PARTE 3 DE 3: MATRIZ DE PERMISOS JERÁRQUICOS Y RECUPERACIÓN DE ACCESOS
  */
 
-App.openAuditLogsMenu = function() {
-    // 1. Recuperar los logs directamente de la matriz unificada de red
-    const logs = AppDB.data.logs || [];
-    let rows = "";
+// CERROJO DE PERMISOS: Validación de jerarquías basada en clases CSS semánticas
+App.applySecurityCerberusPermissions = function() {
+    if (!this.currentUser) return;
 
-    // 2. Renderizar de forma inversa (lo más nuevo arriba)
-    for (let i = logs.length - 1; i >= 0; i--) {
-        const log = logs[i];
-        if (!log.timestamp) continue;
-        
-        const dateObj = new Date(log.timestamp);
-        const timeStr = dateObj.toLocaleTimeString();
-        const dateStr = dateObj.toLocaleDateString();
+    const btnAdmin = document.getElementById("btnAdminPanel");
+    const btnNewAsig = document.getElementById("btnNewAssignment");
 
-        let actionBadgeColor = "background:#f1f5f9; color:#475569;";
-        if (log.action.includes("FAIL") || log.action.includes("DELETE") || log.action.includes("BLOQ") || log.action.includes("LOGOUT")) {
-            actionBadgeColor = "background:#fee2e2; color:#b91c1c; font-weight:bold;";
-        } else if (log.action.includes("CREATE") || log.action.includes("SUCCESS") || log.action.includes("ASSIGN")) {
-            actionBadgeColor = "background:#dcfce7; color:#15803d; font-weight:bold;";
-        } else if (log.action.includes("EXECUTE") || log.action.includes("BATCH")) {
-            actionBadgeColor = "background:#eff6ff; color:#1d4ed8;";
+    // Consultar el nivel operacional (lvl) sembrado en db.js
+    const userRole = this.currentUser.role;
+    const roleMeta = AppDB.data.roles[userRole];
+    const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
+    const permissions = (roleMeta && roleMeta.perms) ? roleMeta.perms : [];
+    const isMaster = (this.currentUser.username === "admin");
+
+    // REGLA DE ORO PCI: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
+    if (btnAdmin) {
+        if (isMaster || userLevel >= 3) {
+            btnAdmin.classList.remove("hidden");
+        } else {
+            btnAdmin.classList.add("hidden");
         }
-
-        rows += `
-            <tr style="border-bottom:1px solid #e2e8f0; font-size:11px;">
-                <td style="padding:6px; color:#64748b; white-space:nowrap;">${dateStr}<br><small>${timeStr}</small></td>
-                <td style="padding:6px; font-weight:bold; color:#0f172a;">${log.user.toUpperCase()}</td>
-                <td style="padding:6px; text-align:center;">
-                    <span style="font-size:9px; padding:2px 5px; border-radius:4px; ${actionBadgeColor}">${log.action}</span>
-                </td>
-                <td style="padding:6px; color:#334155; max-width:180px; word-break:break-word;">${log.details || "Sin descripción"}</td>
-            </tr>`;
     }
 
-    document.getElementById("modalContent").innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:0.5rem;margin-bottom:1rem;">
-            <h3 style="margin:0;font-size:12px;text-transform:uppercase;font-weight:700;color:#9f1239;">Bitácora de Auditoría Gerencial</h3>
-            <button onclick="App.openAdminMenu()" class="btn-secondary" style="padding:2px 6px;font-size:10px;">&larr; Volver</button>
-        </div>
-        
-        <p style="font-size:10px; color:#64748b; margin:0 0 0.75rem 0; text-transform:uppercase; font-weight:bold;">
-            Historial unificado: ${logs.length} transacciones registradas de forma segura en disco.
-        </p>
+    // CONTROL DE ASIGNACIÓN: El comportamiento visual se delega 100% a la clase .hidden
+    if (btnNewAsig) {
+        if (isMaster || userLevel >= 3 || permissions.includes("crear")) {
+            btnNewAsig.classList.remove("hidden");
+        } else {
+            btnNewAsig.classList.add("hidden");
+        }
+    }
+};
 
-        <div style="max-height:320px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;" class="custom-scrollbar">
-            <table style="width:100%; border-collapse:collapse; text-align:left;">
-                <thead>
-                    <tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:9px; border-bottom:1px solid #cbd5e1;">
-                        <th style="padding:6px;">Fecha/Hora</th>
-                        <th style="padding:6px;">Usuario</th>
-                        <th style="padding:6px; text-align:center;">Acción</th>
-                        <th style="padding:6px;">Detalles del Movimiento</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows || '<tr><td colspan="4" style="text-align:center; padding:2rem; color:#94a3b8; font-style:italic;">No se registran movimientos en la bitácora aún.</td></tr>'}
-                </tbody>
-            </table>
+// Abrir formulario corporativo de blanqueo o recuperación de accesos bloqueados
+App.showRecoveryFormGlobal = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>Restablecer Credenciales de Acceso</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
         </div>
         
-        <div style="margin-top:1rem; text-align:right;" class="no-print">
-            <button onclick="window.print()" class="btn-primary" style="padding:0.5rem 1rem; font-size:10px; font-weight:bold; background:#be123c;">🖨️ IMPRIMIR BITÁCORA</button>
-        </div>`;
+        <form id="fRecovery" onsubmit="App.executeRecoveryWorkflow(event)" class="admin-config-card">
+            <div class="form-group">
+                <label>Usuario Corporativo Afectado</label>
+                <input type="text" id="recUser" required class="form-control" placeholder="Ej: jperez">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Pregunta de Seguridad Obligatoria</label>
+                <input type="text" class="form-control" value="¿Cuál es el nombre de su primera mascota?" disabled>
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Respuesta Secreta de Validación</label>
+                <input type="text" id="recAnswer" required class="form-control" placeholder="Escriba su respuesta">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Nueva Contraseña Solicitada</label>
+                <input type="password" id="recNewPass" required class="form-control" placeholder="••••••••">
+            </div>
+            
+            <div class="modal-action-row-footer">
+                <button type="submit" class="btn-primary-submit">Blanquear Acceso</button>
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+            </div>
+        </form>
+    `;
+};
+
+// Procesar el flujo de recuperación y desbloqueo cloud en caliente
+App.executeRecoveryWorkflow = function(e) {
+    e.preventDefault();
+    
+    const u = document.getElementById("recUser").value.toLowerCase().trim();
+    const ans = document.getElementById("recAnswer").value.toLowerCase().trim();
+    const newPass = document.getElementById("recNewPass").value;
+
+    const user = AppDB.data.users[u];
+    if (!user) return alert("Operación rechazada: El usuario ingresado no existe en la nómina cloud.");
+
+    // Validar concordancia de respuesta con el Hash sembrado en la base de datos
+    if (user.securityQuestions && user.securityQuestions.a === AppDB.hash(ans)) {
+        
+        // Ejecutar validación de robustez de contraseña nativa
+        if (typeof App.validatePasswordStrength === "function") {
+            const check = App.validatePasswordStrength(newPass);
+            if (!check.valid) return alert(check.msg);
+        }
+
+        const hashedNewPass = AppDB.hash(newPass);
+        
+        // Actualizar datos, reiniciar intentos fallidos y desbloquear cuenta
+        user.password = hashedNewPass;
+        user.failedAttempts = 0;
+        user.status = "active";
+        user.passwordChangedDate = new Date().toISOString();
+        if (!user.passwordHistory) user.passwordHistory = [];
+        user.passwordHistory.push(hashedNewPass);
+
+        AppDB.save();
+        AppDB.addLog(u, "RECUPERACION_EXITOSA", "El usuario restableció su clave y desbloqueó la cuenta.");
+        
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert("¡AUTENTICACIÓN INTEGRAL CONCLUIDA! Su contraseña ha sido modificada y su cuenta se encuentra activa.");
+    } else {
+        alert("Validación fallida: La respuesta secreta ingresada es incorrecta.");
+    }
+};
+
+// Cargar la inicialización por defecto del sistema al levantar la ventana
+window.onload = function() {
+    App.init();
 };

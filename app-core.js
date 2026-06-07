@@ -1,302 +1,253 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - MÓDULO CORE TRAZABLE INTERACTIVO (app-core.js)
- * FRAGMENTO 1 DE 2 - CONTROL DE INICIO, SESIÓN Y VALIDACIÓN DE EXPIRACIÓN EN RED
+ * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+ * PARTE 1 DE 3: RUTEO DE VISTAS SPA, CONTROL DE SESIÓN Y CARGA DE INTERFAZ
+ * 100% LIBRE DE ESTILOS INTRUSIVOS Y PROPIEDADES .STYLE
  */
 
 const App = {
     currentUser: null,
 
-        init() {
-        this.updateHeaderGerencia();
-        this.renderCorporateLogo(); 
-        this.checkAutoResetMonthly();
-        if (typeof this.renderTopWorker === 'function') this.renderTopWorker();
-        setInterval(() => this.refreshTimeAlerts(), 30000);
-    },
-
-
-
-    updateHeaderGerencia() {
-        document.getElementById("displayGerenciaName").innerText = AppDB.data.config.title || "Gerencia de Adquirencia";
-    },
-
-    async handleLogin(e) {
-        e.preventDefault();
-        const user = document.getElementById("loginUser").value.toLowerCase().trim();
-        const pass = document.getElementById("loginPass").value;
-
-        const res = await AppDB.login(user, pass);
-        if (res.success) {
-            this.currentUser = AppDB.data.users[user];
-            this.showDashboard();
-        } else {
-            alert(res.msg);
+    init() {
+        // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
+        const topBanner = document.getElementById("topBanner");
+        if (topBanner) {
+            topBanner.classList.add("hidden");
         }
+        this.showView("viewLogin");
     },
 
-        logout() {
-        // Registrar la salida en la bitácora local de forma directa y segura
-        if (this.currentUser && typeof AppDB.addLog === 'function') {
-            AppDB.addLog(this.currentUser.username, "LOGOUT", "Cierre de sesion exitoso");
+    // Ruteador lógico SPA puro basado en clases CSS .hidden
+    showView(viewId) {
+        const views = ["viewLogin", "viewDashboard"];
+        views.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === viewId) {
+                    el.classList.remove("hidden");
+                } else {
+                    el.classList.add("hidden");
+                }
+            }
+        });
+    },
+
+    // Cargar los letreros y componentes dinámicos del perfil al ingresar
+    setupDashboardView() {
+        if (!this.currentUser) return;
+
+        const welcomeName = document.getElementById("dashWelcomeName");
+        const userRole = document.getElementById("dashUserRole");
+        const avatarFrame = document.getElementById("userAvatarFrame");
+
+        if (welcomeName) welcomeName.innerText = `${this.currentUser.names} ${this.currentUser.lastnames}`;
+        if (userRole) userRole.innerText = this.currentUser.role;
+        
+        if (avatarFrame) {
+            avatarFrame.innerText = this.currentUser.avatar || "👤";
         }
-        
-        // Limpiar la sesión activa en el hilo de ejecucion
-        this.currentUser = null;
-        
-        // Forzar el cambio visual inmediato ocultando los paneles del Dashboard
-        document.getElementById("viewDashboard").classList.add("hidden");
-        document.getElementById("topBanner").classList.add("hidden");
-        
-        // Mostrar la pantalla exterior de login corporativo totalmente despejada
-        document.getElementById("viewLogin").classList.remove("hidden");
-        document.getElementById("formLogin").reset();
-    },
 
+        // Mostrar el banner superior de control de forma limpia
+        const topBanner = document.getElementById("topBanner");
+        if (topBanner) {
+            topBanner.classList.remove("hidden");
+        }
 
-    showDashboard() {
-        const lastChange = this.currentUser.passwordChangedDate ? new Date(this.currentUser.passwordChangedDate) : new Date();
+        this.applySecurityCerberusPermissions();
+        this.showView("viewDashboard");
+        
+        // Disparar render de tablas operacionales del archivo app-executive
+        if (typeof App.renderDashboardData === "function") {
+            App.renderDashboardData();
+        }
+    }
+};
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+ * PARTE 2 DE 3: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN
+ */
+
+App.handleLogin = async function(e) {
+    e.preventDefault();
+    
+    const userField = document.getElementById("loginUser");
+    const passField = document.getElementById("loginPass");
+    if (!userField || !passField) return;
+
+    const username = userField.value.trim();
+    const password = passField.value;
+
+    // Llamar a la pasarela cifrada de la base de datos cloud en db.js
+    const result = await AppDB.login(username, password);
+
+    if (result.success) {
+        this.currentUser = result.user;
+        
+        // Evaluar políticas de caducidad de clave corporativa (Requerimiento PCI-DSS)
+        const passDate = new Date(this.currentUser.passwordChangedDate);
         const expiryDays = AppDB.data.config.passwordExpiryDays || 90;
-        const diffTime = Math.abs(new Date() - lastChange);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((new Date() - passDate) / (1000 * 60 * 60 * 24));
 
-        if (diffDays > expiryDays && this.currentUser.username !== "admin") {
-            alert(`SU CONTRASEÑA HA EXPIRADO (Límite: ${expiryDays} días). Debe actualizar sus credenciales.`);
-            if (typeof App.openForcedPasswordChangeModal === 'function') App.openForcedPasswordChangeModal();
+        if (diffDays >= expiryDays && username !== "admin") {
+            alert("🔒 SEGURIDAD BANCARIA: Su contraseña ha caducado. Debe actualizarla de inmediato.");
+            this.openForcePasswordChangeModal();
             return;
         }
 
-        document.getElementById("viewLogin").classList.add("hidden");
-        document.getElementById("viewDashboard").classList.remove("hidden");
-        document.getElementById("topBanner").classList.remove("hidden");
-
-        document.getElementById("dashWelcomeName").innerText = `${this.currentUser.names} ${this.currentUser.lastnames || ""}`;
-        document.getElementById("dashUserRole").innerText = this.currentUser.role;
-
-        const avatarFrame = document.getElementById("userAvatarFrame");
-        if (this.currentUser.avatar && this.currentUser.avatar.startsWith("data:image")) {
-            avatarFrame.innerText = ""; avatarFrame.style.backgroundImage = `url('${this.currentUser.avatar}')`;
-        } else {
-            avatarFrame.style.backgroundImage = "none"; avatarFrame.innerText = this.currentUser.avatar || "👤";
+        // Si la clave es la de fábrica, forzar la actualización preventiva
+        if (password === "Admin2026*" && username === "admin") {
+            alert("⚠️ ALERTA: Utiliza la contraseña genérica. Modifíquela por políticas de resguardo.");
+            this.openForcePasswordChangeModal();
+            return;
         }
 
-        const roleData = AppDB.data.roles[this.currentUser.role] || { perms: [] };
-        const p = roleData.perms || [];
-        const isMaster = p.includes("all") || this.currentUser.username === "admin" || this.currentUser.role === "Administrador" || this.currentUser.role === "Gerente";
+        userField.value = "";
+        passField.value = "";
+        
+        // Levantar la pantalla principal sincronizada
+        this.setupDashboardView();
+        
+    } else {
+        alert(result.msg);
+    }
+};
 
-               // ==========================================================================
-        // FILTRO DE SEGURIDAD ESTRICTO POR NIVEL COGNITIVO JERÁRQUICO (CORREGIDO)
-        // ==========================================================================
-        const btnAdmin = document.getElementById("btnAdminPanel");
-        const btnNewAsig = document.getElementById("btnNewAssignment");
+// Cierre de sesión y limpieza de hilos activos de memoria RAM
+App.logout = function() {
+    if (this.currentUser) {
+        AppDB.addLog(this.currentUser.username, "LOGOUT", "Cierre de sesion voluntario.");
+    }
+    this.currentUser = null;
+    
+    const userField = document.getElementById("loginUser");
+    const passField = document.getElementById("loginPass");
+    if (userField) userField.value = "";
+    if (passField) passField.value = "";
 
-        // Obtener el rol del usuario actual y buscar su nivel (lvl) real de base de datos
-        var userRole = App.currentUser.role;
-        var roleMeta = AppDB.data.roles[userRole];
-        var userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
+    const topBanner = document.getElementById("topBanner");
+    if (topBanner) {
+        topBanner.classList.add("hidden");
+    }
 
-        // REGLA DE ORO: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
+    this.showView("viewLogin");
+    alert("Sesión finalizada de forma segura.");
+};
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+ * PARTE 3 DE 3: MATRIZ DE PERMISOS JERÁRQUICOS Y RECUPERACIÓN DE ACCESOS
+ */
+
+// CERROJO DE PERMISOS: Validación de jerarquías basada en clases CSS semánticas
+App.applySecurityCerberusPermissions = function() {
+    if (!this.currentUser) return;
+
+    const btnAdmin = document.getElementById("btnAdminPanel");
+    const btnNewAsig = document.getElementById("btnNewAssignment");
+
+    // Consultar el nivel operacional (lvl) sembrado en db.js
+    const userRole = this.currentUser.role;
+    const roleMeta = AppDB.data.roles[userRole];
+    const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
+    const permissions = (roleMeta && roleMeta.perms) ? roleMeta.perms : [];
+    const isMaster = (this.currentUser.username === "admin");
+
+    // REGLA DE ORO PCI: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
+    if (btnAdmin) {
         if (isMaster || userLevel >= 3) {
             btnAdmin.classList.remove("hidden");
         } else {
             btnAdmin.classList.add("hidden");
         }
+    }
 
-        // CONTROL DE ASIGNACIÓN: Solo niveles autorizados (o permisos explícitos de creación)
-        if (isMaster || userLevel >= 3 || p.includes("crear")) {
-            if (btnNewAsig) btnNewAsig.style.display = "inline-block";
+    // CONTROL DE ASIGNACIÓN: El comportamiento visual se delega 100% a la clase .hidden
+    if (btnNewAsig) {
+        if (isMaster || userLevel >= 3 || permissions.includes("crear")) {
+            btnNewAsig.classList.remove("hidden");
         } else {
-            if (btnNewAsig) btnNewAsig.style.display = "none";
-        }
-
-
-        this.renderDashboardData();
-        if (typeof this.renderTopWorker === 'function') this.renderTopWorker();
-    },
-
-    checkAutoResetMonthly() {
-        const now = new Date();
-        const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
-        const lastReset = localStorage.getItem("LAST_MONTHLY_RESET");
-
-        if (lastReset && lastReset !== currentMonthYear) {
-            const oldMonth = lastReset.split("-");
-            AppDB.data.assignments.forEach(asig => {
-                if (!asig.assignmentPeriod) asig.assignmentPeriod = oldMonth;
-            });
-            AppDB.save(); localStorage.setItem("LAST_MONTHLY_RESET", currentMonthYear);
-        } else if (!lastReset) {
-            localStorage.setItem("LAST_MONTHLY_RESET", currentMonthYear);
+            btnNewAsig.classList.add("hidden");
         }
     }
 };
-//segunda parte
-/**
- * FRAGMENTO 2 DE 2 - TABLEROS CON ESTAMPAS CRONOLÓGICAS DE SOLICITUD Y RESOLUCIÓN
- */
 
-App.renderDashboardData = function() {
-    const tableBody = document.getElementById("tableAssignmentsBody");
-    if (!tableBody) return; tableBody.innerHTML = "";
-
-    let totalRealizadas = 0; let warningCount = 0; let dangerCount = 0; let onTimeCount = 0;
-
-    const roleData = AppDB.data.roles[this.currentUser.role] || { perms: [] };
-    const p = roleData.perms || [];
-    const isMaster = p.includes("all") || this.currentUser.username === "admin" || this.currentUser.role === "Gerente" || this.currentUser.role === "Administrador";
-
-    let filtered = AppDB.data.assignments || [];
-    if (!isMaster) {
-        filtered = filtered.filter(asig => asig.assignedTo.toLowerCase().trim() === this.currentUser.username.toLowerCase().trim());
-    }
-
-    const selectedPeriod = document.getElementById("filterAuditMonth") ? document.getElementById("filterAuditMonth").value : "current";
-    const now = new Date(); const activeMonth = (now.getMonth() + 1).toString();
-
-    if (selectedPeriod === "current") {
-        filtered = filtered.filter(asig => !asig.assignmentPeriod || asig.assignmentPeriod === activeMonth);
-    } else {
-        filtered = filtered.filter(asig => asig.assignmentPeriod === selectedPeriod);
-    }
-
-    const filterStatus = document.getElementById("filterAssignmentStatus") ? document.getElementById("filterAssignmentStatus").value : "all";
-    if (filterStatus === "pending") filtered = filtered.filter(asig => asig.processed < asig.targetQuantity);
-    if (filterStatus === "completed") filtered = filtered.filter(asig => asig.processed >= asig.targetQuantity);
-    if (filterStatus === "expired") {
-        filtered = filtered.filter(asig => (asig.processed < asig.targetQuantity) && ((new Date(asig.deadline) - new Date()) <= 0));
-    }
-
-    if (filtered.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:2rem; font-style:italic;">No se registran actividades bajo este criterio.</td></tr>`;
-        if (typeof this.renderMonitorPanel === 'function') this.renderMonitorPanel(0, 0, 0, 0);
-        return;
-    }
-
-    filtered.forEach((asig) => {
-        const realIndex = AppDB.data.assignments.indexOf(asig);
-        const evaluationTime = asig.completionTime ? new Date(asig.completionTime) : new Date();
-        const timeDiff = new Date(asig.deadline) - evaluationTime;
-        const minutesLeft = Math.floor(timeDiff / 60000);
+// Abrir formulario corporativo de blanqueo o recuperación de accesos bloqueados
+App.showRecoveryFormGlobal = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>Restablecer Credenciales de Acceso</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
         
-        let timeStr = ""; let rowClass = "";
-        const isCompleted = asig.processed >= asig.targetQuantity;
-
-        if (isCompleted) {
-            const finalOvertime = asig.overtimeCount || 0;
-            rowClass = finalOvertime > 0 ? "row-completed-overtime" : "row-completed-ontime";
-            timeStr = finalOvertime > 0 ? "A Destiempo" : "A Tiempo";
-        } else {
-            if (minutesLeft <= 0) {
-                timeStr = "Vencido"; dangerCount++; rowClass = "alert-danger";
-            } else if (minutesLeft <= 30) {
-                timeStr = `Por vencer (${minutesLeft}m)`; warningCount++; rowClass = "alert-warning";
-            } else {
-                timeStr = `${minutesLeft} min`;
-            }
-        }
-
-        totalRealizadas += asig.processed;
-        onTimeCount += (asig.processed - (asig.overtimeCount || 0));
-
-        let originDisplay = "";
-        if (asig.sourceReference) {
-            if (asig.sourceReference.startsWith("http")) {
-                originDisplay = `<div style="user-select: text; -webkit-user-select: text;"><a href="${asig.sourceReference}" target="_blank" style="color:#2563eb; font-weight:bold; text-decoration:underline; font-size:10px; display:inline-block; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🔗 Ir a Zoho Mail</a></div>`;
-            } else {
-                originDisplay = `<div style="user-select: text; -webkit-user-select: text; font-size:10px; color:#475569; font-weight:600; background:#f1f5f9; padding:2px 4px; border-radius:4px; display:inline-block; word-break:break-all;">${asig.sourceReference}</div>`;
-            }
-        } else {
-            originDisplay = `<span style="color:#94a3b8; font-style:italic; font-size:10px;">No registrado</span>`;
-        }
-
-        let actionField = "";
-        if (selectedPeriod !== "current") {
-            actionField = `<span style="color:#64748b; font-style:italic; font-size:10px;">🔒 Historial</span>`;
-        } else if (isCompleted) {
-            // MOSTRAR FECHA Y HORA DE RESOLUCIÓN CUANDO ESTÉ CULMINADA
-            const resDate = asig.resolvedAt ? asig.resolvedAt : new Date().toLocaleString();
-            actionField = `<span class="badge-completed">🏁 CULMINADO</span><br><small style="color:#166534; font-size:9px; font-weight:700;">Resuelto: ${resDate}</small>`;
-        } else if (p.includes("ejecutar") || p.includes("all")) {
-            const maxAllowed = asig.targetQuantity - asig.processed;
-            actionField = `
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center; background:#f8fafc; padding:4px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <div style="display:flex; gap:2px; width:100%;">
-                        <input type="number" id="inputQty_${realIndex}" min="1" max="${maxAllowed}" value="${maxAllowed}" class="batch-input" style="flex:1;">
-                        <button onclick="App.executeBatchManagement(${realIndex})" class="btn-primary" style="padding: 2px 6px; font-size: 10px; border-radius: 4px;">Guardar</button>
-                    </div>
-                    <input type="text" id="inputSource_${realIndex}" placeholder="Pegue link o escriba Origen" style="width:100%; font-size:10px; padding:3px; border:1px solid #cbd5e1; border-radius:4px; user-select:text; -webkit-user-select:text;">
-                </div>`;
-        } else {
-            actionField = `<span>Solo Lectura</span>`;
-        }
-
-        // MOSTRAR FECHA Y HORA DE SOLICITUD ABAJO DEL NOMBRE DE LA ACTIVIDAD
-        const reqDate = asig.createdAt ? asig.createdAt : "Fábrica";
-
-        tableBody.innerHTML += `
-            <tr class="${rowClass}">
-                <td style="padding:0.75rem;">
-                    <strong>${asig.activityName}</strong><br>
-                    <small style="color:#64748b;">Para: ${asig.assignedTo.toUpperCase()}</small> | 
-                    <small style="color:#2563eb; font-weight:600; font-size:9px;">Solicitud: ${reqDate}</small>
-                </td>
-                <td style="text-align: center;">${asig.targetQuantity}</td>
-                <td style="text-align: center; font-weight: bold;">${asig.processed} / ${asig.targetQuantity}</td>
-                <td style="text-align: center; padding:0.5rem; max-width:190px;">${originDisplay}</td>
-                <td style="text-align: center;" class="text-frozen-status">${timeStr}</td>
-                <td style="text-align: center; line-height:1.2;">${actionField}</td>
-            </tr>`;
-    });
-
-    if (typeof this.renderMonitorPanel === 'function') {
-        this.renderMonitorPanel(warningCount, dangerCount, totalRealizadas, onTimeCount);
-    }
+        <form id="fRecovery" onsubmit="App.executeRecoveryWorkflow(event)" class="admin-config-card">
+            <div class="form-group">
+                <label>Usuario Corporativo Afectado</label>
+                <input type="text" id="recUser" required class="form-control" placeholder="Ej: jperez">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Pregunta de Seguridad Obligatoria</label>
+                <input type="text" class="form-control" value="¿Cuál es el nombre de su primera mascota?" disabled>
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Respuesta Secreta de Validación</label>
+                <input type="text" id="recAnswer" required class="form-control" placeholder="Escriba su respuesta">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Nueva Contraseña Solicitada</label>
+                <input type="password" id="recNewPass" required class="form-control" placeholder="••••••••">
+            </div>
+            
+            <div class="modal-action-row-footer">
+                <button type="submit" class="btn-primary-submit">Blanquear Acceso</button>
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+            </div>
+        </form>
+    `;
 };
 
-App.executeBatchManagement = function(realIndex) {
-    const asig = AppDB.data.assignments[realIndex];
-    const inputVal = parseInt(document.getElementById(`inputQty_${realIndex}`).value);
-    const sourceVal = document.getElementById(`inputSource_${realIndex}`).value.trim();
-
-    if (isNaN(inputVal) || inputVal <= 0) return alert("Cantidad inválida.");
-    const remaining = asig.targetQuantity - asig.processed;
-    if (inputVal > remaining) return alert("Exceso rechazado.");
-
-    if (sourceVal !== "") asig.sourceReference = sourceVal;
-
-    const timeDiff = new Date(asig.deadline) - new Date();
-    asig.processed += inputVal;
-    if (Math.floor(timeDiff / 60000) <= 0) asig.overtimeCount = (asig.overtimeCount || 0) + inputVal;
+// Procesar el flujo de recuperación y desbloqueo cloud en caliente
+App.executeRecoveryWorkflow = function(e) {
+    e.preventDefault();
     
-    // Al completarse la meta, se sella físicamente la estampa de resolución
-    if (asig.processed >= asig.targetQuantity) {
-        asig.completionTime = new Date().toISOString();
-        asig.resolvedAt = new Date().toLocaleString(); // ESTAMPA OBLIGATORIA DE RESOLUCIÓN
-        asig.assignmentPeriod = (new Date().getMonth() + 1).toString();
-    }
+    const u = document.getElementById("recUser").value.toLowerCase().trim();
+    const ans = document.getElementById("recAnswer").value.toLowerCase().trim();
+    const newPass = document.getElementById("recNewPass").value;
 
-    AppDB.save(); this.renderDashboardData();
-};
+    const user = AppDB.data.users[u];
+    if (!user) return alert("Operación rechazada: El usuario ingresado no existe en la nómina cloud.");
 
-App.refreshTimeAlerts = function() {
-    if (this.currentUser) this.renderDashboardData();
-};
-
-// ==========================================================================
-// RENDERIZADO INMUNE DEL LOGO POR ACTUALIZACIÓN DE SRC DIRECTO (ANTI-CORS)
-// ==========================================================================
-App.renderCorporateLogo = function() {
-    var imgElement = document.getElementById("appLogoImg");
-    if (imgElement) {
-        // Añadir una estampa de tiempo al link de la imagen para obligar a Windows a leer del disco
-        var antiCacheToken = new Date().getTime();
-        imgElement.src = "logo_gerencia.png?v=" + antiCacheToken;
-        imgElement.style.display = "block";
+    // Validar concordancia de respuesta con el Hash sembrado en la base de datos
+    if (user.securityQuestions && user.securityQuestions.a === AppDB.hash(ans)) {
         
-        // Mantener oculto el emoji de respaldo porque la imagen ya cargó
-        var fallback = document.getElementById("appLogoFallback");
-        if (fallback) fallback.style.display = "none";
+        // Ejecutar validación de robustez de contraseña nativa
+        if (typeof App.validatePasswordStrength === "function") {
+            const check = App.validatePasswordStrength(newPass);
+            if (!check.valid) return alert(check.msg);
+        }
+
+        const hashedNewPass = AppDB.hash(newPass);
+        
+        // Actualizar datos, reiniciar intentos fallidos y desbloquear cuenta
+        user.password = hashedNewPass;
+        user.failedAttempts = 0;
+        user.status = "active";
+        user.passwordChangedDate = new Date().toISOString();
+        if (!user.passwordHistory) user.passwordHistory = [];
+        user.passwordHistory.push(hashedNewPass);
+
+        AppDB.save();
+        AppDB.addLog(u, "RECUPERACION_EXITOSA", "El usuario restableció su clave y desbloqueó la cuenta.");
+        
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert("¡AUTENTICACIÓN INTEGRAL CONCLUIDA! Su contraseña ha sido modificada y su cuenta se encuentra activa.");
+    } else {
+        alert("Validación fallida: La respuesta secreta ingresada es incorrecta.");
     }
 };
 
-
-document.addEventListener("DOMContentLoaded", () => App.init());
+// Cargar la inicialización por defecto del sistema al levantar la ventana
+window.onload = function() {
+    App.init();
+};
