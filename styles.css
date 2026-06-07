@@ -1,343 +1,596 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS CORPORATIVOS
- * Diseño: Ejecutivo, Limpio y de Alta Legibilidad para Entornos Restringidos
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
+ * PARTE 1 DE 3: VARIABLES, CONFIGURACIÓN DE LIENZO Y CAPAS DE FONDO
  */
+@import url('https://googleapis.com');
 
-/* 1. CONFIGURACIÓN DE FUENTES Y BASE */
+:root {
+    --bg-dark-overlay: #000000;
+    --card-bg-white: rgba(255, 255, 255, 0.95);
+    --card-bg-dash: rgba(255, 255, 255, 0.96);
+    --text-main-slate: #0f172a;
+    --text-muted-blue: #94a3b8;
+    --text-label-gray: #64748b;
+    --border-color-light: #e2e8f0;
+    --border-color-soft: #f1f5f9;
+    --btn-blue-primary: #2563eb;
+    --btn-blue-hover: #1d4ed8;
+    --accent-emerald: #34d399;
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8fafc;
-    color: #1e293b;
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    /* Enlace nativo al archivo local de red */
-    background-image: url('1.jpeg');
-    
-    /* Propiedades ejecutivas de escalado y fijado */
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: center center;
-    background-size: cover;
-    
-    /* Color de respaldo por si la imagen tarda en cargar */
-    background-color: #f8fafc; 
-    
-    /* Mantener las fuentes corporativas intactas */
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     margin: 0;
     padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-main-slate);
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
-/* 2. MAQUETACIÓN GENERAL Y CONTENEDORES */
-header {
-    background: linear-gradient(to right, #0f172a, #1e293b);
-    color: #ffffff;
-    padding: 0.5rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+/* --- BLOQUE DE CAPA DE FONDO E INMUNIDAD OPERATIVA --- */
+.background-master-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -101;
+    background-color: var(--bg-dark-overlay);
 }
 
+.background-image-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -100;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* --- DISEÑO COMPACTO SPA Y VISTAS GENERALES --- */
 main {
-    flex-grow: 1;
+    position: relative;
+    z-index: 10;
+    background: transparent !important;
+    background-color: transparent !important;
+    min-height: calc(100vh - 60px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 1rem;
-}
-
-footer {
-    background-color: #f1f5f9;
-    border-top: 1px solid #e2e8f0;
-    text-align: center;
-    padding: 0.75rem;
-    font-size: 10px;
-    color: #94a3b8;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-
-/* 3. VISTAS Y MODALES (SPA) */
-.hidden {
-    display: none !important;
+    box-sizing: border-box;
 }
 
 .view-card {
-    width: 100%;
-    background-color: #ffffff;
-    border: 1px solid #f1f5f9;
     border-radius: 1rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .max-w-md { max-width: 28rem; }
 .max-w-7xl { max-width: 80rem; }
+.hidden { display: none !important; }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
+ * PARTE 2 DE 3: LOGIN, ENCABEZADO DE DASHBOARD, BOTONES Y COMPONENTES FORMULARIOS
+ */
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 50;
+/* --- SECCIÓN A: LOGIN CORPORATIVO --- */
+#viewLogin {
+    padding: 2rem;
+    background-color: var(--card-bg-white) !important;
+    backdrop-filter: blur(8px);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.logo-wrapper {
+    width: 7.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1.5rem auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
 }
 
-.modal-content {
-    background-color: #ffffff;
-    border-radius: 1rem;
+.logo-wrapper img {
     width: 100%;
-    max-width: 32rem;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 1.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
-/* 4. COMPONENTES DEL LOGIN Y DETALLES EDITABLES */
-.login-header {
+.logo-fallback-badge {
+    display: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 1px solid var(--border-color-light);
+}
+
+.login-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main-slate);
+    margin: 0;
+}
+
+.login-header p {
+    font-size: 10px;
+    color: var(--text-muted-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+/* --- SECCIÓN B: ENCABEZADO DEL DASHBOARD --- */
+#topBanner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(4px);
+    color: white;
+}
+
+.gerencia-meta-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gerencia-meta-label span:first-child {
+    font-size: 0.75rem;
+    color: var(--text-muted-blue);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.gerencia-meta-label span:last-child {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.merit-podium {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.merit-podium span:first-child {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-emerald);
+    text-transform: uppercase;
+}
+
+.merit-podium span:last-child {
+    font-size: 0.75rem;
+    color: #ecfdf5;
+}
+
+/* --- SECCIÓN C: DASHBOARD PRINCIPAL --- */
+#viewDashboard {
+    padding: 1.5rem;
+    background-color: var(--card-bg-dash) !important;
+    backdrop-filter: blur(10px);
+    align-self: flex-start;
+    margin-top: 1rem;
+}
+
+.dashboard-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color-soft);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.profile-identity-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-frame {
+    width: 3rem;
+    height: 3rem;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 1px solid var(--border-color-light);
+    cursor: pointer;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-identity-block h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main-slate);
+    margin: 0;
+}
+
+.profile-identity-block p {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted-blue);
+    margin: 0;
+}
+
+.action-buttons-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* --- COMPONENTES FORMULARIOS Y BOTONES --- */
+.form-group {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin-bottom: 2rem;
 }
 
-.app-logo-frame {
-    width: 6rem;
-    height: 6rem;
+.form-group-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-label-gray);
+    margin-bottom: 0.25rem;
+}
+
+.form-group-header-row label {
+    margin-bottom: 0;
+}
+
+.form-group-header-row button {
+    background: none;
+    border: none;
+    font-size: 11px;
+    color: var(--btn-blue-primary);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+}
+
+.form-control {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color-light);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--btn-blue-primary);
+}
+
+.btn-primary {
+    background-color: var(--btn-blue-primary);
+    color: white;
+    border: 1px solid var(--btn-blue-primary);
+    padding: 0.65rem 1.2rem;
+    border-radius: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--btn-blue-hover);
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #475569;
+    border: 1px solid var(--border-color-light);
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
     background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+}
+
+.btn-logout {
+    color: #e11d48;
+    background-color: #fff1f2;
+    border-color: #ffe4e6;
+}
+
+.btn-logout:hover {
+    background-color: #ffe4e6;
+}
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (styles.css)
+ * PARTE 3 DE 3: CONTADORES, DISEÑO EN SPLIT, TABLAS, MONITOR DE FONDO Y SCROLLBAR
+ */
+
+/* --- PANEL DE CONTADORES DE MÉTRICA --- */
+.grid-counters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.counter-card {
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    box-sizing: border-box;
+}
+
+.counter-card p:first-child {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.counter-num {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0.5rem 0 0 0;
+    line-height: 1;
+}
+
+.bg-total { background-color: #f8fafc; border: 1px solid var(--border-color-soft); }
+.bg-total p { color: var(--text-label-gray); }
+.bg-total .counter-num { color: var(--text-main-slate); }
+
+.bg-warning { background-color: #fffbeb; border: 1px solid #fef3c7; }
+.bg-warning p { color: #b45309; }
+.bg-warning .counter-num { color: #d97706; }
+
+.bg-danger { background-color: #fef2f2; border: 1px solid #fee2e2; }
+.bg-danger p { color: #991b1b; }
+.bg-danger .counter-num { color: #dc2626; }
+
+.bg-ied { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
+.bg-ied p { color: #166534; }
+.bg-ied .counter-num { color: var(--accent-emerald); }
+
+/* --- DISEÑO EN SPLIT Y COMPONENTES TABLAS --- */
+.dashboard-split-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-split-layout { grid-template-columns: 1fr; }
+}
+
+.split-main-panel { overflow: hidden; }
+
+.panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filters-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 2.25rem;
-    margin-bottom: 0.75rem;
-    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-/* 5. TABLAS DE GESTIÓN Y ALERTAS CRÍTICAS DE TIEMPO */
+.filters-wrapper h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    margin: 0;
+}
+
+.filter-select {
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color-light);
+    font-size: 11px;
+    font-weight: 600;
+    background-color: white;
+    font-family: inherit;
+    outline: none;
+}
+
+#btnNewAssignment {
+    background: none;
+    border: none;
+    color: var(--btn-blue-primary);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    padding: 0;
+}
+
 .table-container {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    overflow: hidden;
+    width: 100%;
     overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color-soft);
+    background-color: white;
 }
 
 .executive-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 0.75rem;
+    font-size: 13px;
 }
 
 .executive-table th {
     background-color: #f8fafc;
-    color: #64748b;
+    padding: 0.75rem 1rem;
     font-weight: 700;
+    color: var(--text-label-gray);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.75rem;
-    border-bottom: 1px solid #e2e8f0;
+    font-size: 10px;
+    border-bottom: 1px solid var(--border-color-soft);
 }
 
 .executive-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-/* Resaltados Mandatorios solicitados */
-.alert-warning {
-    background-color: #fef3c7 !important; /* Amarillo: Menos de 30 min */
-    color: #92400e !important;
-}
-
-.alert-danger {
-    background-color: #fee2e2 !important; /* Rojo: Vencidas */
-    color: #991b1b !important;
-}
-
-/* Monitor de alertas lateral */
-.monitor-panel {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
     padding: 1rem;
-    border-radius: 0.75rem;
-    max-height: 350px;
+    border-bottom: 1px solid var(--border-color-soft);
+    color: #334155;
+}
+
+/* --- COMPONENTE LATERAL DE ALERTAS MONITOR --- */
+.split-side-panel h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+.monitor-panel {
+    background-color: white;
+    border: 1px solid var(--border-color-soft);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 250px;
+    max-height: 450px;
     overflow-y: auto;
-}
-
-.monitor-card {
-    background-color: #ffffff;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* 6. RECONOCIMIENTO Y MÉRITO (PODIO SUPERIOR) */
-.merit-podium {
-    background-color: rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.4);
-    padding: 0.25rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .6; }
-}
-
-/* 7. CONTADORES EJECUTIVOS (DASHBOARD) */
-.grid-counters {
-    display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-@media (min-width: 768px) {
-    .grid-counters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-.counter-card { padding: 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
-.bg-total { background-color: #f8fafc; }
-.bg-warning { background-color: #fffbeb; border-color: #fde68a; color: #b45309; }
-.bg-danger { background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; }
-.bg-ied { background-color: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-
-.counter-num { font-size: 1.875rem; font-weight: 700; margin-top: 0.25rem; }
-
-/* 8. BOTONES Y FORMULARIOS */
-.btn-primary { background-color: #0f172a; color: #ffffff; border: none; cursor: pointer; }
-.btn-primary:hover { background-color: #1e293b; }
-.btn-secondary { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; }
-.btn-secondary:hover { background-color: #e2e8f0; }
-
-.form-group { margin-bottom: 1rem; }
-.form-control {
-    width: 100%;
-    padding: 0.625rem 1rem;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
     box-sizing: border-box;
 }
 
-/* ==========================================================================
-   NUEVOS COMPONENTES: FILTROS, LOTES Y ALERTAS REMOVIBLES
-   ========================================================================== */
-
-/* Selector ejecutivo de filtrado */
-.filter-select {
-    font-size: 11px;
-    font-weight: bold;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 2px 6px;
-    background: #f8fafc;
-    color: #334155;
-    cursor: pointer;
-}
-
-/* Sello ejecutivo de fin de ciclo */
-.badge-completed {
-    background-color: #dcfce7;
-    color: #15803d;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    display: inline-block;
-}
-
-/* Contenedor del procesador numérico */
-.batch-input-container {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Input numérico de metas pendientes */
-.batch-input {
-    width: 55px;
-    padding: 3px;
-    font-size: 11px;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
+/* --- FOOTER Y MODALES --- */
+footer {
+    position: relative;
+    z-index: 10;
     text-align: center;
-}
-
-/* Etiquetas del monitor lateral */
-.badge-alert {
-    font-size: 9px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-.badge-alert.vencido { background: #e11d48; color: white; }
-.badge-alert.critico { background: #d97706; color: white; }
-
-/* Botón de purga o descarte "X" */
-.btn-dismiss {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 0 4px;
-    line-height: 1;
-}
-
-/* ==========================================================================
-   FORMATO DE FILAS CULMINADAS (RESTAURACIÓN DE ESTRUCTURA)
-   ========================================================================== */
-
-/* Fila culminada con éxito (A tiempo) */
-.row-completed-ontime {
-    background-color: #f0fdf4 !important; /* Verde menta muy sutil y ejecutivo */
-    color: #166534 !important;
-}
-
-/* Fila culminada con retraso (A destiempo) */
-.row-completed-overtime {
-    background-color: #fef2f2 !important; /* Rojo sutil corporativo */
-    color: #991b1b !important;
-}
-
-/* Texto destacado para estados congelados */
-.text-frozen-status {
+    padding: 1rem;
     font-size: 11px;
-    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
 }
 
-.btn-dismiss:hover { color: #64748b; }
-.form-control:focus { outline: none; border-color: #94a3b8; }
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-/* SCROLLBAR PERSONALIZADO */
+.modal-content {
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 32rem;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+}
+
+/* --- ENLACE SANEADO PARA FORMULARIO DE ACCESO --- */
+#formLogin {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.btn-primary-login {
+    background-color: var(--btn-blue-primary);
+    color: white;
+    border: 1px solid var(--btn-blue-primary);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+}
+.btn-primary-login:hover {
+    background-color: var(--btn-blue-hover);
+}
+
+/* --- CLASES COMPLEMENTARIAS PARA MODAL INYECTADO (styles.css) --- */
+.modal-inner-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+.modal-inner-header h3 { margin: 0; font-size: 13px; text-transform: uppercase; font-weight: 700; color: #1e293b; }
+.modal-inner-header button { background: none; border: none; font-size: 18px; cursor: pointer; font-weight: bold; color: #64748b; }
+.admin-config-card { margin-bottom: 1rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.4rem; }
+.input-inline-row { display: flex; gap: 0.5rem; }
+.input-inline-row input { background: white; margin-bottom: 0.25rem; flex: 1; }
+.input-inline-row button { padding: 0 0.75rem; border-radius: 6px; font-size: 11px; }
+.full-width { width: 100%; }
+.mt-2 { margin-top: 0.5rem; }
+.maintenance-critical-card { background: #fef2f2; padding: 0.6rem; border-radius: 8px; border: 1px solid #fee2e2; margin-bottom: 1rem; }
+.maintenance-critical-card label { font-size: 9px; font-weight: 700; color: #991b1b; text-transform: uppercase; display: block; margin-bottom: 0.25rem; }
+.maintenance-critical-card p { font-size: 10px; color: #7f1d1d; margin: 0 0 0.4rem 0; line-height: 1.2; }
+.btn-danger-reset { background: #dc2626; border: 1px solid #b91c1c; color: white; width: 100%; padding: 0.5rem; font-size: 10px; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-danger-reset:hover { background-color: #b91c1c; }
+.modal-grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
+.modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+.modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+.modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+.bg-navy { background: #1e293b !important; border-color: #1e293b !important; }
+.bg-navy:hover { background: #0f172a !important; }
+.bg-sky { background: #0369a1 !important; border-color: #0369a1 !important; }
+.bg-sky:hover { background: #0284c7 !important; }
+.bg-crimson { background: #be123c !important; border-color: #be123c !important; }
+.bg-crimson:hover { background: #9f1239 !important; }
+.font-bold { font-weight: bold !important; }
+
+
+/* SCROLLBAR PERSONALIZADO INTERNO */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
