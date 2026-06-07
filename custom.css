@@ -622,7 +622,7 @@ main {
 
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6B-2 DE 7: DETALLES INTERNOS ADMINISTRATIVOS DE LA VENTANA MODAL Y REPORTES PDF
+ * PARTE 6B-2 DE 7: CONFIGURACIÓN INTERNA DE FORMULARIOS MODALES Y REPORTES PDF
  */
 
 .modal-inner-header { 
@@ -651,7 +651,6 @@ main {
     color: var(--text-muted-blue); 
 }
 
-/* Fichas técnicas y formularios internos del panel de ajustes */
 .admin-config-card { 
     margin-bottom: 1.25rem; 
     background: #f8fafc; 
@@ -720,7 +719,6 @@ main {
 .bg-crimson:hover { background: #9f1239; }
 .font-bold { font-weight: bold; }
 
-/* Botones de reportes exportables semanales y mensuales (.PDF) */
 .report-export-label-title { font-size: 11px; font-weight: 700; color: var(--text-label-gray); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; }
 .report-buttons-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
 .btn-primary-export { color: #ffffff; padding: 0.75rem 0.5rem; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; cursor: pointer; border: none; transition: filter 0.2s ease; }
@@ -728,33 +726,6 @@ main {
 .bg-sky-export { background-color: #0284c7; }
 .bg-navy-export { background-color: #1e293b; }
 
-/* Variables receptoras de eventos e historial JavaScript */
-.monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; border-radius: 6px; background-color: #f8fafc; }
-.alert-item-title { font-size: 11px; font-weight: bold; color: #1e293b; }
-.alert-item-body { font-size: 12px; margin-top: 0.25rem; color: #475569; }
-.monitor-empty-text { font-size: 13px; text-align: center; margin-top: 1.5rem; color: var(--text-muted-blue); }
-.modal-text-bold { font-size: 13px; margin: 0 0 0.5rem 0; font-weight: 700; }
-.modal-text-muted { font-size: 12px; margin: 0 0 0.5rem 0; color: #475569; }
-.modal-text-muted-spacer { font-size: 12px; margin: 0 0 1rem 0; color: #475569; }
-.modal-action-row-footer { margin-top: 1.25rem; display: flex; gap: 0.5rem; }
-.report-card-gap { gap: 0.75rem; }
-.report-meta-text { font-size: 13px; margin: 0; }
-.report-data-text { font-size: 13px; margin: 0; }
-.report-efficiency-text { font-size: 14px; margin: 0; color: #166534; font-weight: 700; }
-.modal-divider-line { border: none; border-top: 1px solid #e2e8f0; margin: 0.75rem 0; height: 1px; width: 100%; }
-.report-footer-disclaimer { font-size: 11px; color: #64748b; line-height: 1.4; margin: 0; }
-.about-modal-card-labels { display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5; font-size: 13px; color: #334155; }
-.about-modal-card-labels p { margin: 0; }
-.about-modal-footer { font-size: 11px; color: #64748b; text-align: center; margin: 1rem 0 0 0; }
-.avatar-modal-description { font-size: 13px; color: #475569; margin: 0 0 1rem 0; }
-.avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
-.avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; border: 1px solid #e2e8f0; }
-.avatar-selector-grid-item:hover { background: #f1f5f9; }
-.btn-primary-submit { background-color: var(--btn-blue-primary); color: #ffffff; border: none; padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; cursor: pointer; flex: 2; }
-.btn-secondary-cancel { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
-.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
-.bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; padding: 0.5rem; border-radius: 6px; }
-.text-emerald-dark { color: #166534; }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
  * PARTE 7 DE 7: FILTRO DE DETALLES INTERNOS DEL MODAL Y SECUENCIA DE FOOTER EN CASCADA
@@ -865,7 +836,19 @@ main {
 .bg-navy-export { background-color: #1e293b; }
 
 /* Variables receptoras de eventos e historial JavaScript */
-.monitor-alert-item { margin-bottom: 0.5rem; padding: 0.75rem; border-radius: 6px; background-color: #f8fafc; }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 7 DE 8: CLASES ADAPTATIVAS DE SISTEMA, BITÁCORAS Y AVATARES
+ */
+
+/* Adaptativos dinámicos inyectados por el motor Javascript */
+.monitor-alert-item { 
+    margin-bottom: 0.5rem; 
+    padding: 0.75rem; 
+    border-radius: 6px; 
+    background-color: #f8fafc; 
+}
+
 .alert-item-title { font-size: 11px; font-weight: bold; color: #1e293b; }
 .alert-item-body { font-size: 12px; margin-top: 0.25rem; color: #475569; }
 .monitor-empty-text { font-size: 13px; text-align: center; margin-top: 1.5rem; color: var(--text-muted-blue); }
@@ -879,18 +862,25 @@ main {
 .report-efficiency-text { font-size: 14px; margin: 0; color: #166534; font-weight: 700; }
 .modal-divider-line { border: none; border-top: 1px solid #e2e8f0; margin: 0.75rem 0; height: 1px; width: 100%; }
 .report-footer-disclaimer { font-size: 11px; color: #64748b; line-height: 1.4; margin: 0; }
+
+/* Enlaces del modal corporativo de Acerca De */
 .about-modal-card-labels { display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5; font-size: 13px; color: #334155; }
 .about-modal-card-labels p { margin: 0; }
 .about-modal-footer { font-size: 11px; color: #64748b; text-align: center; margin: 1rem 0 0 0; }
+
+/* Retícula de selección del avatar de usuario */
 .avatar-modal-description { font-size: 13px; color: #475569; margin: 0 0 1rem 0; }
 .avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
 .avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; border: 1px solid #e2e8f0; }
 .avatar-selector-grid-item:hover { background: #f1f5f9; }
+
+/* Controles de envío internos */
 .btn-primary-submit { background-color: var(--btn-blue-primary); color: #ffffff; border: none; padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; cursor: pointer; flex: 2; }
 .btn-secondary-cancel { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
 .admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
 .bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; padding: 0.5rem; border-radius: 6px; }
 .text-emerald-dark { color: #166534; }
+
 
 /* ================= CENTRADO EN CASCADA DEL PIE DE PÁGINA (FOOTER) ================= */
 footer {
@@ -900,16 +890,46 @@ footer {
     width: 100%;
     display: block;
     clear: both;
-    margin: 4rem auto 1rem auto;
-    padding: 1rem 0;
-    font-size: 11px;
+    margin: 1rem auto 1rem auto;
+    padding: 0.5rem 0;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.75);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
-/* Canales de barras de desplazamiento sutiles */
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 8 DE 8: CERROJO DE COMPRESIÓN VERTICAL (FOOTER CEÑIDO AL MARCO DE PANTALLA)
+ */
+
+/* ================= COMPRESIÓN DE LIENZO EXCLUSIVA PARA EL LOGIN ================= */
+/* Cuando el Dashboard está oculto y sólo vive el Login, colapsamos los espacios vacíos */
+body:has(#viewDashboard.hidden) main {
+    min-height: auto;
+    padding: 1.5rem 1rem 0 1rem;
+    flex-direction: column;
+}
+
+/* Reducción estricta de márgenes del pie de página para ceñirse al marco del Login */
+body:has(#viewDashboard.hidden) footer {
+    margin: Center;
+    padding: 0.5rem 0;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ================= COMPORTAMIENTO PARA EL DASHBOARD ACTIVO ================= */
+/* Cuando ya inicias sesión, el footer recupera su holgura natural abajo */
+#viewDashboard ~ footer {
+    margin: 3rem auto 1rem auto;
+    padding: 1rem 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* BARRAS DE DESPLAZAMIENTO COMPACTAS SUTILES */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
