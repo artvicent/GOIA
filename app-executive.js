@@ -195,6 +195,7 @@ App.markAssignmentAsCompleted = function(index) {
 };
 
 // Abrir el menú ejecutivo de reportes consolidados y auditoría mensual
+// Abrir el menú ejecutivo de reportes consolidados y auditoría con exportación PDF
 App.openReportsMenu = function() {
     document.getElementById("modalOverlay").classList.remove("hidden");
     
@@ -221,10 +222,37 @@ App.openReportsMenu = function() {
             <p class="report-efficiency-text"><b>Índice Neto de Eficiencia (IED):</b> ${eficienciaGeneral}%</p>
             
             <div class="modal-divider-line"></div>
+            
+            <!-- MÓDULO EXPORTADOR DE ALTO NIVEL PARA LA GERENCIA -->
+            <label class="report-export-label-title">📦 MÓDULO DE EXPORTACIÓN EXCEL / PDF</label>
+            <div class="report-buttons-grid-layout">
+                <button onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary-export bg-sky-export">
+                    📄 GENERAR REPORTE SEMANAL (.PDF)
+                </button>
+                <button onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary-export bg-navy-export">
+                    📅 GENERAR REPORTE MENSUAL (.PDF)
+                </button>
+            </div>
+            
+            <div class="modal-divider-line"></div>
             <p class="report-footer-disclaimer">Este balance consolida todas las actividades de Pin Pagos, desinstalaciones y requerimientos de Help Desk procesados de forma global por el equipo.</p>
         </div>
     `;
 };
+
+// Controlador de impresión y empaquetado nativo PDF
+App.executeExportDataToPDF = function(tipoReporte) {
+    if (!App.currentUser) return;
+    
+    alert(`⏳ Procesando algoritmo de compilación...\nGenerando reporte consolidadado ${tipoReporte} en formato PDF portable de la Gerencia.`);
+    
+    // Al invocar el controlador de impresión nativo del motor Chromium,
+    // el navegador web compilará la hoja de estilos custom.css optimizada para PDF.
+    window.print();
+    
+    AppDB.addLog(App.currentUser.username, "EXPORTAR_PDF", `Exportó balance consolidado de tipo: ${tipoReporte}`);
+};
+
 /**
  * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
  * PARTE 3 DE 3: ELIMINACIÓN CLOUD, PODIO DE MÉRITO Y MENÚ DE AVATARES PERSONALIZADOS

@@ -577,6 +577,54 @@ footer {
 .bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px; }
 .text-emerald-dark { color: #166534; }
 
+/* --- COMPONENTES DE EXPORTACIÓN DE REPORTES (custom.css) --- */
+.report-export-label-title {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: var(--text-label-gray) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.report-buttons-grid-layout {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.btn-primary-export {
+    color: #ffffff !important;
+    padding: 0.75rem 0.5rem !important;
+    border-radius: 0.5rem !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    font-family: inherit !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em !important;
+    cursor: pointer !important;
+    border: none !important;
+    transition: filter 0.2s ease !important;
+}
+
+.btn-primary-export:hover {
+    filter: brightness(1.1) !important;
+}
+
+.bg-sky-export { background-color: #0284c7 !important; }
+.bg-navy-export { background-color: #1e293b !important; }
+
+/* REGLA DE IMPRESIÓN INTEGRADORA: Optimiza el formato de la hoja de PDF al disparar window.print() */
+@media print {
+    body { background: #ffffff !important; color: #000000 !important; }
+    .background-master-container, .background-image-canvas, #topBanner, .dashboard-top-bar, .action-buttons-group, footer, .modal-inner-header button { display: none !important; }
+    .modal-overlay { position: relative !important; background: transparent !important; backdrop-filter: none !important; }
+    .modal-content { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
+}
+
 /* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS */
 .custom-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
