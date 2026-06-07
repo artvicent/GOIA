@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <!-- Rompe la caché de tu Live Server local con la versión definitiva -->
-    <link rel="stylesheet" href="custom.css?v=50">
+    <!-- Truco definitivo para destruir la caché del Live Server local -->
+    <link rel="stylesheet" href="custom.css?v=999">
 </head>
 <body>
 
+    <!-- CAPA INTEGRADA DE FONDO CON OPACIDAD -->
     <div class="background-master-container"></div>
     <img src="1.jpeg" class="background-image-canvas" alt="Fondo">
 
-    <!-- BANNER SUPERIOR OSCURO INSTITUCIONAL -->
+    <!-- 1. ENCABEZADO SUPERIOR OSCURO INSTITUCIONAL -->
     <header id="topBanner">
         <div class="gerencia-meta-label">
             <span>Gerencia:</span>
@@ -25,7 +26,7 @@
     </header>
 
     <main>
-        <!-- ================= VISTA A: FORMULARIO DE ACCESO ================= -->
+        <!-- ================= VISTA A: FORMULARIO DE ACCESO COMPLETAMENTE REPARADO ================= -->
         <section id="viewLogin" class="view-card max-w-md">
             <div class="login-header">
                 <div class="logo-wrapper">
@@ -36,10 +37,11 @@
                 <p>Acceso Corporativo</p>
             </div>
 
+            <!-- ESTRUCTURA PURA: Se eliminan clases innecesarias para romper la fusión de la barra blanca -->
             <form id="formLogin" onsubmit="App.handleLogin(event)" autocomplete="off">
                 <div class="form-group">
                     <label>Usuario</label>
-                    <input type="text" id="loginUser" required class="form-control" placeholder="Ej: jperez">
+                    <input type="text" id="loginUser" required class="form-control" placeholder="Ej: arturo.noto">
                 </div>
                 <div class="form-group">
                     <div class="form-group-header-row">
@@ -92,7 +94,6 @@
                     <p id="countPerformance" class="counter-num">0%</p>
                 </div>
             </div>
-
             <!-- SECCIÓN CENTRAL CENTRALIZADA EN BLOQUE VERTICAL -->
             <div class="dashboard-split-layout">
                 <!-- PANEL SUPERIOR INTERNO: TABLA DE GESTIONES A ANCHO COMPLETO -->
@@ -163,7 +164,7 @@
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
 
-    <!-- Hilo lógico secuencial de carga estructurada -->
+    <!-- Hilo lógico secuencial de carga estructurada de red -->
     <script src="db.js"></script>
     <script src="app-core.js"></script>
     <script src="app-executive.js"></script>
@@ -173,10 +174,10 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-    <!-- CONTROL GRÁFICO COMPATIBLE LOCAL SIN INYECTORES DE INTERFERENCIA -->
+    <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
     <script>
         setInterval(function() {
-            // Sincronizador indestructible del nombre de la gerencia desde Firebase
+            // Sincronizador del nombre de la gerencia desde Firebase Realtime Database
             if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
                 var elTituloCloud = AppDB.data.config.title;
                 var bannerGerencia = document.getElementById("displayGerenciaName");
