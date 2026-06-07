@@ -4,8 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <!-- CERROJO DE ESTILOS: Fuerza al navegador a leer el diseño nuevo de inmediato -->
-    <link rel="stylesheet" href="styles.css?v=124">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- CERROJO DE DISEÑO INDESTRUCTIBLE: Estilos fijos inmunes a bloqueos de caché -->
+    <style>
+        /* --- CORRECCIÓN DE ENTORNO OSCURO DEL BANNER SUPERIOR --- */
+        #topBanner {
+            position: relative !important;
+            z-index: 100 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0.75rem 2rem !important;
+            background-color: rgba(15, 23, 42, 0.9) !important;
+            backdrop-filter: blur(8px) !important;
+            color: #ffffff !important;
+        }
+        .gerencia-meta-label, .merit-podium {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+
+        /* --- CORRECCIÓN DE ALINEACIÓN DE TU PERFIL A LA IZQUIERDA --- */
+        .dashboard-top-bar {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        .profile-identity-block {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            text-align: left !important;
+        }
+        .profile-text-labels {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            text-align: left !important;
+        }
+        .profile-text-labels h2, .profile-text-labels p {
+            margin: 0 !important;
+            text-align: left !important;
+        }
+    </style>
 </head>
 <body>
 
