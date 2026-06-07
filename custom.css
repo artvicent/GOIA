@@ -325,3 +325,274 @@ main {
     gap: 0.5rem;
     margin-left: auto; /* Efecto imán fluido hacia el borde derecho */
 }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 5 DE 6: ESTILIZACIÓN DE TARJETAS DE MÉTRICAS, BOTONES SECUNDARIOS Y FILTROS
+ */
+
+/* --- BOTONES SECUNDARIOS DE LA BARRA TOP --- */
+.btn-secondary {
+    background-color: #ffffff;
+    color: #475569;
+    border: 1px solid var(--border-color-light);
+    padding: 0.55rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+    color: var(--text-main-slate);
+    transform: translateY(-1px);
+}
+
+.btn-logout {
+    color: #dc2626;
+    background-color: #fef2f2;
+    border-color: #fee2e2;
+}
+
+.btn-logout:hover {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* --- TARJETAS DE MÉTRICAS OPERACIONALES (GRID CORPORATIVO) --- */
+.grid-counters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.counter-card {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color-soft);
+}
+
+.counter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+/* Aislamiento estricto de textos dentro de las métricas */
+.grid-counters .counter-card p {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    width: auto;
+    display: block;
+}
+
+.counter-num {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin: 0.5rem 0 0 0;
+    line-height: 1;
+}
+
+/* Paleta de colores operacionales corporativos */
+.bg-total { background-color: #f8fafc; border-left: 4px solid #64748b; }
+.bg-total p { color: var(--text-label-gray); }
+.bg-total .counter-num { color: var(--text-main-slate); }
+
+.bg-warning { background-color: #fffbeb; border-left: 4px solid #d97706; }
+.bg-warning p { color: #b45309; }
+.bg-warning .counter-num { color: #d97706; }
+
+.bg-danger { background-color: #fef2f2; border-left: 4px solid #dc2626; }
+.bg-danger p { color: #991b1b; }
+.bg-danger .counter-num { color: #dc2626; }
+
+.bg-ied { background-color: #f0fdf4; border-left: 4px solid #10b981; }
+.bg-ied p { color: #166534; }
+.bg-ied .counter-num { color: #10b981; }
+
+/* --- BLOQUE DE FILTROS Y APILADO VERTICAL --- */
+.dashboard-split-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.split-main-panel {
+    width: 100%;
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filters-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filters-wrapper h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-label-gray);
+    margin: 0;
+}
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 6A DE 7: FILTROS DEL PANEL, TABLA ANCHO COMPLETO Y MONITOR INFERIOR ENCAPSULADO
+ */
+
+/* AISLAMIENTO CRÍTICO: Los selects de filtros solo se estilizan dentro del Dashboard */
+.split-main-panel .filter-select {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.split-main-panel .filter-select:hover {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+}
+
+.split-main-panel #btnNewAssignment {
+    background-color: var(--btn-blue-primary);
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.split-main-panel #btnNewAssignment:hover {
+    background-color: var(--btn-blue-hover);
+    transform: translateY(-1px);
+}
+
+/* --- TABLA PRINCIPAL DE ASIGNACIONES EXPANDIDA PREMIUM --- */
+.split-main-panel .table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+}
+
+.split-main-panel .executive-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+.split-main-panel .executive-table th {
+    background-color: #f8fafc;
+    padding: 0.85rem 1.25rem;
+    font-weight: 700;
+    color: var(--text-label-gray);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.split-main-panel .executive-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.split-main-panel .executive-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* --- MONITOR INFERIOR CON REVESTIMIENTO DE DISEÑO --- */
+.split-side-panel {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.split-side-panel h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-label-gray);
+    margin-bottom: 0.6rem;
+}
+
+.split-side-panel .monitor-panel {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    min-height: 110px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #475569;
+}
+
+/* ================= SECUENCIA DE CENTRADO ABSOLUTO PARA EL FOOTER ================= */
+footer {
+    position: relative;
+    z-index: 10;
+    text-align: center; /* Alinea el texto en el centro horizontal exacto */
+    width: 100%;
+    display: block;
+    clear: both;
+    margin: 2rem auto 1rem auto; /* Separa el footer de las tarjetas simétricamente */
+    padding: 1rem 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75); /* Incrementa la opacidad para legibilidad corporativa */
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS SUTILES */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
