@@ -1,6 +1,6 @@
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 1 DE 6: VARIABLES DE LIENZO, FUENTES Y CAPA BASE DE DISEÑO
+ * PARTE 1 DE 7: VARIABLES DE ENTORNO, FUENTES Y LIENZO BASE SPA
  */
 @import url('https://googleapis.com');
 
@@ -11,8 +11,8 @@
     --text-main-slate: #0f172a;
     --text-muted-blue: #94a3b8;
     --text-label-gray: #64748b;
-    --border-color-light: #e2e8f0;
-    --border-color-soft: #f1f5f9;
+    --border-color-light: #94a3b8; /* Gris oscuro para visibilidad de bordes */
+    --border-color-soft: #cbd5e1;
     --btn-blue-primary: #2563eb;
     --btn-blue-hover: #1d4ed8;
     --accent-emerald: #34d399;
@@ -39,7 +39,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 2 DE 6: FONDOS CANVAS, MARCOS SPA Y ACCESO CORPORATIVO LIBRE DE BARRAS
+ * PARTE 2 DE 7: CAPAS DE FONDO CANVAS, LIENZO FÍSICO Y ESTRUCTURA DE TARJETAS SPA
  */
 
 /* --- CAPAS DE INTEGRIDAD DEL LIENZO DE FONDO (1.jpeg) --- */
@@ -65,6 +65,7 @@ main {
     opacity: 0.6;
 }
 
+/* --- MARCOS DE CONTROL DE VISTAS (SPA) --- */
 .view-card {
     border-radius: 1rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -75,8 +76,12 @@ main {
 .max-w-md { max-width: 28rem; }
 .max-w-7xl { max-width: 80rem; }
 .hidden { display: none !important; }
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 3 DE 7: LOGIN SANEADO, ENTRADAS SEPARADAS (ANTI BARRA BLANCA) Y BOTÓN AZUL
+ */
 
-/* --- SECCIÓN A: ACCESO CORPORATIVO --- */
+/* --- SECCIÓN A: ACCESO CORPORATIVO PURIFICADO --- */
 #viewLogin {
     padding: 2rem;
     background-color: var(--card-bg-white);
@@ -94,7 +99,7 @@ main {
     margin: 0;
 }
 
-/* BLINDAJE ABSOLUTO ANTI BARRA BLANCA: Fuerza la transparencia total del subtítulo */
+/* BLINDAJE ANTI BARRA BLANCA: Mantiene el subtítulo libre de fondos extraños */
 .login-header p {
     font-size: 10px !important;
     color: var(--text-muted-blue) !important;
@@ -111,9 +116,55 @@ main {
     box-shadow: none !important;
     display: block !important;
 }
+
+/* CONTROLES DE ENTRADA SANADOS: Separa los inputs y les da bordes visibles para romper la barra blanca */
+.form-control {
+    width: 100% !important;
+    padding: 0.65rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid var(--border-color-light) !important; /* Borde oscuro bien marcado */
+    background-color: #f8fafc !important; /* Fondo grisáceo claro, no blanco total */
+    color: var(--text-main-slate) !important;
+    font-size: 13px !important;
+    font-family: inherit !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.75rem !important; /* Espaciado estricto para evitar fusiones */
+    display: block !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.form-control:focus {
+    border-color: var(--btn-blue-primary) !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* DISEÑO PREMIUM EXCLUSIVO DEL BOTÓN DE ACCESO AZUL */
+.btn-primary-login {
+    background-color: var(--btn-blue-primary) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--btn-blue-primary) !important;
+    padding: 0.75rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    margin-top: 1rem !important;
+    width: 100% !important;
+    display: block !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.btn-primary-login:hover {
+    background-color: var(--btn-blue-hover) !important;
+    border-color: var(--btn-blue-hover) !important;
+}
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 3 DE 6: LOGO WRAPPER, BOTÓN DE INGRESO PREMIUM AZUL Y BANNER OSCURO NATIVO
+ * PARTE 4 DE 7: LOGOTIPO DE ACCESO Y BANNER OSCURO SUPERIOR INSTITUCIONAL
  */
 
 .logo-wrapper {
@@ -141,29 +192,7 @@ main {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    border: 1px solid var(--border-color-light);
-}
-
-/* --- DISEÑO EXCLUSIVO PARA EL BOTÓN DE INGRESO MAESTRO AZUL --- */
-.btn-primary-login {
-    background-color: var(--btn-blue-primary) !important;
-    color: #ffffff !important;
-    border: 1px solid var(--btn-blue-primary) !important;
-    padding: 0.75rem !important;
-    border-radius: 0.75rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 600 !important;
-    font-family: inherit !important;
-    cursor: pointer !important;
-    margin-top: 0.5rem !important;
-    width: 100% !important;
-    display: block !important;
-    transition: background-color 0.2s ease !important;
-}
-
-.btn-primary-login:hover {
-    background-color: var(--btn-blue-hover) !important;
-    border-color: var(--btn-blue-hover) !important;
+    border: 1px solid var(--border-color-soft);
 }
 
 /* --- SECCIÓN B: ENCABEZADO SUPERIOR OSCURO INSTITUCIONAL --- */
@@ -210,7 +239,7 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 4 DE 6: BARRA TOP DASHBOARD, AVATAR A LA IZQUIERDA CON NOMBRE A LA DERECHA y BOTONES
+ * PARTE 5 DE 7: BARRA TOP DASHBOARD, AVATAR CON NOMBRE A LA IZQUIERDA Y BOTONES A LA DERECHA
  */
 
 /* --- SECCIÓN C: BARRA TOP DEL DASHBOARD --- */
@@ -254,7 +283,7 @@ main {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    border: 1px solid var(--border-color-light);
+    border: 1px solid var(--border-color-soft);
     cursor: pointer;
     overflow: hidden;
     order: 1 !important; /* Fuerza al logo a posicionarse de primero a la izquierda */
@@ -297,23 +326,35 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 5 DE 6: CONTADORES DE MÉTRICAS, APILADO VERTICAL Y ELEMENTOS FORMULARIOS
+ * PARTE 6 DE 7: BOTONES COMPLEMENTARIOS, CONTADORES Y REORGANIZACIÓN VERTICAL
  */
 
-/* --- BOTONES COMPLEMENTARIOS Y COMPONENTES FORMULARIOS --- */
-.form-group { display: flex; flex-direction: column; }
-.form-group-header-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
-.form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-label-gray); margin-bottom: 0.25rem; }
-.form-group-header-row label { margin-bottom: 0; }
-.form-group-header-row button { background: none; border: none; font-size: 11px; color: var(--btn-blue-primary); cursor: pointer; font-weight: 600; padding: 0; }
-.form-control { padding: 0.65rem 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color-light); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; }
-.form-control:focus { border-color: var(--btn-blue-primary); }
-.btn-primary { background-color: var(--btn-blue-primary); color: white; border: 1px solid var(--btn-blue-primary); padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background-color 0.2s; }
-.btn-primary:hover { background-color: var(--btn-blue-hover); }
-.btn-secondary { background-color: white; color: #475569; border: 1px solid var(--border-color-light); padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase; font-family: inherit; cursor: pointer; }
-.btn-secondary:hover { background-color: #f8fafc; }
-.btn-logout { color: #e11d48; background-color: #fff1f2; border-color: #ffe4e6; }
-.btn-logout:hover { background-color: #ffe4e6; }
+.btn-secondary {
+    background-color: white !important;
+    color: #475569 !important;
+    border: 1px solid var(--border-color-soft) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+}
+
+.btn-secondary:hover {
+    background-color: #f8fafc !important;
+}
+
+.btn-logout {
+    color: #e11d48 !important;
+    background-color: #fff1f2 !important;
+    border-color: #ffe4e6 !important;
+}
+
+.btn-logout:hover {
+    background-color: #ffe4e6 !important;
+}
 
 /* --- PANEL DE CONTADORES DE MÉTRICA CONTROLADO EN GRID --- */
 .grid-counters {
@@ -329,7 +370,7 @@ main {
     box-sizing: border-box !important;
 }
 
-/* SEGMENTACIÓN ABSOLUTA: Estas propiedades solo aplican dentro de las tarjetas de métricas */
+/* SEGMENTACIÓN SEGURA: Bloquea las propiedades dentro de las tarjetas del Dashboard */
 .grid-counters .counter-card p {
     font-size: 11px !important;
     font-weight: 700 !important;
@@ -352,19 +393,19 @@ main {
     line-height: 1 !important;
 }
 
-.bg-total { background-color: #f8fafc; border: 1px solid #e2e8f0; }
+.bg-total { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
 .bg-total p { color: var(--text-label-gray) !important; }
 .bg-total .counter-num { color: var(--text-main-slate) !important; }
 
-.bg-warning { background-color: #fffbeb; border: 1px solid #fef3c7; }
+.bg-warning { background-color: #fffbeb !important; border: 1px solid #fef3c7 !important; }
 .bg-warning p { color: #b45309 !important; }
 .bg-warning .counter-num { color: #d97706 !important; }
 
-.bg-danger { background-color: #fef2f2; border: 1px solid #fee2e2; }
+.bg-danger { background-color: #fef2f2 !important; border: 1px solid #fee2e2 !important; }
 .bg-danger p { color: #991b1b !important; }
 .bg-danger .counter-num { color: #dc2626 !important; }
 
-.bg-ied { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
+.bg-ied { background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
 .bg-ied p { color: #166534 !important; }
 .bg-ied .counter-num { color: var(--accent-emerald) !important; }
 
@@ -381,114 +422,114 @@ main {
 }
 
 .panel-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 0.5rem !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
 }
 
 .filters-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
 }
 
 .filters-wrapper h3 {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #475569;
-    margin: 0;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #475569 !important;
+    margin: 0 !important;
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6 DE 6: FILTROS SELECTS, MONITOR INFERIOR, MODALES Y BOTONES DE REPORTE PDF
+ * PARTE 7 DE 7: TABLAS EXPANDIDAS, MONITOR INFERIOR, MODALES Y EXPORTACIÓN PDF
  */
 
 .filter-select {
-    padding: 0.4rem 0.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color-light);
-    font-size: 11px;
-    font-weight: 600;
-    background-color: white;
-    font-family: inherit;
-    outline: none;
+    padding: 0.4rem 0.5rem !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid var(--border-color-soft) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    background-color: white !important;
+    font-family: inherit !important;
+    outline: none !important;
 }
 
 #btnNewAssignment {
-    background: none;
-    border: none;
-    color: var(--btn-blue-primary);
-    font-weight: 700;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0;
+    background: none !important;
+    border: none !important;
+    color: var(--btn-blue-primary) !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    padding: 0 !important;
 }
 
-/* TABLA EXPANDIDA: Ocupa el 100% del ancho horizontal del recuadro */
+/* TABLA EXPANDIDA: Consume el 100% del ancho horizontal del recuadro */
 .table-container {
     width: 100% !important;
-    overflow-x: auto;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color-soft);
-    background-color: white;
+    overflow-x: auto !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid var(--border-color-soft) !important;
+    background-color: white !important;
 }
 
 .executive-table {
     width: 100% !important;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 13px;
+    border-collapse: collapse !important;
+    text-align: left !important;
+    font-size: 13px !important;
 }
 
 .executive-table th {
-    background-color: #f8fafc;
-    padding: 0.75rem 1rem;
-    font-weight: 700;
-    color: var(--text-label-gray);
-    text-transform: uppercase;
-    font-size: 10px;
-    border-bottom: 1px solid var(--border-color-soft);
+    background-color: #f8fafc !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-label-gray) !important;
+    text-transform: uppercase !important;
+    font-size: 10px !important;
+    border-bottom: 1px solid var(--border-color-soft) !important;
 }
 
 .executive-table td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color-soft);
-    color: #334155;
+    padding: 1rem !important;
+    border-bottom: 1px solid var(--border-color-soft) !important;
+    color: #334155 !important;
 }
 
 /* --- MONITOR EN PARTE INFERIOR: Se despliega abajo de la tabla a ancho completo --- */
 .split-side-panel {
     width: 100% !important;
-    margin-top: 1rem;
+    margin-top: 1rem !important;
 }
 
 .split-side-panel h3 {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #475569;
-    margin-bottom: 0.5rem;
-    margin-top: 0;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #475569 !important;
+    margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
 }
 
 .monitor-panel {
-    background-color: white;
-    border: 1px solid var(--border-color-soft);
-    border-radius: 0.5rem;
-    padding: 1rem;
+    background-color: white !important;
+    border: 1px solid var(--border-color-soft) !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
     min-height: 100px !important;
     max-height: 200px !important;
-    overflow-y: auto;
-    box-sizing: border-box;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
     width: 100% !important;
 }
 
-/* --- CAPAS MODALES GENERALES --- */
+/* --- CAPAS DE PLANIFICACIÓN DE MODALES --- */
 .modal-overlay {
     position: fixed !important;
     top: 0 !important;
@@ -510,13 +551,13 @@ main {
     width: 100% !important;
     max-width: 32rem !important;
     max-height: 85vh !important;
-    overflow-y: auto;
+    overflow-y: auto !important;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
     box-sizing: border-box !important;
 }
 
 /* --- CLASES COMPLEMENTARIAS MODALES ADM --- */
-.modal-inner-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 1px solid var(--border-color-light) !important; padding-bottom: 0.5rem !important; margin-bottom: 1rem !important; }
+.modal-inner-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 1px solid var(--border-color-soft) !important; padding-bottom: 0.5rem !important; margin-bottom: 1rem !important; }
 .modal-inner-header h3 { margin: 0 !important; font-size: 13px !important; text-transform: uppercase !important; font-weight: 700 !important; color: #1e293b !important; }
 .modal-inner-header button { background: none !important; border: none !important; font-size: 18px !important; cursor: pointer !important; font-weight: bold !important; color: #64748b !important; }
 .admin-config-card { margin-bottom: 1rem !important; background: #f8fafc !important; padding: 0.75rem !important; border-radius: 8px !important; display: flex !important; flex-direction: column !important; gap: 0.4rem !important; }
@@ -538,7 +579,7 @@ main {
 .bg-crimson { background: #be123c !important; border-color: #be123c !important; }
 .font-bold { font-weight: bold !important; }
 
-/* --- COMPONENTES DE EXPORTACIÓN DE REPORTES PDF --- */
+/* --- FORMATO EXCLUSIVO DE REPORTES PDF --- */
 .report-export-label-title { font-size: 10px !important; font-weight: 700 !important; color: var(--text-label-gray) !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; margin-bottom: 0.5rem !important; }
 .report-buttons-grid-layout { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; width: 100% !important; margin-bottom: 0.5rem !important; }
 .btn-primary-export { color: #ffffff !important; padding: 0.75rem 0.5rem !important; border-radius: 0.5rem !important; font-size: 10px !important; font-weight: 700 !important; font-family: inherit !important; text-transform: uppercase !important; letter-spacing: 0.02em !important; cursor: pointer !important; border: none !important; transition: filter 0.2s ease !important; }
@@ -567,9 +608,11 @@ main {
 .avatar-modal-description { font-size: 12px !important; color: #475569 !important; margin: 0 0 1rem 0 !important; }
 .avatar-buttons-grid-layout { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 0.75rem !important; margin-bottom: 0.5rem !important; }
 .avatar-selector-grid-item { font-size: 1.75rem !important; padding: 0.5rem !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 0.5rem !important; cursor: pointer !important; background: #ffffff !important; }
+.avatar-selector-grid-item:hover { background: #f1f5f9 !important; }
 .btn-primary-submit { background-color: var(--btn-blue-primary) !important; color: white !important; border: 1px solid var(--btn-blue-primary) !important; padding: 0.65rem 1.2rem !important; border-radius: 0.5rem !important; font-size: 13px !important; font-weight: 600 !important; font-family: inherit !important; cursor: pointer; flex: 2; }
-.btn-secondary-cancel { background-color: white !important; color: #475569 !important; border: 1px solid var(--border-color-light) !important; padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
-.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }.bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px !important; }.text-emerald-dark { color: #166534 !important; }
+.btn-secondary-cancel { background-color: white !important; color: #475569 !important; border: 1px solid var(--border-color-soft) !important; padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 11px; text-transform: uppercase; font-family: inherit; cursor: pointer; flex: 1; }
+.admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }.bg-ied-banner-info { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; margin-bottom: 8px !important; }
+.text-emerald-dark { color: #166534 !important; }
 
 /* BARRAS DE DESPLAZAMIENTO INTERNAS PERSONALIZADAS */
 .custom-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
