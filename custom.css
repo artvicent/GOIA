@@ -569,3 +569,44 @@ footer {
     background-color: var(--btn-blue-hover) !important;
     border-color: var(--btn-blue-hover) !important;
 }
+
+/* --- CORRECCIONES DE ALINEACIÓN FINAL DASHBOARD (custom.css) --- */
+
+/* 1. Forzar visualización y opacidad real del Banner Superior */
+#topBanner {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: rgba(15, 23, 42, 0.9) !important;
+}
+
+/* 2. Forzar al bloque de Arturo Noto a alinearse estrictamente a la izquierda junto al avatar */
+.dashboard-top-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.profile-identity-block {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    order: 1 !important; /* Lo posiciona de primero a la izquierda */
+}
+
+.action-buttons-group {
+    order: 2 !important; /* Manda los botones al extremo derecho */
+}
+
+/* 3. Restaurar cajas blancas redondeadas y bordes limpios para los Filtros */
+.filter-select {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid var(--border-color-light) !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    color: var(--text-main-slate) !important;
+    font-weight: 600 !important;
+}
