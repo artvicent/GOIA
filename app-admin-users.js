@@ -183,3 +183,51 @@ App.listUsersAdmin = function() {
     
     document.getElementById("modalContent").innerHTML = html;
 };
+// =========================================================================
+// MÓDULO LOGÍSTICO PREMIUM: CAPTURA, COMPRESIÓN Y SUBIDA DE LOGO DESDE PC A FIREBASE
+// =========================================================================
+App.handleUploadSystemLogoFromPC = function() {
+    var fileInput = document.getElementById("inputLogoFilePC");
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("⚠️ Por favor, seleccione primero una imagen (.png, .jpeg o .jpg) desde los archivos de su PC.");
+        return;
+    }
+
+    var elArchivo = fileInput.files[0];
+    
+    // Control de peso de seguridad para optimizar la velocidad de carga de Firebase
+    if (elArchivo.size > 800 * 1024) { 
+        alert("⚠️ La imagen seleccionada es muy pesada. Por favor, elija un logotipo corporativo de menos de 800 KB.");
+        return;
+    }
+
+    var lectorDeDisco = new FileReader();
+    
+    lectorDeDisco.onload = function(evento) {
+        var cadenaBase64Segura = evento.target.result;
+
+        // Inyección directa en caliente al nodo de configuración global de Firebase Realtime Database
+        firebase.database().ref("config/logoBase64").set(cadenaBase64Segura)
+            .then(function() {
+                // Sincroniza la caché interna de la aplicación de inmediato para evitar retardos
+                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
+                    AppDB.data.config.logoBase64 = cadenaBase64Segura;
+                }
+                
+                alert("✅ ¡Éxito de Sincronización Cloud!\n\nEl nuevo logotipo de la PC ha sido subido e implantado como imagen del sistema.");
+                
+                // Hace el cambio visible en tiempo real en la pantalla actual
+                var logoLogin = document.getElementById("appLogoImg");
+                if (logoLogin) {
+                    logoLogin.src = cadenaBase64Segura;
+                }
+            })
+            .catch(function(error) {
+                console.error("Error crítico de escritura en Firebase: ", error);
+                alert("❌ Fallo de comunicación: El servidor de red rechazó la carga de la foto corporativa.");
+            });
+    };
+
+    // Dispara el lector de archivos binarios de Windows/Mac y lo transforma a string Base64
+    lectorDeDisco.readAsDataURL(elArchivo);
+};

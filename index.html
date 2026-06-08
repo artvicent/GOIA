@@ -29,10 +29,10 @@
         <!-- ================= VISTA A: FORMULARIO DE ACCESO COMPLETAMENTE REPARADO ================= -->
         <section id="viewLogin" class="view-card max-w-md">
             <div class="login-header">
-                <div class="logo-wrapper">
-                    <img id="appLogoImg" src="logo_gerencia.png" onerror="this.style.display='none'; document.getElementById('appLogoFallback').style.display='flex';" alt="Logo">
-                    <div id="appLogoFallback" class="logo-fallback-badge">🏢</div>
-                </div>
+                <!-- REEMPLAZO EN INDEX.HTML: Bloque de logotipo optimizado y limpio -->
+            <div class="logo-wrapper">
+                <img id="appLogoImg" src="logo_gerencia.png" class="login-brand-logo" alt="Logo Credicard">
+            </div>
                 <h1>Control de Gestiones</h1>
                 <p>Acceso Corporativo</p>
             </div>
@@ -174,21 +174,33 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-    <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
+        <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
     <script>
         setInterval(function() {
-            // Sincronizador del nombre de la gerencia desde Firebase Realtime Database
-            if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
-                var elTituloCloud = AppDB.data.config.title;
-                var bannerGerencia = document.getElementById("displayGerenciaName");
-                if (bannerGerencia && bannerGerencia.innerText !== elTituloCloud) {
-                    bannerGerencia.innerText = elTituloCloud;
+            // Sincronizador indestructible de textos e imágenes corporativas desde Firebase
+            if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
+                // 1. Sincroniza el título de la gerencia en la barra negra
+                if (AppDB.data.config.title) {
+                    var elTituloCloud = AppDB.data.config.title;
+                    var bannerGerencia = document.getElementById("displayGerenciaName");
+                    if (bannerGerencia && bannerGerencia.innerText !== elTituloCloud) {
+                        bannerGerencia.innerText = elTituloCloud;
+                    }
+                }
+                
+                // 2. Sincroniza el Logotipo seleccionado en la pantalla de Login
+                if (AppDB.data.config.logoBase64) {
+                    var logoLogin = document.getElementById("appLogoImg");
+                    if (logoLogin && logoLogin.src !== AppDB.data.config.logoBase64) {
+                        logoLogin.src = AppDB.data.config.logoBase64;
+                    }
                 }
             }
         }, 500);
 
         setTimeout(function() {
             if (typeof App !== 'undefined') {
+                // Sobreescritura del menú de Ajustes y Usuarios con el cargador de archivos de PC
                 App.openAdminMenu = function() {
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
@@ -202,8 +214,15 @@
                         <div class="form-group admin-config-card">
                             <label>Nombre de Gerencia / Programa</label>
                             <div class="input-inline-row">
-                                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title}">
+                                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title || ''}">
                                 <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
+                            </div>
+
+                            <!-- INPUT CARGADOR DE IMAGENES DE LA PC (PREMIUM) -->
+                            <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
+                            <div class="input-inline-row" style="margin-bottom: 0.5rem;">
+                                <input type="file" id="inputLogoFilePC" class="form-control" accept="image/png, image/jpeg, image/jpg" style="padding: 4px; font-size: 11px;">
+                                <button onclick="App.handleUploadSystemLogoFromPC()" class="btn-primary" style="background-color: #10b981; border-color: #10b981;">Subir Foto</button>
                             </div>
                             
                             <label class="mt-2">Expiración de Contraseñas del Personal</label>
@@ -214,7 +233,6 @@
                             </select>
                         </div>
 
-                        <!-- MÓDULO DE REINICIO DE FÁBRICA SÍNCRONO CON FIREBASE -->
                         <div class="maintenance-critical-card">
                             <label>🚨 Mantenimiento Crítico de Servidor</label>
                             <p>Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>

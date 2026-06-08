@@ -37,32 +37,33 @@ main {
     padding: 1rem;
     box-sizing: border-box;
 }
+
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 2 DE 6: CAPAS CANVAS, MARCOS SPA Y ACCESO CORPORATIVO NATURAL LIBRE DE FORCE
+ * PARTE 2 DE 6: CAPAS CANVAS, MARCOS SPA Y CERROJO ABSOLUTO DE OCULTACIÓN DE VISTAS
  */
 
 /* --- CAPAS DE INTEGRIDAD DEL LIENZO DE FONDO (1.jpeg) --- */
 .background-master-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -101;
-    background-color: var(--bg-dark-overlay);
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: -101 !important;
+    background-color: var(--bg-dark-overlay) !important;
 }
 
 .background-image-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    z-index: -100;
-    pointer-events: none;
-    opacity: 0.6;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    z-index: -100 !important;
+    pointer-events: none !important;
+    opacity: 0.6 !important;
 }
 
 .view-card {
@@ -74,7 +75,12 @@ main {
 
 .max-w-md { max-width: 28rem; }
 .max-w-7xl { max-width: 80rem; }
-.hidden { display: none; }
+
+/* ================= CERROJO SPA MAESTRO: Extingue físicamente las pantallas inactivas ================= */
+/* Esta es la directiva que obliga al Login a desaparecer por completo al iniciar sesión */
+.hidden, #viewLogin.hidden, #viewDashboard.hidden { 
+    display: none !important; 
+}
 
 /* --- SECCIÓN A: ACCESO CORPORATIVO NATURAL --- */
 #viewLogin {
@@ -88,27 +94,6 @@ main {
     margin-bottom: 1.5rem;
 }
 
-.login-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-main-slate);
-    margin: 0;
-}
-
-.login-header p {
-    font-size: 10px;
-    color: var(--text-muted-blue);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-    margin: 0.25rem 0 0 0;
-    background: transparent;
-    border: none;
-    padding: 0;
-    width: auto;
-    box-shadow: none;
-    display: block;
-}
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
  * PARTE 3 DE 6: FILAS DE CONTRASEÑA, ENTRADAS SEPARADAS Y BOTÓN DE ACCESO AZUL NATIVO
@@ -197,22 +182,25 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 4 DE 6: LOGOTIPOS, BANNER SUPERIOR Y CONTROL DE ALINEACIÓN FLUIDA DEL PERFIL
+ * OPTIMIZACIÓN DE LOGOTIPO PROPORCIONAL PREMIUM (PARTE 4)
  */
 
+/* Contenedor del logotipo: Expandido horizontal y verticalmente para el espacio disponible */
 .logo-wrapper {
-    width: 7.5rem;
-    height: 3.5rem;
-    margin: 0 auto 1.5rem auto;
+    width: 14rem;
+    height: 5.5rem;
+    margin: 0.5rem auto 1.5rem auto; /* Centrado horizontal con margen controlado abajo */
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
-.logo-wrapper img {
+/* La imagen corporativa ahora consume el espacio de forma imponente y nítida */
+.login-brand-logo {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: contain; /* Evita que la imagen se deforme o estire feo */
     display: block;
 }
 
@@ -907,14 +895,18 @@ footer {
 /* ================= COMPRESIÓN DE LIENZO EXCLUSIVA PARA EL LOGIN ================= */
 /* Cuando el Dashboard está oculto y sólo vive el Login, colapsamos los espacios vacíos */
 body:has(#viewDashboard.hidden) main {
-    min-height: auto;
-    padding: 1.5rem 1rem 0 1rem;
+    min-height: calc(90vh - 50px); /* Ocupa todo el monitor descontando el banner superior */
+    display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Clava el cuadro blanco exactamente en el centro vertical */
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 /* Reducción estricta de márgenes del pie de página para ceñirse al marco del Login */
 body:has(#viewDashboard.hidden) footer {
-    margin: Center;
+    margin: 1rem auto 1rem auto;
     padding: 0.5rem 0;
     font-size: 10px;
     color: rgba(255, 255, 255, 0.6);
