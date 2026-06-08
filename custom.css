@@ -736,3 +736,171 @@ body:has(#viewDashboard.hidden) footer {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/**
+ * HOJA DE ESTILOS - COMPONENTES ADMINISTRATIVOS DE AJUSTES Y LOGOTIPO (custom.css)
+ * SECCIÓN EXCLUSIVA DE ESTILIZACIÓN DEL CARGADOR DE IMÁGENES DE LA PC
+ */
+
+/* Estilización del campo donde seleccionas el archivo en Windows */
+#inputLogoFilePC.form-control {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color-light);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* Revestimiento Premium para el botón verde de "Subir Foto" corporativo */
+.btn-upload-logo-pc {
+    background-color: #10b981; /* Verde esmeralda institucional de éxito */
+    color: #ffffff;
+    border: 1px solid #10b981;
+    padding: 0.65rem 1.2rem;
+    border-radius: 0.5rem;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-upload-logo-pc:hover {
+    background-color: #059669; /* Oscurece al pasar el ratón */
+    border-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+/**
+ * HOJA DE ESTILOS - CUADRÍCULA ADMINISTRATIVA PREMIUM (custom.css)
+ * PARTE 1B DE 3: RETÍCULA SIMÉTRICA Y COMPONENTES REVESTIDOS DEL PANEL DE AJUSTES
+ */
+
+/* Distribución en 2 columnas simétricas para los pares de botones principales */
+.modal-overlay .modal-grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Botón administrativo estándar revestido de forma uniforme */
+.modal-overlay .modal-grid-buttons button {
+    padding: 0.65rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.modal-overlay .modal-grid-buttons button:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+/* Distribución a ancho completo (1 columna rígida) para el Historial Crítico de Auditoría */
+.modal-overlay .modal-single-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Revestimiento premium para el botón extendido de Logs de Auditoría */
+.modal-overlay .modal-single-row button {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.modal-overlay .modal-single-row button:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+/**
+ * HOJA DE ESTILOS - COLORES ADMINISTRATIVOS CORPORATIVOS (custom.css)
+ * PARTE 1C DE 3: TEXTOS DE FORMULARIO, EXPIRED SELECTS Y PALETA DE COLORES ADM
+ */
+
+/* Estilos de etiquetas y selects específicos para los formularios del modal */
+.modal-overlay .form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-label-gray);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+
+.modal-overlay .form-control.full-width {
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color-light);
+    color: var(--text-main-slate);
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+
+/* --- PALETA DE COLORES EJECUTIVOS ADM PARA LOS BOTONES --- */
+.modal-overlay .bg-navy {
+    background-color: #1e293b;
+    color: #ffffff;
+}
+
+.modal-overlay .bg-sky {
+    background-color: #0369a1;
+    color: #ffffff;
+}
+
+.modal-overlay .bg-crimson {
+    background-color: #be123c;
+    color: #ffffff;
+}
+
+.modal-overlay .btn-primary {
+    background-color: var(--btn-blue-primary);
+    color: #ffffff;
+    border: none;
+    padding: 0.55rem 1.2rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-overlay .btn-primary:hover {
+    background-color: var(--btn-blue-hover);
+}
