@@ -566,10 +566,42 @@ main {
  * PARTE 6B-1: CONFIGURACIÓN DE CAPAS MODALES TRANSPARENTES FLOTANTES AL FRENTE
  */
 
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6B-1: EXTINCIÓN DE CONTENEDORES OCULTOS (ANTI RECTÁNGULO BLANCO FANTASMA)
- */
+/* LA SOLUCIÓN FISICA: Elevamos el z-index a 2000 para que salte al frente de la tabla del Dashboard */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000; /* Pasa al frente del Dashboard de manera indestructible sin alterar el Login */
+    background-color: transparent; /* Tu fondo limpio transparente sin pantallas oscuras de fondo */
+    backdrop-filter: blur(6px); /* El efecto esmerilado que elegiste */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* LA TARJETA BLANCA: Se dibuja en bloque al frente del overlay solo al activarse */
+.modal-content {
+    display: none; /* Extingue el rectángulo blanco fantasma que se queda pegado */
+    background-color: #ffffff;
+    color: var(--text-main-slate);
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 32rem;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* HABILITACIÓN ESTRICTA EN CASCADA: Al remover la clase .hidden, la tarjeta blanca toma prioridad */
+.modal-overlay:not(.hidden) .modal-content {
+    display: block; /* Levanta la tarjeta verdadera al frente sólo cuando presionas un botón */
+    z-index: 2001; /* Clava la ventana flotante adelante de todo el estatus de forma limpia */
+}
 
 /* TU CONFIGURACIÓN EXACTA: Mantiene la capa externa con z-index 1 y fondo transparente */
 .modal-overlay {
