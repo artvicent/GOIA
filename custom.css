@@ -1,6 +1,6 @@
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 1 DE 6: VARIABLES DE ENTORNO, FUENTES Y LIENZO BASE SPA
+ * PARTE 1 DE 3: VARIABLES, BANNER CORPORATIVO FIJO Y CAPAS DE LIENZO BASE
  */
 @import url('https://googleapis.com');
 
@@ -27,10 +27,28 @@ body {
     box-sizing: border-box;
 }
 
+/* ================= FIJACIÓN PERMANENTE E INMUNE DEL BANNER SUPERIOR ================= */
+#topBanner {
+    position: fixed; /* Clavado estricto en el techo de la pantalla siempre */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 4000; /* La capa más alta de todo el sistema para que jamás se oculte */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: rgba(15, 23, 42, 0.98); /* Fondo sólido para blindar el Login */
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+    box-sizing: border-box;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+}
+
 main {
     position: relative;
     z-index: 10;
-    min-height: calc(100vh - 60px);
+    margin-top: 60px; /* Margen de respeto para dar espacio al banner superior fijo */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,19 +56,14 @@ main {
     box-sizing: border-box;
 }
 
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 2 DE 6: CAPAS CANVAS, MARCOS SPA Y CERROJO ABSOLUTO DE OCULTACIÓN DE VISTAS
- */
-
-/* --- CAPAS DE INTEGRIDAD DEL LIENZO DE FONDO (1.jpeg) --- */
+/* --- CAPAS DE LIENZO DE FONDO TOTALMENTE SUBORDINADAS --- */
 .background-master-container {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    z-index: -101 !important;
+    z-index: -101 !important; /* Capa más profunda de la pantalla */
     background-color: var(--bg-dark-overlay) !important;
 }
 
@@ -61,7 +74,7 @@ main {
     width: 100vw !important;
     height: 100vh !important;
     object-fit: cover !important;
-    z-index: -100 !important;
+    z-index: -100 !important; /* Se dibuja por encima del fondo negro pero detrás del banner */
     pointer-events: none !important;
     opacity: 0.6 !important;
 }
@@ -76,13 +89,10 @@ main {
 .max-w-md { max-width: 28rem; }
 .max-w-7xl { max-width: 80rem; }
 
-/* ================= CERROJO SPA MAESTRO: Extingue físicamente las pantallas inactivas ================= */
-/* Esta es la directiva que obliga al Login a desaparecer por completo al iniciar sesión */
 .hidden, #viewLogin.hidden, #viewDashboard.hidden { 
     display: none !important; 
 }
 
-/* --- SECCIÓN A: ACCESO CORPORATIVO NATURAL --- */
 #viewLogin {
     padding: 2rem;
     background-color: var(--card-bg-white);
@@ -93,10 +103,9 @@ main {
     text-align: center;
     margin-bottom: 1.5rem;
 }
-
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 3 DE 6: FILAS DE CONTRASEÑA, ENTRADAS SEPARADAS Y BOTÓN DE ACCESO AZUL NATIVO
+ * PARTE 2 DE 3: FORMULARIOS DEL LOGIN, LOGOTIPO PREMIUM Y ESTRUCTURA DE CONTROL SPA
  */
 
 .form-group {
@@ -139,7 +148,6 @@ main {
     margin-bottom: 0.25rem;
 }
 
-/* INPUTS INDEPENDIENTES: Fluyen en bloque con su borde sutil gris de alto contraste */
 .form-control {
     width: 100%;
     padding: 0.65rem 0.75rem;
@@ -159,7 +167,6 @@ main {
     background-color: #ffffff;
 }
 
-/* BOTÓN DE ACCESO AZUL EN CASCADA NATIVA */
 .btn-primary-login {
     background-color: var(--btn-blue-primary);
     color: #ffffff;
@@ -180,66 +187,33 @@ main {
     background-color: var(--btn-blue-hover);
     border-color: var(--btn-blue-hover);
 }
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * OPTIMIZACIÓN DE LOGOTIPO PROPORCIONAL PREMIUM (PARTE 4)
- */
 
-/* Contenedor del logotipo: Expandido horizontal y verticalmente para el espacio disponible */
+/* --- LOGOTIPO ESCALADO PROPORCIONAL PREMIUM --- */
 .logo-wrapper {
     width: 14rem;
     height: 5.5rem;
-    margin: 0.5rem auto 1.5rem auto; /* Centrado horizontal con margen controlado abajo */
+    margin: 0.5rem auto 1.5rem auto;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
 
-/* La imagen corporativa ahora consume el espacio de forma imponente y nítida */
 .login-brand-logo {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Evita que la imagen se deforme o estire feo */
+    object-fit: contain;
     display: block;
 }
 
-/* --- SECCIÓN B: ENCABEZADO SUPERIOR OSCURO INSTITUCIONAL --- */
-#topBanner {
-    position: relative;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 2rem;
-    background-color: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(8px);
-    color: white;
-}
-
-.gerencia-meta-label, .merit-podium {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.gerencia-meta-label span:first-child { 
-    font-size: 0.75rem; 
-    color: var(--text-muted-blue); 
-    font-weight: 600; 
-    text-transform: uppercase; 
-}
-
-.gerencia-meta-label span:last-child { font-size: 0.75rem; font-weight: 700; }
-.merit-podium span:first-child { font-size: 0.75rem; font-weight: 700; color: var(--accent-emerald); text-transform: uppercase; }
-.merit-podium span:last-child { font-size: 0.75rem; color: #ecfdf5; }
-
-/* --- SECCIÓN C: BARRA DE CONTROL DEL DASHBOARD NATURAL --- */
+/* --- DETALLES INTERNOS DEL DASHBOARD GENERAL --- */
 #viewDashboard {
     padding: 1.5rem;
     background-color: var(--card-bg-dash);
-    backdrop-filter: blur(10px);
+    /* SANEAMIENTO: Se quitó el backdrop-filter que asfixiaba los modales */
     margin-top: 1rem;
+    position: relative;
+    z-index: 20;
 }
 
 .dashboard-top-bar {
@@ -254,7 +228,6 @@ main {
     gap: 1rem;
 }
 
-/* ALINEACIÓN LINEAL DEL PERFIL: Icono a la izquierda y textos a su derecha */
 .profile-identity-block {
     display: flex;
     flex-direction: row;
@@ -275,16 +248,15 @@ main {
     border: 1px solid var(--border-color-soft);
     cursor: pointer;
     overflow: hidden;
-    order: 1; /* El avatar redondo se posiciona de PRIMERO a la izquierda */
+    order: 1;
 }
 
-/* Caja de textos unida simétricamente al lado derecho de tu avatar circular */
 .profile-text-labels {
     display: flex;
     flex-direction: column;
     justify-content: center;
     text-align: left;
-    order: 2; /* Fuerza a tu nombre y rol a renderizarse a la DERECHA del logo */
+    order: 2;
 }
 
 .profile-text-labels h2 {
@@ -304,21 +276,15 @@ main {
     text-align: left;
 }
 
-/* BOTONERA EXTRA SUPERIOR DERECHA: Empuja los comandos al extremo opuesto */
 .action-buttons-group {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
     gap: 0.5rem;
-    margin-left: auto; /* Efecto imán fluido hacia el borde derecho */
+    margin-left: auto;
 }
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 5 DE 6: ESTILIZACIÓN DE TARJETAS DE MÉTRICAS, BOTONES SECUNDARIOS Y FILTROS
- */
 
-/* --- BOTONES SECUNDARIOS DE LA BARRA TOP --- */
 .btn-secondary {
     background-color: #ffffff;
     color: #475569;
@@ -352,7 +318,6 @@ main {
     color: #991b1b;
 }
 
-/* --- TARJETAS DE MÉTRICAS OPERACIONALES (GRID CORPORATIVO) --- */
 .grid-counters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -373,7 +338,6 @@ main {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
-/* Aislamiento estricto de textos dentro de las métricas */
 .grid-counters .counter-card p {
     font-size: 11px;
     font-weight: 700;
@@ -395,24 +359,19 @@ main {
     line-height: 1;
 }
 
-/* Paleta de colores operacionales corporativos */
 .bg-total { background-color: #f8fafc; border-left: 4px solid #64748b; }
 .bg-total p { color: var(--text-label-gray); }
 .bg-total .counter-num { color: var(--text-main-slate); }
-
 .bg-warning { background-color: #fffbeb; border-left: 4px solid #d97706; }
 .bg-warning p { color: #b45309; }
 .bg-warning .counter-num { color: #d97706; }
-
 .bg-danger { background-color: #fef2f2; border-left: 4px solid #dc2626; }
 .bg-danger p { color: #991b1b; }
 .bg-danger .counter-num { color: #dc2626; }
-
 .bg-ied { background-color: #f0fdf4; border-left: 4px solid #10b981; }
 .bg-ied p { color: #166534; }
 .bg-ied .counter-num { color: #10b981; }
 
-/* --- BLOQUE DE FILTROS Y APILADO VERTICAL --- */
 .dashboard-split-layout {
     display: flex;
     flex-direction: column;
@@ -454,10 +413,9 @@ main {
 }
 /**
  * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6A DE 7: FILTROS DEL PANEL, TABLA ANCHO COMPLETO Y MONITOR INFERIOR ENCAPSULADO
+ * PARTE 3 DE 3: FILTROS, TABLAS, MODALES AL FRENTE (Z-INDEX 5000) Y AJUSTE DE LIENZO 90VH
  */
 
-/* AISLAMIENTO CRÍTICO: Los selects de filtros solo se estilizan dentro del Dashboard */
 .split-main-panel .filter-select {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -561,29 +519,24 @@ main {
     line-height: 1.5;
     color: #475569;
 }
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6B-1: CONFIGURACIÓN DE CAPAS MODALES TRANSPARENTES FLOTANTES AL FRENTE
- */
 
-/* LA SOLUCIÓN FISICA: Elevamos el z-index a 2000 para que salte al frente de la tabla del Dashboard */
+/* ================= CAPAS MODALES SANEADAS EN CASCADA (Z-INDEX 5000) ================= */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 2000; /* Pasa al frente del Dashboard de manera indestructible sin alterar el Login */
-    background-color: transparent; /* Tu fondo limpio transparente sin pantallas oscuras de fondo */
-    backdrop-filter: blur(6px); /* El efecto esmerilado que elegiste */
+    z-index: 5000; /* Prioridad máxima por encima del Dashboard y del login banner fixed */
+    background-color: transparent;
+    backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* LA TARJETA BLANCA: Se dibuja en bloque al frente del overlay solo al activarse */
 .modal-content {
-    display: none; /* Extingue el rectángulo blanco fantasma que se queda pegado */
+    display: none; /* Extingue el rectángulo blanco fantasma de fondo */
     background-color: #ffffff;
     color: var(--text-main-slate);
     border-radius: 1rem;
@@ -592,58 +545,16 @@ main {
     max-width: 32rem;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
     box-sizing: border-box;
     position: relative;
+    z-index: 5001;
 }
 
-/* HABILITACIÓN ESTRICTA EN CASCADA: Al remover la clase .hidden, la tarjeta blanca toma prioridad */
+/* Visibilidad controlada: sólo se abre la tarjeta al remover la clase hidden */
 .modal-overlay:not(.hidden) .modal-content {
-    display: block; /* Levanta la tarjeta verdadera al frente sólo cuando presionas un botón */
-    z-index: 2001; /* Clava la ventana flotante adelante de todo el estatus de forma limpia */
+    display: block;
 }
-
-/* TU CONFIGURACIÓN EXACTA: Mantiene la capa externa con z-index 1 y fondo transparente */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1; 
-    background-color: transparent; 
-    backdrop-filter: blur(6px); 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* EL CERROJO OPERATIVO: Oculta por defecto cualquier rectángulo blanco huérfano en la pantalla */
-.modal-content {
-    display: none; /* Extingue el rectángulo blanco fantasma que se queda pegado de fondo */
-    background-color: #ffffff;
-    color: var(--text-main-slate);
-    border-radius: 1rem;
-    padding: 2rem;
-    width: 90%;
-    max-width: 32rem;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    box-sizing: border-box;
-    position: relative;
-}
-
-/* SEÑALIZACIÓN ESTRICTA: Sólo cuando la capa overlay está activa, se da permiso de dibujar la tarjeta blanca al frente */
-.modal-overlay:not(.hidden) .modal-content {
-    display: block; /* Levanta la tarjeta verdadera al frente sólo cuando presionas un botón */
-    z-index: 10; /* La clava adelante del Dashboard de forma limpia */
-}
-
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 6B-2 DE 7: CONFIGURACIÓN INTERNA DE FORMULARIOS MODALES Y REPORTES PDF
- */
 
 .modal-inner-header { 
     display: flex; 
@@ -725,12 +636,10 @@ main {
 }
 
 .btn-danger-reset:hover { background-color: #b91c1c; }
-
 .modal-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
 .modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
 .modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
 .modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-
 .bg-navy { background: #1e293b; color: #ffffff; border: none; }
 .bg-navy:hover { background: #0f172a; }
 .bg-sky { background: #0369a1; color: #ffffff; border: none; }
@@ -746,129 +655,12 @@ main {
 .bg-sky-export { background-color: #0284c7; }
 .bg-navy-export { background-color: #1e293b; }
 
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 7 DE 7: FILTRO DE DETALLES INTERNOS DEL MODAL Y SECUENCIA DE FOOTER EN CASCADA
- */
-
-/* Mantiene el diseño limpio de los encabezados internos de tu ventana flotante */
-.modal-inner-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 1px solid var(--border-color-soft); 
-    padding-bottom: 0.75rem; 
-    margin-bottom: 1.25rem; 
-}
-
-.modal-inner-header h3 { 
-    margin: 0; 
-    font-size: 14px; 
-    text-transform: uppercase; 
-    font-weight: 700; 
-    color: var(--text-main-slate); 
-}
-
-.modal-inner-header button { 
-    background: none; 
-    border: none; 
-    font-size: 22px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    color: var(--text-muted-blue); 
-}
-
-/* Fichas técnicas y formularios internos del panel de ajustes */
-.admin-config-card { 
-    margin-bottom: 1.25rem; 
-    background: #f8fafc; 
-    padding: 1rem; 
-    border-radius: 8px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 0.5rem; 
-}
-
-.input-inline-row { display: flex; gap: 0.5rem; }
-.input-inline-row input { background: #ffffff; flex: 1; }
-.full-width { width: 100%; }
-.mt-2 { margin-top: 0.5rem; }
-
-.maintenance-critical-card { 
-    background: #fef2f2; 
-    padding: 0.85rem; 
-    border-radius: 8px; 
-    border: 1px solid #fee2e2; 
-    margin-bottom: 1.25rem; 
-}
-
-.maintenance-critical-card label { 
-    font-size: 10px; 
-    font-weight: 700; 
-    color: #991b1b; 
-    text-transform: uppercase; 
-    display: block; 
-    margin-bottom: 0.25rem; 
-}
-
-.maintenance-critical-card p { 
-    font-size: 11px; 
-    color: #7f1d1d; 
-    margin: 0 0 0.5rem 0; 
-    line-height: 1.3; 
-}
-
-.btn-danger-reset { 
-    background: #dc2626; 
-    border: none; 
-    color: #ffffff; 
-    width: 100%; 
-    padding: 0.65rem; 
-    font-size: 11px; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    transition: background-color 0.2s ease; 
-}
-
-.btn-danger-reset:hover { background-color: #b91c1c; }
-
-.modal-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
-.modal-grid-buttons button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-.modal-single-row { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
-.modal-single-row button { padding: 0.75rem; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-
-.bg-navy { background: #1e293b; color: #ffffff; border: none; }
-.bg-navy:hover { background: #0f172a; }
-.bg-sky { background: #0369a1; color: #ffffff; border: none; }
-.bg-sky:hover { background: #0284c7; }
-.bg-crimson { background: #be123c; color: #ffffff; border: none; }
-.bg-crimson:hover { background: #9f1239; }
-.font-bold { font-weight: bold; }
-
-/* Botones de reportes exportables semanales y mensuales (.PDF) */
-.report-export-label-title { font-size: 11px; font-weight: 700; color: var(--text-label-gray); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; }
-.report-buttons-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
-.btn-primary-export { color: #ffffff; padding: 0.75rem 0.5rem; border-radius: 0.5rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; cursor: pointer; border: none; transition: filter 0.2s ease; }
-.btn-primary-export:hover { filter: brightness(1.1); }
-.bg-sky-export { background-color: #0284c7; }
-.bg-navy-export { background-color: #1e293b; }
-
-/* Variables receptoras de eventos e historial JavaScript */
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 7 DE 8: CLASES ADAPTATIVAS DE SISTEMA, BITÁCORAS Y AVATARES
- */
-
-/* Adaptativos dinámicos inyectados por el motor Javascript */
 .monitor-alert-item { 
     margin-bottom: 0.5rem; 
     padding: 0.75rem; 
     border-radius: 6px; 
     background-color: #f8fafc; 
 }
-
 .alert-item-title { font-size: 11px; font-weight: bold; color: #1e293b; }
 .alert-item-body { font-size: 12px; margin-top: 0.25rem; color: #475569; }
 .monitor-empty-text { font-size: 13px; text-align: center; margin-top: 1.5rem; color: var(--text-muted-blue); }
@@ -883,24 +675,20 @@ main {
 .modal-divider-line { border: none; border-top: 1px solid #e2e8f0; margin: 0.75rem 0; height: 1px; width: 100%; }
 .report-footer-disclaimer { font-size: 11px; color: #64748b; line-height: 1.4; margin: 0; }
 
-/* Enlaces del modal corporativo de Acerca De */
 .about-modal-card-labels { display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5; font-size: 13px; color: #334155; }
 .about-modal-card-labels p { margin: 0; }
 .about-modal-footer { font-size: 11px; color: #64748b; text-align: center; margin: 1rem 0 0 0; }
 
-/* Retícula de selección del avatar de usuario */
 .avatar-modal-description { font-size: 13px; color: #475569; margin: 0 0 1rem 0; }
 .avatar-buttons-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-bottom: 0.5rem; }
 .avatar-selector-grid-item { font-size: 1.75rem; padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; background: #ffffff; border: 1px solid #e2e8f0; }
 .avatar-selector-grid-item:hover { background: #f1f5f9; }
 
-/* Controles de envío internos */
 .btn-primary-submit { background-color: var(--btn-blue-primary); color: #ffffff; border: none; padding: 0.65rem 1.2rem; border-radius: 0.5rem; font-size: 13px; font-weight: 600; cursor: pointer; flex: 2; }
 .btn-secondary-cancel { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
 .admin-config-form-layout { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
 .bg-ied-banner-info { background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 8px; padding: 0.5rem; border-radius: 6px; }
 .text-emerald-dark { color: #166534; }
-
 
 /* ================= CENTRADO EN CASCADA DEL PIE DE PÁGINA (FOOTER) ================= */
 footer {
@@ -919,33 +707,23 @@ footer {
     letter-spacing: 0.08em;
 }
 
-/**
- * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
- * PARTE 8 DE 8: CERROJO DE COMPRESIÓN VERTICAL (FOOTER CEÑIDO AL MARCO DE PANTALLA)
- */
-
-/* ================= COMPRESIÓN DE LIENZO EXCLUSIVA PARA EL LOGIN ================= */
-/* Cuando el Dashboard está oculto y sólo vive el Login, colapsamos los espacios vacíos */
+/* ================= COMPRESIÓN DE LIENZO EXCLUSIVA PARA TU MÉTODO 90VH ================= */
 body:has(#viewDashboard.hidden) main {
-    min-height: calc(90vh - 50px); /* Ocupa todo el monitor descontando el banner superior */
+    min-height: calc(90vh - 50px); /* Tu calibración matemática perfecta */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Clava el cuadro blanco exactamente en el centro vertical */
+    justify-content: center;
     padding: 1rem;
-    box-sizing: border-box;
-}
+    box-sizing: border-box;}
 
-/* Reducción estricta de márgenes del pie de página para ceñirse al marco del Login */
 body:has(#viewDashboard.hidden) footer {
-    margin: 1rem auto 1rem auto;
-    padding: 0.5rem 0;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
-}
+        margin: 1rem auto 1rem auto;
+        padding: 0.5rem 0;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.6);
+    }
 
-/* ================= COMPORTAMIENTO PARA EL DASHBOARD ACTIVO ================= */
-/* Cuando ya inicias sesión, el footer recupera su holgura natural abajo */
 #viewDashboard ~ footer {
     margin: 3rem auto 1rem auto;
     padding: 1rem 0;
