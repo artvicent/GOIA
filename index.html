@@ -178,8 +178,9 @@
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
             <!-- CONTROL GRÁFICO CORPORATIVO: INTERFAZ UNIFICADA (PARTE 1 DE 3) -->
+            <!-- CONTROL GRÁFICO MAESTRO: PERSISTENCIA LOCAL DE AVATAR Y EMISIÓN DE TICKETS -->
     <script>
-        // 1. Sincronizador en vivo de cabecera y logotipo de Login
+        // 1. Sincronizador en vivo de cabecera corporativa y foto de perfil persistente
         setInterval(function() {
             if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
                 var cfg = AppDB.data.config;
@@ -187,14 +188,26 @@
                     var b = document.getElementById("displayGerenciaName");
                     if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
                 }
-                if (cfg.logoBase64) {
-                    var l = document.getElementById("appLogoImg");
-                    if (l && l.src !== cfg.logoBase64) l.src = cfg.logoBase64;
+            }
+            // Recupera la foto guardada en el disco duro local de la PC para el Login y el Dashboard
+            var localAvatar = localStorage.getItem("user_avatar_system");
+            if (localAvatar) {
+                var imgLogin = document.getElementById("appLogoImg");
+                var frameDash = document.getElementById("userAvatarFrame");
+                // Si la imagen de la PC es una foto real (Base64), la inyecta como etiqueta IMG
+                if (localAvatar.startsWith("data:image")) {
+                    if (imgLogin && !imgLogin.src.startsWith("data:image")) imgLogin.src = localAvatar;
+                    if (frameDash && !frameDash.innerHTML.includes("<img")) {
+                        frameDash.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                    }
+                } else {
+                    // Si es un emoji, lo inyecta como texto directo
+                    if (frameDash && frameDash.innerText !== localAvatar) frameDash.innerText = localAvatar;
                 }
             }
         }, 500);
 
-        // 2. Inicializador inmediato de ganchos de escucha SPA
+        // 2. Inicializador síncrono de ganchos de escucha SPA
         setTimeout(function() {
             if (typeof App === 'undefined') window.App = {};
 
@@ -238,6 +251,26 @@
                     </div>`;
             };
 
+            /* === LÓGICA DE AVATAR PERSISTENTE EN DISCO DURO LOCAL (localStorage) === */
+            App.handleUploadAvatarFromPC = function() {
+                var fileInput = document.getElementById("inputAvatarFilePC");
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var base64Str = e.target.result;
+                    localStorage.setItem("user_avatar_system", base64Str); // Guardado físico indestructible
+                    document.getElementById("modalOverlay").classList.add("hidden");
+                    alert("✅ ¡Foto de perfil fijada con éxito en esta PC!");
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            };
+
+            App.handleSelectEmojiAvatarInline = function(emoji) {
+                localStorage.setItem("user_avatar_system", emoji); // El emoji se graba a fuego en disco
+                document.getElementById("modalOverlay").classList.add("hidden");
+                alert("✅ Avatar actualizado: " + emoji);
+            };
+
             /* ================= App.openAdminMenu ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
@@ -259,12 +292,12 @@
                 }
             };
 
-            /* ================= ACCIONES DE NÓMINA REST API DEFINITIVAS ================= */
+            /* ================= ACCIONES DE NÓMINA REST API INDESTRUCTIBLES ================= */
             App.deleteUserCloud = function(id, name) {
                 if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
                 if (confirm("⚠️ ¿Eliminar a " + name.toUpperCase() + "?")) {
                     fetch("https://firebaseio.com" + id + ".json", { method: "DELETE" })
-                        .then(function() { alert("✅ Eliminado."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
+                        .then(function() { alert("✅ Usuario removido de la nube."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
                 }
             };
 
