@@ -231,3 +231,71 @@ App.handleUploadSystemLogoFromPC = function() {
     // Dispara el lector de archivos binarios de Windows/Mac y lo transforma a string Base64
     lectorDeDisco.readAsDataURL(elArchivo);
 };
+
+// =========================================================================
+// ACCIÓN A: PROCESAR FOTO REAL DE LA PC (.PNG / .JPEG) MEDIANTE BASE64
+// =========================================================================
+App.handleUploadAvatarFromPC = function() {
+    var fileInput = document.getElementById("inputAvatarFilePC");
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("⚠️ Por favor, seleccione primero un archivo de imagen en su computadora.");
+        return;
+    }
+
+    var file = fileInput.files[0];
+    
+    // Control de tamaño para evitar la saturación de los canales de red de Firebase
+    if (file.size > 500 * 1024) { 
+        alert("⚠️ La imagen es muy grande. Elija una foto de perfil optimizada de menos de 500 KB.");
+        return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var base64Str = e.target.result;
+
+        // Obtenemos el ID del usuario activo en la aplicación
+        var userId = App.currentUserId || "currentUser"; 
+
+        // Guardamos la foto real de forma permanente en el nodo de usuarios de Firebase
+        firebase.database().ref("users/" + userId + "/avatar").set(base64Str)
+            .then(function() {
+                alert("✅ ¡Foto de perfil cargada y guardada con éxito!");
+                document.getElementById("modalOverlay").classList.add("hidden");
+                
+                // Actualizamos el círculo de tu perfil en el Dashboard de inmediato
+                var frame = document.getElementById("userAvatarFrame");
+                if (frame) {
+                    frame.innerHTML = `<img src="${base64Str}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                }
+            })
+            .catch(function(error) {
+                alert("❌ Error de comunicación de red al intentar subir la foto.");
+            });
+    };
+
+    reader.readAsDataURL(file); // Transforma el archivo de tu PC a texto seguro Base64
+};
+
+// =========================================================================
+// ACCIÓN B: GUARDAR EMOTICONO SELECCIONADO DIRECTO DE LA RETÍCULA DEL MODAL
+// =========================================================================
+App.handleSelectEmojiAvatarInline = function(emojiSelected) {
+    var userId = App.currentUserId || "currentUser";
+
+    // Guardamos el emoji de forma nativa en la base de datos cloud de la gerencia
+    firebase.database().ref("users/" + userId + "/avatar").set(emojiSelected)
+        .then(function() {
+            alert("✅ Perfil actualizado con el avatar: " + emojiSelected);
+            document.getElementById("modalOverlay").classList.add("hidden");
+            
+            // Actualizamos la pantalla al ras en caliente
+            var frame = document.getElementById("userAvatarFrame");
+            if (frame) {
+                frame.innerHTML = emojiSelected;
+            }
+        })
+        .catch(function() {
+            alert("❌ Fallo en el servidor al intentar guardar el avatar.");
+        });
+};

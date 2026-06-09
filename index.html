@@ -350,6 +350,55 @@
                     }
                 }
             };
+            /* ================= App.openAvatarSelectionModal: CARGADOR DE PC Y RETÍCULA DE EMOJIS ================= */
+App.openAvatarSelectionModal = function() {
+    // Levantamos el overlay flotante transparente de forma nativa
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // Lista corporativa de emojis de respaldo rápidos para el operador
+    var avatarsList = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🐼", "🤖", "🚀", "🎯"];
+    var gridOptionsHtml = "";
+    
+    // Armamos la retícula de botones interactivos para los avatares integrados
+    avatarsList.forEach(function(emoji) {
+        gridOptionsHtml += `
+            <div onclick="App.handleSelectEmojiAvatarInline('${emoji}')" class="avatar-selector-grid-item">
+                ${emoji}
+            </div>`;
+    });
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>👤 Personalizar Foto de Perfil</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-form-layout">
+            <p class="avatar-modal-description">Elija una opción para actualizar su identidad visual en el Sistema de Control:</p>
+            
+            <!-- OPCIÓN A: EXAMINAR ARCHIVO BINARIO DE LA PC -->
+            <div class="form-group admin-config-card">
+                <label>Opción 1: Cargar Foto Real desde tu PC</label>
+                <div class="input-inline-row">
+                    <input type="file" id="inputAvatarFilePC" class="form-control" accept="image/png, image/jpeg, image/jpg">
+                    <button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button>
+                </div>
+            </div>
+
+            <!-- OPCIÓN B: CUADRÍCULA DE EMOJIS PREINSTALADOS -->
+            <div class="form-group admin-config-card">
+                <label>Opción 2: Seleccionar un Avatar Rápido</label>
+                <div class="avatar-buttons-grid-layout">
+                    ${gridOptionsHtml}
+                </div>
+            </div>
+
+            <div class="modal-action-row-footer">
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button>
+            </div>
+        </div>`;
+};
+
         }, 1500);
     </script>
 </body>
