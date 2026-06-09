@@ -176,6 +176,7 @@
 
         <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
+        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
     <script>
         // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
         setInterval(function() {
@@ -197,23 +198,14 @@
 
         // 2. Inicializador inmediato de botones de interfaz de usuario
         setTimeout(function() {
-            if (typeof App === 'undefined') {
-                window.App = {};
-            }
+            if (typeof App === 'undefined') { window.App = {}; }
 
             /* ================= App.openAssignmentModal: CON CONEXIÓN AL CATÁLOGO DE GESTIONES ================= */
             App.openAssignmentModal = function() {
-                var backupTicket = 0;
-                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
-                    if (typeof AppDB.data.config.ticketCounter !== 'undefined' && AppDB.data.config.ticketCounter !== null) {
-                        backupTicket = parseInt(AppDB.data.config.ticketCounter);
-                    }
-                }
+                var backupTicket = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? parseInt(AppDB.data.config.ticketCounter) : 0;
                 
-                // Función interna que dibuja la ventana flotante inyectando el catálogo dinámico
                 var renderModal = function(num, optionsHtml) {
                     var numeroValidado = (isNaN(num) || num === undefined || num === null) ? 0 : num;
-
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     document.getElementById("modalContent").innerHTML = `
                         <div class="modal-inner-header">
@@ -226,8 +218,6 @@
                                     🔢 Próximo Ticket a Registrar: <span>#${numeroValidado}</span>
                                 </label>
                             </div>
-                            
-                            <!-- SELECCIÓN DINÁMICA: Jala las gestiones reales guardadas en tu catálogo -->
                             <div class="form-group">
                                 <label>Seleccionar Gestión a Realizar</label>
                                 <select id="assignSource" required class="form-control">
@@ -235,7 +225,6 @@
                                     ${optionsHtml}
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label>Meta / Carga Numérica</label>
                                 <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
@@ -251,48 +240,30 @@
                         </form>`;
                 };
 
-                // Consulta encadenada REST: Buscamos el catálogo de gestiones en la nube
                 fetch("https://firebaseio.com")
                     .then(function(res) { return res.json(); })
                     .then(function(managementsData) {
                         var optionsHtml = "";
-                        
                         if (managementsData) {
                             Object.keys(managementsData).forEach(function(key) {
                                 var item = managementsData[key];
-                                if (item && item.name) {
-                                    optionsHtml += `<option value="${item.name}">${item.name}</option>`;
-                                }
+                                if (item && item.name) { optionsHtml += `<option value="${item.name}">${item.name}</option>`; }
                             });
                         }
-                        
                         if (optionsHtml === "") {
-                            optionsHtml = `
-                                <option value="Auditoría de Cuentas">Auditoría de Cuentas</option>
-                                <option value="Validación de Registros">Validación de Registros</option>
-                                <option value="Control de Reclamos">Control de Reclamos</option>`;
+                            optionsHtml = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option><option value="Validación de Registros">Validación de Registros</option>`;
                         }
-
-                        // Pasamos al segundo fetch para consultar el número correlativo de ticket
                         fetch("https://firebaseio.com")
                             .then(function(res) { return res.json(); })
-                            .then(function(ticketData) {
-                                var numeroCloud = (ticketData === null) ? 0 : parseInt(ticketData);
-                                renderModal(numeroCloud, optionsHtml);
-                            })
-                            .catch(function() {
-                                renderModal(backupTicket, optionsHtml);
-                            });
+                            .then(function(ticketData) { renderModal(ticketData === null ? 0 : parseInt(ticketData), optionsHtml); })
+                            .catch(function() { renderModal(backupTicket, optionsHtml); });
                     })
                     .catch(function() {
-                        var optionsHtml = `
-                            <option value="Auditoría de Cuentas">Auditoría de Cuentas</option>
-                            <option value="Validación de Registros">Validación de Registros</option>
-                            <option value="Control de Reclamos">Control de Reclamos</option>`;
+                        var optionsHtml = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option><option value="Validación de Registros">Validación de Registros</option>`;
                         renderModal(backupTicket, optionsHtml);
                     });
             };
-            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON HOJAS DE ESTILOS LIMPIAS ================= */
+            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
                 var currentExpiry = (typeof AppDB !== 'undefined' && AppDB.data?.config?.passwordExpiryDays) ? AppDB.data.config.passwordExpiryDays : 90;
@@ -343,61 +314,79 @@
                 if (confirm("⚠️ ATENCIÓN SUPERVISOR: ¿Desea REINICIAR LA BASE DE DATOS?\n\nEsta operación borrará todas las actividades.")) {
                     if (prompt("Para confirmar la purga, digite: REINICIAR") === "REINICIAR") {
                         if (typeof AppDB !== 'undefined' && typeof AppDB.seedInitialData === 'function') {
-                            AppDB.seedInitialData();
-                            alert("¡Base de datos restablecida a cero!");
-                            location.reload();
+                            AppDB.seedInitialData(); alert("¡Base de datos restablecida a cero!"); location.reload();
                         }
                     }
                 }
             };
-            /* ================= App.openAvatarSelectionModal: CARGADOR DE PC Y RETÍCULA DE EMOJIS ================= */
-App.openAvatarSelectionModal = function() {
-    // Levantamos el overlay flotante transparente de forma nativa
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    
-    // Lista corporativa de emojis de respaldo rápidos para el operador
-    var avatarsList = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🐼", "🤖", "🚀", "🎯"];
-    var gridOptionsHtml = "";
-    
-    // Armamos la retícula de botones interactivos para los avatares integrados
-    avatarsList.forEach(function(emoji) {
-        gridOptionsHtml += `
-            <div onclick="App.handleSelectEmojiAvatarInline('${emoji}')" class="avatar-selector-grid-item">
-                ${emoji}
-            </div>`;
-    });
 
-    document.getElementById("modalContent").innerHTML = `
-        <div class="modal-inner-header">
-            <h3>👤 Personalizar Foto de Perfil</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
-        </div>
-        
-        <div class="admin-config-form-layout">
-            <p class="avatar-modal-description">Elija una opción para actualizar su identidad visual en el Sistema de Control:</p>
-            
-            <!-- OPCIÓN A: EXAMINAR ARCHIVO BINARIO DE LA PC -->
-            <div class="form-group admin-config-card">
-                <label>Opción 1: Cargar Foto Real desde tu PC</label>
-                <div class="input-inline-row">
-                    <input type="file" id="inputAvatarFilePC" class="form-control" accept="image/png, image/jpeg, image/jpg">
-                    <button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button>
-                </div>
-            </div>
+            /* =========================================================================
+             * INYECCIÓN CORE REPARADORA: ACCIONES ADMINISTRATIVAS VIA REST API COMPATIBLE
+             * ========================================================================= */
+            App.deleteUserCloud = function(userId, username) {
+                if (userId === "admin" || username === "arturo.noto") {
+                    alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser eliminado."); return;
+                }
+                if (confirm("⚠️ ¿Desea ELIMINAR permanentemente a " + username.toUpperCase() + " de la nómina?")) {
+                    fetch("https://firebaseio.com" + userId + ".json", { method: "DELETE" })
+                        .then(function() { alert("✅ Usuario removido de la nube."); App.listUsersAdmin(); })
+                        .catch(function() { alert("❌ Error al eliminar el registro."); });
+                }
+            };
 
-            <!-- OPCIÓN B: CUADRÍCULA DE EMOJIS PREINSTALADOS -->
-            <div class="form-group admin-config-card">
-                <label>Opción 2: Seleccionar un Avatar Rápido</label>
-                <div class="avatar-buttons-grid-layout">
-                    ${gridOptionsHtml}
-                </div>
-            </div>
+            App.toggleBlockUser = function(userId, username, currentStatus) {
+                if (userId === "admin" || username === "arturo.noto") {
+                    alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser bloqueado."); return;
+                }
+                var newStatus = (currentStatus === "blocked") ? "active" : "blocked";
+                if (confirm("¿Desea cambiar el estado de " + username.toUpperCase() + " a: " + newStatus.toUpperCase() + "?")) {
+                    fetch("https://firebaseio.com" + userId + ".json", {
+                        method: "PATCH",
+                        body: JSON.stringify({ status: newStatus })
+                    })
+                    .then(function() { alert("✅ Estado actualizado en Firebase."); App.listUsersAdmin(); })
+                    .catch(function() { alert("❌ Error al modificar las restricciones."); });
+                }
+            };
 
-            <div class="modal-action-row-footer">
-                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button>
-            </div>
-        </div>`;
-};
+            App.editUserForm = function(userId, username, currentRole, currentGerencia) {
+                document.getElementById("modalContent").innerHTML = `
+                    <div class="modal-inner-header">
+                        <h3>🔑 Editar Roles y Permisos: ${username.toUpperCase()}</h3>
+                        <button onclick="App.listUsersAdmin()">&larr; Volver</button>
+                    </div>
+                    <form id="formEditUserRole" onsubmit="App.handleSaveUserRoles(event, '${userId}')" class="admin-config-form-layout">
+                        <div class="form-group">
+                            <label>Rol Operativo en el Sistema</label>
+                            <select id="editUserRoleSelect" class="form-control full-width">
+                                <option value="executive" ${currentRole==='executive'?'selected':''}>Ejecutivo / Auditor</option>
+                                <option value="supervisor" ${currentRole==='supervisor'?'selected':''}>Supervisor de Carga</option>
+                                <option value="admin" ${currentRole==='admin'?'selected':''}>Administrador de Sistema</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Asignación de Gerencia Fija</label>
+                            <input type="text" id="editUserGerenciaInput" class="form-control" value="${currentGerencia || ''}">
+                        </div>
+                        <div class="modal-action-row-footer">
+                            <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
+                            <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
+                        </div>
+                    </form>`;
+            };
+
+            App.handleSaveUserRoles = function(event, userId) {
+                event.preventDefault();
+                var newRole = document.getElementById("editUserRoleSelect").value;
+                var newGerencia = document.getElementById("editUserGerenciaInput").value.trim();
+                
+                fetch("https://firebaseio.com" + userId + ".json", {
+                    method: "PATCH",
+                    body: JSON.stringify({ role: newRole, gerencia: newGerencia })
+                })
+                .then(function() { alert("✅ Privilegios actualizados de forma exitosa."); App.listUsersAdmin(); })
+                .catch(function() { alert("❌ Error al guardar las modificaciones."); });
+            };
 
         }, 1500);
     </script>
