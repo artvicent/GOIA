@@ -343,6 +343,56 @@
                     .then(function() { alert("✅ Privilegios guardados."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
             };
 
+                        /* === LÓGICA DE AVATAR PERSISTENTE EN DISCO DURO LOCAL REPARADA === */
+            App.handleUploadAvatarFromPC = function() {
+                var fileInput = document.getElementById("inputAvatarFilePC");
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    alert("⚠️ Por favor, seleccione primero un archivo de imagen en su computadora.");
+                    return;
+                }
+                
+                // CORRECCIÓN MAESTRA: Se extrae el archivo exacto en la posición 0
+                var elArchivoReal = fileInput.files[0];
+                
+                // Control de peso de seguridad (Máximo 500 KB)
+                if (elArchivoReal.size > 500 * 1024) { 
+                    alert("⚠️ La foto es muy pesada. Elija una imagen optimizada de menos de 500 KB.");
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var base64Str = e.target.result;
+                    
+                    // Canal B: Grabado físico indestructible en el disco local de la PC
+                    localStorage.setItem("gerente_avatar_personal", base64Str);
+                    
+                    // Forzamos la actualización inmediata del círculo visual en el Dashboard
+                    var frameDash = document.getElementById("userAvatarFrame");
+                    if (frameDash) {
+                        frameDash.innerHTML = `<img src="${base64Str}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                    }
+                    
+                    document.getElementById("modalOverlay").classList.add("hidden");
+                    alert("✅ ¡Éxito! Tu foto de perfil ha sido fijada de forma permanente.");
+                };
+                reader.readAsDataURL(elArchivoReal);
+            };
+
+            App.handleSelectEmojiAvatarInline = function(emoji) {
+                // Canal B: Grabado físico del emoticono elegido
+                localStorage.setItem("gerente_avatar_personal", emoji);
+                
+                // Actualización al ras en la pantalla
+                var frameDash = document.getElementById("userAvatarFrame");
+                if (frameDash) {
+                    frameDash.innerHTML = emoji;
+                }
+                
+                document.getElementById("modalOverlay").classList.add("hidden");
+                alert("✅ Avatar actualizado: " + emoji);
+            };
+
         }, 1500);
     </script>
 </body>
