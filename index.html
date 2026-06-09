@@ -323,44 +323,51 @@
             };
 
             App.handleCreateNewRoleCloud = function() {
-                var nameIn = document.getElementById("inputNewRoleName");
-                var hierIn = document.getElementById("inputRoleHierarchy");
-                if (!nameIn || !hierIn) return;
+            var nameIn = document.getElementById("inputNewRoleName");
+            var hierIn = document.getElementById("inputRoleHierarchy");
+            if (!nameIn || !hierIn) return;
 
-                var nameValue = nameIn.value.trim();
-                var hierValue = parseInt(hierIn.value) || 1;
-                var roleIdCode = nameValue.toUpperCase().replace(/\s+/g, '_');
+            var nameValue = nameIn.value.trim();
+            var hierValue = parseInt(hierIn.value) || 1;
+            var roleIdCode = nameValue.toUpperCase().replace(/\s+/g, '_');
 
-                if (nameValue === "") {
-                    alert("⚠️ Escriba un nombre para el nuevo perfil.");
-                    return;
-                }
+            if (nameValue === "") {
+                alert("⚠️ Escriba un nombre para el nuevo perfil.");
+                return;
+            }
 
-                var matrixPayload = {};
-                matrixPayload[roleIdCode] = {
-                    name: nameValue,
-                    hierarchy: hierValue,
-                    crear: document.getElementById("chkPermCrear").checked,
-                    modificar: document.getElementById("chkPermModificar").checked,
-                    eliminar: document.getElementById("chkPermEliminar").checked,
-                    ejecutar: document.getElementById("chkPermEjecutar").checked
-                };
+            // Paquete de datos plano listo para la API REST de Firebase
+            var payload = {
+                name: nameValue,
+                hierarchy: hierValue,
+                crear: document.getElementById("chkPermCrear").checked,
+                modificar: document.getElementById("chkPermModificar").checked,
+                eliminar: document.getElementById("chkPermEliminar").checked,
+                ejecutar: document.getElementById("chkPermEjecutar").checked
+            };
 
-                fetch("https://firebaseio.com", {
-                    method: "PATCH",
-                    body: JSON.stringify(matrixPayload)
+                // REPARACIÓN MAESTRA: Apuntamos directamente a la URL específica del Rol con método PUT
+                fetch("https://firebaseio.com" + roleIdCode + ".json", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
                 })
                 .then(function(res) {
                     if (!res.ok) throw new Error("Rejected");
-                    alert("✅ ¡Éxito! Nuevo Perfil con su Matriz de Privilegios inyectado correctamente.");
+                    alert("✅ ¡Éxito! Nuevo Perfil con su Matriz de Privilegios guardado correctamente.");
+                    
+                    // Limpia el formulario sin cerrar la sesión
                     nameIn.value = "";
                     hierIn.value = "";
                     App.handleRenderRolesMatrixTable(); 
                 })
-                .catch(function() {
+                .catch(function(error) {
+                    console.error("Error crítico de escritura cloud:", error);
                     alert("❌ Error de sincronización cloud: Verifique la red corporativa.");
                 });
-            };
+};
 
             App.deleteRoleFromMatrixCloud = function(roleId, roleName) {
                 if (confirm("⚠️ ¿Desea remover el perfil " + roleName.toUpperCase() + " de la matriz cloud?")) {
