@@ -174,13 +174,9 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-        <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
-        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
-        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
-            <!-- CONTROL GRÁFICO CORPORATIVO: INTERFAZ UNIFICADA (PARTE 1 DE 3) -->
-            <!-- CONTROL GRÁFICO MAESTRO: PERSISTENCIA LOCAL DE AVATAR Y EMISIÓN DE TICKETS -->
+        <!-- CONTROL GRÁFICO CORPORATIVO: CANALES DE MEMORIA DESACOPLADOS (PARTE 1 DE 2) -->
     <script>
-        // 1. Sincronizador en vivo de cabecera corporativa y foto de perfil persistente
+        // 1. Sincronizador en vivo de cabecera y logotipos independientes
         setInterval(function() {
             if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
                 var cfg = AppDB.data.config;
@@ -189,38 +185,43 @@
                     if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
                 }
             }
-            // Recupera la foto guardada en el disco duro local de la PC para el Login y el Dashboard
-            var localAvatar = localStorage.getItem("user_avatar_system");
-            if (localAvatar) {
+            
+            // CANAL A: Recupera el LOGOTIPO DEL LOGIN de la PC (Inmune a tu foto de perfil)
+            var systemLogo = localStorage.getItem("system_brand_logo_main");
+            if (systemLogo) {
                 var imgLogin = document.getElementById("appLogoImg");
+                if (imgLogin && imgLogin.src !== systemLogo) imgLogin.src = systemLogo;
+            }
+
+            // CANAL B: Recupera TU FOTO DE PERFIL DE GERENTE de la PC (Sin tocar el Login)
+            var managerAvatar = localStorage.getItem("gerente_avatar_personal");
+            if (managerAvatar) {
                 var frameDash = document.getElementById("userAvatarFrame");
-                // Si la imagen de la PC es una foto real (Base64), la inyecta como etiqueta IMG
-                if (localAvatar.startsWith("data:image")) {
-                    if (imgLogin && !imgLogin.src.startsWith("data:image")) imgLogin.src = localAvatar;
-                    if (frameDash && !frameDash.innerHTML.includes("<img")) {
-                        frameDash.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                if (frameDash) {
+                    if (managerAvatar.startsWith("data:image")) {
+                        if (!frameDash.innerHTML.includes("<img")) {
+                            frameDash.innerHTML = `<img src="${managerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                        }
+                    } else {
+                        if (frameDash.innerText !== managerAvatar) frameDash.innerText = managerAvatar;
                     }
-                } else {
-                    // Si es un emoji, lo inyecta como texto directo
-                    if (frameDash && frameDash.innerText !== localAvatar) frameDash.innerText = localAvatar;
                 }
             }
         }, 500);
 
-        // 2. Inicializador síncrono de ganchos de escucha SPA
+        // 2. Inicializador inmediato de ganchos de escucha SPA REST API
         setTimeout(function() {
             if (typeof App === 'undefined') window.App = {};
 
-            /* ================= App.openAssignmentModal ================= */
+            /* ================= App.openAssignmentModal: SELECTOR DINÁMICO DE TICKETS ================= */
             App.openAssignmentModal = function() {
                 var backup = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? parseInt(AppDB.data.config.ticketCounter) : 0;
                 var render = function(num, opts) {
-                    var valid = (isNaN(num) || num === null) ? 0 : num;
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     document.getElementById("modalContent").innerHTML = `
                         <div class="modal-inner-header"><h3>🎫 Generar Asignación de Ticket</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
                         <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                            <div class="form-group admin-config-card ticket-info-badge"><label class="ticket-label-highlight">🔢 Próximo Ticket: <span>#${valid}</span></label></div>
+                            <div class="form-group admin-config-card ticket-info-badge"><label class="ticket-label-highlight">🔢 Próximo Ticket: <span>#${(isNaN(num) || num === null) ? 0 : num}</span></label></div>
                             <div class="form-group"><label>Gestión a Realizar</label><select id="assignSource" required class="form-control"><option value="" disabled selected>-- Elija del catálogo --</option>${opts}</select></div>
                             <div class="form-group"><label>Meta / Carga</label><input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150"></div>
                             <div class="form-group"><label>Tiempo Estimado (Minutos)</label><input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30"></div>
@@ -233,71 +234,85 @@
                     fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(tk){render(tk===null?0:parseInt(tk), opts);}).catch(function(){render(backup,opts);});
                 }).catch(function(){render(backup,`<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`);});
             };
-            /* ================= App.openAvatarSelectionModal ================= */
+            /* ================= App.openAvatarSelectionModal: PERFIL DE GERENTE INDEPENDIENTE ================= */
             App.openAvatarSelectionModal = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
                 var list = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🤖", "🚀", "🎯"];
-                var grid = ""; 
-                list.forEach(function(em) { 
-                    grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; 
-                });
+                var grid = ""; list.forEach(function(em) { grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; });
                 document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>👤 Personalizar Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+                    <div class="modal-inner-header"><h3>👤 Personalizar Tu Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
                     <div class="admin-config-form-layout">
-                        <div class="form-group admin-config-card"><label>Opción 1: Cargar Foto (.png / .jpg) desde PC</label>
+                        <div class="form-group admin-config-card"><label>Cargar Tu Foto Real desde tu PC</label>
                             <div class="input-inline-row"><input type="file" id="inputAvatarFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button></div></div>
-                        <div class="form-group admin-config-card"><label>Opción 2: Selector de Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
+                        <div class="form-group admin-config-card"><label>O elegir un Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
                         <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button></div>
                     </div>`;
             };
 
-            /* === LÓGICA DE AVATAR PERSISTENTE EN DISCO DURO LOCAL (localStorage) === */
             App.handleUploadAvatarFromPC = function() {
                 var fileInput = document.getElementById("inputAvatarFilePC");
                 if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    var base64Str = e.target.result;
-                    localStorage.setItem("user_avatar_system", base64Str); // Guardado físico indestructible
+                    localStorage.setItem("gerente_avatar_personal", e.target.result); // Grabado en Canal B
                     document.getElementById("modalOverlay").classList.add("hidden");
-                    alert("✅ ¡Foto de perfil fijada con éxito en esta PC!");
+                    alert("✅ Tu foto de perfil ha sido fijada con éxito.");
                 };
-                reader.readAsDataURL(fileInput.files[0]);
+                reader.readAsDataURL(fileInput.files);
             };
 
             App.handleSelectEmojiAvatarInline = function(emoji) {
-                localStorage.setItem("user_avatar_system", emoji); // El emoji se graba a fuego en disco
+                localStorage.setItem("gerente_avatar_personal", emoji); // Grabado en Canal B
                 document.getElementById("modalOverlay").classList.add("hidden");
                 alert("✅ Avatar actualizado: " + emoji);
             };
 
-            /* ================= App.openAdminMenu ================= */
+            /* ================= App.openAdminMenu: PANEL CON LOGOTIPO DE LOGIN SEPARADO ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
                 var exp = AppDB.data?.config?.passwordExpiryDays || 90;
                 var ttl = AppDB.data?.config?.title || "";
                 document.getElementById("modalContent").innerHTML = `
                     <div class="modal-inner-header"><h3>Panel de Personal y Políticas</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
-                    <div class="form-group admin-config-card"><label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
-                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label><div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir</button></div>
+                    <div class="form-group admin-config-card">
+                        <label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
+                        
+                        <!-- CARGADOR DE LOGOTIPO DE ACCESO PRINCIPAL (CANAL A SEPARADO) -->
+                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
+                        <div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Logo</button></div>
+                        
                         <label class="mt-2">Expiración de Contraseñas</label><select id="selectPasswordExpiry" class="form-control full-width"><option value="30" ${exp==30?'selected':''}>Vencimiento cada 30 Días</option><option value="60" ${exp==60?'selected':''}>Vencimiento cada 60 Días</option><option value="90" ${exp==90?'selected':''}>Vencimiento cada 90 Días</option></select></div>
                     <div class="maintenance-critical-card"><label>🚨 Mantenimiento Crítico</label><button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button></div>
                     <div class="modal-grid-buttons"><button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button><button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button></div>
                     <div class="modal-grid-buttons"><button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button><button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button></div>
                     <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
             };
+
+            App.handleUploadSystemLogoFromPC = function() {
+                var fileInput = document.getElementById("inputLogoFilePC");
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var base64Logo = e.target.result;
+                    localStorage.setItem("system_brand_logo_main", base64Logo); // Grabado en Canal A
+                    if (typeof firebase !== 'undefined') firebase.database().ref("config/logoBase64").set(base64Logo);
+                    alert("✅ El Logotipo principal del Login ha sido implantado de forma independiente.");
+                };
+                reader.readAsDataURL(fileInput.files);
+            };
+
             App.executeHardResetDatabaseCloud = function() {
                 if (confirm("🚨 ¿Desea reiniciar el servidor?")) {
                     if (prompt("Digite: REINICIAR") === "REINICIAR") { AppDB.seedInitialData(); location.reload(); }
                 }
             };
 
-            /* ================= ACCIONES DE NÓMINA REST API INDESTRUCTIBLES ================= */
+            /* ================= NÓMINA OPERATIVA MEDIANTE LLAMADAS REST API DIRECTAS ================= */
             App.deleteUserCloud = function(id, name) {
                 if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
                 if (confirm("⚠️ ¿Eliminar a " + name.toUpperCase() + "?")) {
                     fetch("https://firebaseio.com" + id + ".json", { method: "DELETE" })
-                        .then(function() { alert("✅ Usuario removido de la nube."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
+                        .then(function() { alert("✅ Usuario removido."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
                 }
             };
 
@@ -306,7 +321,7 @@
                 var next = (status === "blocked") ? "active" : "blocked";
                 if (confirm("¿Cambiar estado de " + name.toUpperCase() + " a " + next.toUpperCase() + "?")) {
                     fetch("https://firebaseio.com" + id + ".json", { method: "PATCH", body: JSON.stringify({ status: next }) })
-                        .then(function() { alert("✅ Estado modificado."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
+                        .then(function() { alert("✅ Restricción de acceso actualizada."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
                 }
             };
 
@@ -316,7 +331,7 @@
                     <form onsubmit="App.handleSaveUserRoles(event, '${id}')" class="admin-config-form-layout">
                         <div class="form-group"><label>Rol Operativo</label><select id="editUserRoleSelect" class="form-control full-width"><option value="executive" ${role==='executive'?'selected':''}>Ejecutivo / Auditor</option><option value="supervisor" ${role==='supervisor'?'selected':''}>Supervisor</option><option value="admin" ${role==='admin'?'selected':''}>Administrador</option></select></div>
                         <div class="form-group"><label>Gerencia Asignada</label><input type="text" id="editUserGerenciaInput" class="form-control" value="${ger || ''}"></div>
-                        <div class="modal-action-row-footer"><button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Guardar</button></div>
+                        <div class="modal-action-row-footer"><button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Guardar Cambios</button></div>
                     </form>`;
             };
 
@@ -332,4 +347,5 @@
     </script>
 </body>
 </html>
+
 
