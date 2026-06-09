@@ -375,12 +375,12 @@
 
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
           
+            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE NATIVA (REPARADA)
             App.handleCreateNewRoleCloud = function() {
                 var codeIn = document.getElementById("inputNewRoleCode");
                 var nameIn = document.getElementById("inputNewRoleName");
                 if (!codeIn || !nameIn) return;
 
-                // Formateamos el código limpiando espacios para que sirva como ID único (Ej: AUDITOR_SENIOR)
                 var codeValue = codeIn.value.trim().toUpperCase().replace(/\s+/g, '_');
                 var nameValue = nameIn.value.trim();
 
@@ -389,34 +389,31 @@
                     return;
                 }
 
-                // Estructura limpia que se guardará indexada bajo su propio código identificador
-                var roleData = {};
-                roleData[codeValue] = { code: codeValue, name: nameValue };
+                var roleData = { code: codeValue, name: nameValue };
                 
-                // REPARACIÓN REST: Apuntamos directamente a la raíz de roles usando PATCH para forzar la creación del nodo
+                // Consulta REST directa al nodo de roles en la nube de Firebase
                 fetch("https://firebaseio.com", {
-                    method: "PATCH",
+                    method: "POST",
                     body: JSON.stringify(roleData)
                 })
                 .then(function(res) {
-                    if (!res.ok) throw new Error("Fallo en servidor Cloud");
+                    if (!res.ok) throw new Error("Fallo de escritura en servidor Cloud");
                     return res.json();
                 })
                 .then(function() {
                     alert("✅ ¡Éxito de Sincronización Cloud!\n\nNuevo rol corporativo [" + codeValue + "] inyectado correctamente al servidor de Firebase.");
                     
-                    // Limpiamos los campos del formulario para permitir el siguiente registro
+                    // Limpiamos las casillas del formulario para el siguiente registro
                     codeIn.value = "";
                     nameIn.value = "";
                     
-                    App.openRolesMenu(); // Refresca la tabla interna automáticamente con el nuevo dato en vivo
+                    App.openRolesMenu(); // Refresca la tabla en vivo de forma instantánea
                 })
                 .catch(function(error) {
-                    console.error("Fallo crítico de escritura REST:", error);
+                    console.error("Fallo crítico de red:", error);
                     alert("❌ Error de red: Firebase denegó la inserción. Verifique las reglas o las cabeceras de la app.");
                 });
             };
-
 
             // B. FUNCIÓN PARA ELIMINAR UN ROL ESPECÍFICO DEL SERVIDOR
             App.deleteRoleCloud = function(roleId, roleName) {
