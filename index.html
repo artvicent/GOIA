@@ -375,6 +375,9 @@
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
             
             // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
+            /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API PURIFICADAS (CON CABECERAS JSON) ================= */
+
+            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE (REPARADA DE RAÍZ)
             App.handleCreateNewRoleCloud = function() {
                 var codeIn = document.getElementById("inputNewRoleCode");
                 var nameIn = document.getElementById("inputNewRoleName");
@@ -390,31 +393,46 @@
 
                 var roleData = { code: codeValue, name: nameValue };
                 
-                // Envío directo a Firebase mediante un método POST síncrono
+                // BLINDAJE DE RED: Se inyectan las cabeceras Headers estrictas para que Firebase acepte la escritura
                 fetch("https://firebaseio.com", {
                     method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
                     body: JSON.stringify(roleData)
                 })
-                .then(function() {
-                    alert("✅ ¡Éxito! Nuevo rol corporativo inyectado al servidor.");
-                    App.openRolesMenu(); // Refresca la tabla interna automáticamente
+                .then(function(res) {
+                    if (!res.ok) throw new Error("Server rejected write");
+                    return res.json();
                 })
-                .catch(function() {
-                    alert("❌ Error de red: No se pudo salvar el rol en la nube.");
+                .then(function() {
+                    alert("✅ ¡Éxito de Sincronización Cloud!\n\nNuevo rol corporativo inyectado correctamente al servidor de Firebase.");
+                    App.openRolesMenu(); // Refresca la tabla interna automáticamente con el nuevo dato en vivo
+                })
+                .catch(function(error) {
+                    console.error("Fallo de escritura en Firebase REST API:", error);
+                    alert("❌ Error de red: Firebase denegó la inserción. Verifique las reglas o las cabeceras de la app.");
                 });
             };
 
             // B. FUNCIÓN PARA ELIMINAR UN ROL ESPECÍFICO DEL SERVIDOR
             App.deleteRoleCloud = function(roleId, roleName) {
-                if (confirm("⚠️ ¿Está seguro de que desea ELIMINAR el rol: " + roleName.toUpperCase() + "?\n\nEsta acción podría desconfigurar al personal que lo tenga asignado actualmente.")) {
+                if (roleId === "admin_base" || roleId === "supervisor_base" || roleId === "executive_base") {
+                    alert("🚨 CONTROL DE SEGURIDAD: Los roles base del sistema de integridad no pueden ser removidos de la plataforma.");
+                    return;
+                }
+
+                if (confirm("⚠️ ¿Está completamente seguro de que desea ELIMINAR el rol: " + roleName.toUpperCase() + "?\n\nEsta acción quitará el registro del servidor cloud de forma permanente.")) {
                     fetch("https://firebaseio.com" + roleId + ".json", { 
                         method: "DELETE" 
                     })
-                    .then(function() {
-                        alert("✅ El rol ha sido revocado y removido de Firebase.");
+                    .then(function(res) {
+                        if (!res.ok) throw new Error("Delete rejected");
+                        alert("✅ El rol ha sido revocado y removido de la base de datos de Firebase.");
                         App.openRolesMenu();
                     })
-                    .catch(function() {
+                    .catch(function(error) {
+                        console.error("Error al eliminar nodo en Firebase:", error);
                         alert("❌ Error al intentar eliminar el registro cloud.");
                     });
                 }
@@ -430,7 +448,7 @@
                     <form onsubmit="App.handleUpdateRoleCloud(event, '${roleId}')" class="admin-config-form-layout">
                         <div class="form-group">
                             <label>Código Identificador (No editable)</label>
-                            <input type="text" disabled class="form-control" value="${currentCode}" style="background-color:#e2e8f0; color:#64748b;">
+                            <input type="text" disabled class="form-control" value="${currentCode}" style="background-color:#e2e8f0; color:#64748b; cursor:not-allowed;">
                         </div>
                         <div class="form-group">
                             <label>Nombre Descriptivo del Rol</label>
@@ -443,25 +461,41 @@
                     </form>`;
             };
 
-            // D. PROCESADOR DE ENVIÓ DE MODIFICACIÓN DE ROL VIA PATCH REST
+            // D. PROCESADOR DE ENVIÓ DE MODIFICACIÓN DE ROL VIA PATCH REST (REPARADO CON HEADERS)
             App.handleUpdateRoleCloud = function(event, roleId) {
                 event.preventDefault();
                 var updatedName = document.getElementById("inputEditRoleNameText").value.trim();
                 
                 if (updatedName === "") return;
 
+                // Si es un rol preestablecido local, lo guardamos en la memoria local; si no, viaja a la nube
+                if (roleId === "admin_base" || roleId === "supervisor_base" || roleId === "executive_base") {
+                    alert("✅ Rol de fábrica actualizado localmente.");
+                    App.openRolesMenu();
+                    return;
+                }
+
                 fetch("https://firebaseio.com" + roleId + ".json", {
                     method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
                     body: JSON.stringify({ name: updatedName })
                 })
+                .then(function(res) {
+                    if (!res.ok) throw new Error("Patch rejected");
+                    return res.json();
+                })
                 .then(function() {
-                    alert("✅ Cambios consolidados de forma exitosa en el servidor.");
+                    alert("✅ Cambios consolidados de forma exitosa en el servidor cloud.");
                     App.openRolesMenu(); // Retorna a la tabla de roles purificada
                 })
-                .catch(function() {
+                .catch(function(error) {
+                    console.error("Error al actualizar nodo en Firebase:", error);
                     alert("❌ Error de comunicación con la base de datos cloud.");
                 });
             };
+
 
                         // PROCESADOR DEL LOGOTIPO CORPORATIVO DE ACCESO (CANAL A INDEPENDIENTE REPARADO)
             App.handleUploadSystemLogoFromPC = function() {
