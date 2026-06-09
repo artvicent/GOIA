@@ -175,8 +175,9 @@
     <script src="app-admin-logs.js"></script>
 
         <!-- CONTROL GRÁFICO CORPORATIVO: CANALES DE MEMORIA DESACOPLADOS (PARTE 1 DE 2) -->
+        <!-- CONTROL GRÁFICO MAESTRO: INTERFAZ RESISTENTE A REFRESCOS DE SESIÓN (PARTE 1 DE 2) -->
     <script>
-        // 1. Sincronizador en vivo de cabecera y logotipos independientes
+        // 1. Sincronizador en vivo de cabecera corporativa y logotipos independientes
         setInterval(function() {
             if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
                 var cfg = AppDB.data.config;
@@ -185,15 +186,11 @@
                     if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
                 }
             }
-            
-            // CANAL A: Recupera el LOGOTIPO DEL LOGIN de la PC (Inmune a tu foto de perfil)
             var systemLogo = localStorage.getItem("system_brand_logo_main");
             if (systemLogo) {
                 var imgLogin = document.getElementById("appLogoImg");
                 if (imgLogin && imgLogin.src !== systemLogo) imgLogin.src = systemLogo;
             }
-
-            // CANAL B: Recupera TU FOTO DE PERFIL DE GERENTE de la PC (Sin tocar el Login)
             var managerAvatar = localStorage.getItem("gerente_avatar_personal");
             if (managerAvatar) {
                 var frameDash = document.getElementById("userAvatarFrame");
@@ -234,112 +231,55 @@
                     fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(tk){render(tk===null?0:parseInt(tk), opts);}).catch(function(){render(backup,opts);});
                 }).catch(function(){render(backup,`<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`);});
             };
-            /* ================= App.openAvatarSelectionModal: PERFIL DE GERENTE INDEPENDIENTE ================= */
-            App.openAvatarSelectionModal = function() {
+
+            /* ================= App.openRolesMenu: MATRIZ CORREGIDA LIBRE DE REFRESCOS DE PÁGINA ================= */
+            App.openRolesMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
-                var list = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🤖", "🚀", "🎯"];
-                var grid = ""; list.forEach(function(em) { grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; });
+                
+                // CORRECCIÓN ATÓMICA: Cambiamos la etiqueta FORM por una estructura DIV y el botón por type="button"
                 document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>👤 Personalizar Tu Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
-                    <div class="admin-config-form-layout">
-                        <div class="form-group admin-config-card"><label>Cargar Tu Foto Real desde tu PC</label>
-                            <div class="input-inline-row"><input type="file" id="inputAvatarFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button></div></div>
-                        <div class="form-group admin-config-card"><label>O elegir un Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
-                        <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button></div>
+                    <div class="modal-inner-header">
+                        <h3>CONTROL DE ROLES Y PRIVILEGIOS</h3>
+                        <button onclick="App.openAdminMenu()" class="btn-secondary" style="font-size:12px; padding:4px 10px;">&larr; Volver</button>
+                    </div>
+                    
+                    <div class="admin-config-form-layout" style="gap:1rem;">
+                        <div class="input-inline-row" style="gap:0.75rem;">
+                            <input type="text" id="inputNewRoleName" class="form-control" placeholder="Nombre de Perfil (Ej: Especialista)" style="flex:2;">
+                            <input type="number" id="inputRoleHierarchy" class="form-control" min="1" max="4" placeholder="Jerarquía (1-4)" style="flex:1;">
+                        </div>
+
+                        <div class="admin-config-card" style="padding:0.75rem; background:#ffffff; border:1px solid #cbd5e1;">
+                            <label style="font-size:10px; font-weight:700; color:#1e293b; text-transform:uppercase; margin-bottom:0.5rem; display:block;">Asignación de Privilegios de Uso</label>
+                            <div class="input-inline-row" style="justify-content:space-between; width:100%; padding:4px 0;">
+                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermCrear"> Crear</label>
+                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermModificar"> Modificar</label>
+                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEliminar"> Eliminar</label>
+                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEjecutar" checked> Ejecutar</label>
+                            </div>
+                        </div>
+
+                        <!-- type="button" frena en seco el submit abusivo del navegador y salva la sesión -->
+                        <button type="button" onclick="App.handleCreateNewRoleCloud()" class="btn-primary-login" style="margin:0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; background-color:#0f172a; border-color:#0f172a;">
+                            + GUARDAR NUEVO PERFIL
+                        </button>
+                    </div>
+
+                    <div class="table-container custom-scrollbar" style="max-height:220px; overflow-y:auto; margin-top:1rem; border:none;">
+                        <table class="executive-table" style="width:100%;">
+                            <thead>
+                                <tr style="background:transparent;"><th style="font-size:10px; padding:8px 4px;">PERFIL</th><th style="font-size:10px; padding:8px 4px; text-align:center;">MATRIZ PERMISOS</th><th style="font-size:10px; padding:8px 4px; text-align:right;">BAJA</th></tr>
+                            </thead>
+                            <tbody id="tableRolesCloudBody">
+                                <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue); font-size:12px;">Conectando con la nube...</td></tr>
+                            </tbody>
+                        </table>
                     </div>`;
+
+                App.handleRenderRolesMatrixTable();
             };
-
-            App.handleUploadAvatarFromPC = function() {
-                var fileInput = document.getElementById("inputAvatarFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    localStorage.setItem("gerente_avatar_personal", e.target.result); // Grabado en Canal B
-                    document.getElementById("modalOverlay").classList.add("hidden");
-                    alert("✅ Tu foto de perfil ha sido fijada con éxito.");
-                };
-                reader.readAsDataURL(fileInput.files);
-            };
-
-            App.handleSelectEmojiAvatarInline = function(emoji) {
-                localStorage.setItem("gerente_avatar_personal", emoji); // Grabado en Canal B
-                document.getElementById("modalOverlay").classList.add("hidden");
-                alert("✅ Avatar actualizado: " + emoji);
-            };
-
-            /* ================= App.openAdminMenu: PANEL CON LOGOTIPO DE LOGIN SEPARADO ================= */
-            App.openAdminMenu = function() {
-                document.getElementById("modalOverlay").classList.remove("hidden");
-                var exp = AppDB.data?.config?.passwordExpiryDays || 90;
-                var ttl = AppDB.data?.config?.title || "";
-                document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>Panel de Personal y Políticas</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
-                    <div class="form-group admin-config-card">
-                        <label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
-                        
-                        <!-- CARGADOR DE LOGOTIPO DE ACCESO PRINCIPAL (CANAL A SEPARADO) -->
-                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
-                        <div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Logo</button></div>
-                        
-                        <label class="mt-2">Expiración de Contraseñas</label><select id="selectPasswordExpiry" class="form-control full-width"><option value="30" ${exp==30?'selected':''}>Vencimiento cada 30 Días</option><option value="60" ${exp==60?'selected':''}>Vencimiento cada 60 Días</option><option value="90" ${exp==90?'selected':''}>Vencimiento cada 90 Días</option></select></div>
-                    <div class="maintenance-critical-card"><label>🚨 Mantenimiento Crítico</label><button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button></div>
-                    <div class="modal-grid-buttons"><button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button><button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button></div>
-                    <div class="modal-grid-buttons"><button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button><button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button></div>
-                    <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
-            };
-
-            /* ================= App.openRolesMenu: MÓDULO DE GESTIÓN DE ROLES CLOUD REST ================= */
-            /* ================= App.openRolesMenu: MATRIZ DE CONTROL DE ROLES Y PRIVILEGIOS VISUAL ================= */
-App.openRolesMenu = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    
-    // Dibujamos la cabecera, los inputs proporcionales y las casillas de verificación exactas de tu foto
-    document.getElementById("modalContent").innerHTML = `
-        <div class="modal-inner-header">
-            <h3>CONTROL DE ROLES Y PRIVILEGIOS</h3>
-            <button onclick="App.openAdminMenu()" class="btn-secondary" style="font-size:12px; padding:4px 10px;">&larr; Volver</button>
-        </div>
-        
-        <form id="formNewRoleMatrix" onsubmit="App.handleCreateNewRoleCloud(event)" class="admin-config-form-layout" style="gap:1rem;">
-            <div class="input-inline-row" style="gap:0.75rem;">
-                <input type="text" id="inputNewRoleName" required class="form-control" placeholder="Nombre de Perfil (Ej: Especialista)" style="flex:2;">
-                <input type="number" id="inputRoleHierarchy" required class="form-control" min="1" max="4" placeholder="Jerarquía (1-4)" style="flex:1;">
-            </div>
-
-            <div class="admin-config-card" style="padding:0.75rem; background:#ffffff; border:1px solid #cbd5e1;">
-                <label style="font-size:10px; font-weight:700; color:#1e293b; text-transform:uppercase; margin-bottom:0.5rem; display:block;">Asignación de Privilegios de Uso</label>
-                <div class="input-inline-row" style="justify-content:space-between; width:100%; padding:4px 0;">
-                    <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermCrear"> Crear</label>
-                    <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermModificar"> Modificar</label>
-                    <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEliminar"> Eliminar</label>
-                    <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEjecutar" checked> Ejecutar</label>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-primary-login" style="margin:0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; background-color:#0f172a; border-color:#0f172a;">
-                + GUARDAR NUEVO PERFIL
-            </button>
-        </form>
-
-        <div class="table-container custom-scrollbar" style="max-height:220px; overflow-y:auto; margin-top:1rem; border:none;">
-            <table class="executive-table" style="width:100%;">
-                <thead>
-                    <tr style="background:transparent;"><th style="font-size:10px; padding:8px 4px;">PERFIL</th><th style="font-size:10px; padding:8px 4px; text-align:center;">MATRIZ PERMISOS</th><th style="font-size:10px; padding:8px 4px; text-align:right;">BAJA</th></tr>
-                </thead>
-                <tbody id="tableRolesCloudBody">
-                    <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue); font-size:12px;">Conectando con la nube...</td></tr>
-                </tbody>
-            </table>
-        </div>`;
-
-    // Llamamos en paralelo a la lectura de la base de datos cloud REST
-    App.handleRenderRolesMatrixTable();
-};
             /* ================= ACCIONES DE LA MATRIZ DE ROLES VIA REST API COMPATIBLES ================= */
-
-            // A. FUNCIÓN PARA CARGAR Y RENDERIZAR LA MATRIZ EN TIEMPO REAL
             App.handleRenderRolesMatrixTable = function() {
-                // Roles del sistema fijos por defecto (Fila de respaldo idéntica a tu captura)
                 var rolesBaseHtml = `
                     <tr><td><strong>Gerente</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía Nivel: 4</span></td><td style="text-align:center;"><span style="font-size:10px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:3px 6px; border-radius:4px; text-transform:uppercase;">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; font-weight:600; padding-right:10px;">Fijo</td></tr>
                     <tr><td><strong>Administrador</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía Nivel: 3</span></td><td style="text-align:center;"><span style="font-size:10px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:3px 6px; border-radius:4px; text-transform:uppercase;">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; font-weight:600; padding-right:10px;">Fijo</td></tr>`;
@@ -355,7 +295,6 @@ App.openRolesMenu = function() {
                             Object.keys(data).forEach(function(key) {
                                 var r = data[key];
                                 if (r && r.name) {
-                                    // Construcción visual de los chips de la matriz de permisos
                                     var badges = "";
                                     if (r.crear) badges += `<span style="font-size:9px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 4px; border-radius:3px; margin-right:2px;">CREA</span>`;
                                     if (r.modificar) badges += `<span style="font-size:9px; font-weight:700; color:#16a34a; background:#f0fdf4; padding:2px 4px; border-radius:3px; margin-right:2px;">MOD</span>`;
@@ -383,10 +322,7 @@ App.openRolesMenu = function() {
                     });
             };
 
-            // B. PROCESADOR DE ENVÍO BINARIO DE LA MATRIZ DE ROLES (PATCH INDESTRUCTIBLE)
-            App.handleCreateNewRoleCloud = function(event) {
-                event.preventDefault();
-
+            App.handleCreateNewRoleCloud = function() {
                 var nameIn = document.getElementById("inputNewRoleName");
                 var hierIn = document.getElementById("inputRoleHierarchy");
                 if (!nameIn || !hierIn) return;
@@ -395,9 +331,11 @@ App.openRolesMenu = function() {
                 var hierValue = parseInt(hierIn.value) || 1;
                 var roleIdCode = nameValue.toUpperCase().replace(/\s+/g, '_');
 
-                if (nameValue === "") return;
+                if (nameValue === "") {
+                    alert("⚠️ Escriba un nombre para el nuevo perfil.");
+                    return;
+                }
 
-                // Estructura del objeto de la matriz mapeado con booleanos nativos
                 var matrixPayload = {};
                 matrixPayload[roleIdCode] = {
                     name: nameValue,
@@ -415,242 +353,86 @@ App.openRolesMenu = function() {
                 .then(function(res) {
                     if (!res.ok) throw new Error("Rejected");
                     alert("✅ ¡Éxito! Nuevo Perfil con su Matriz de Privilegios inyectado correctamente.");
-                    App.openRolesMenu(); // Recarga la tabla de inmediato
+                    nameIn.value = "";
+                    hierIn.value = "";
+                    App.handleRenderRolesMatrixTable(); 
                 })
                 .catch(function() {
                     alert("❌ Error de sincronización cloud: Verifique la red corporativa.");
                 });
             };
 
-            // C. FUNCIÓN DE BAJA (ELIMINAR) PERFILES REGISTRADOS
             App.deleteRoleFromMatrixCloud = function(roleId, roleName) {
                 if (confirm("⚠️ ¿Desea remover el perfil " + roleName.toUpperCase() + " de la matriz cloud?")) {
-                    fetch("https://firebaseio.com" + roleId + ".json", {
-                        method: "DELETE"
-                    })
-                    .then(function() {
-                        alert("✅ Registro revocado correctamente.");
-                        App.openRolesMenu();
-                    });
+                    fetch("https://firebaseio.com" + roleId + ".json", { method: "DELETE" })
+                        .then(function() {
+                            alert("✅ Registro revocado correctamente.");
+                            App.handleRenderRolesMatrixTable();
+                        });
                 }
             };
-
-
-                // 3. Consulta REST directa a tu base de datos cloud de Google Firebase
-                fetch("https://firebaseio.com")
-                    .then(function(res) { 
-                        return res.json(); 
-                    })
-                    .then(function(data) {
-                        var tbody = document.getElementById("tableRolesCloudBody");
-                        if (!tbody) return;
-                        
-                        var html = "";
-                        // Si la base de datos cloud ya tiene roles creados, los lista dinámicamente uno por uno
-                        if (data !== null && typeof data === 'object') {
-                            Object.keys(data).forEach(function(key) {
-                                var r = data[key];
-                                if (r && r.code) {
-                                    html += `
-                                        <tr>
-                                            <td><strong>${r.code.toUpperCase()}</strong></td>
-                                            <td>${r.name}</td>
-                                            <td>
-                                                <button onclick="App.editRoleFormInline('${key}', '${r.code}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button>
-                                                <button onclick="App.deleteRoleCloud('${key}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:#dc2626;">🗑️</button>
-                                            </td>
-                                        </tr>`;
-                                }
-                            });
-                        }
-                        
-                        // Si el nodo de Firebase está en blanco o dio null, inyecta la nómina base + los roles que crees
-                        tbody.innerHTML = rolesPorDefectoHtml + html;
-                    })
-                    .catch(function(error) {
-                        console.warn("Fallo de red o nodo vacío en Firebase, activando el backup local:", error);
-                        var tbody = document.getElementById("tableRolesCloudBody");
-                        if (tbody) {
-                            // El sistema se mantiene operativo inyectando los roles base de seguridad de inmediato
-                            tbody.innerHTML = rolesPorDefectoHtml;
-                        }
-                    });
-            
-
-            /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
-          
-            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE NATIVA (REPARADA)
-  // A. FUNCIÓN PARA AGREGAR NUEVO ROL CON CONTROL DE ORIGEN INMUNE (ANTI-CORS)
-            App.handleCreateNewRoleCloud = function() {
-                var codeIn = document.getElementById("inputNewRoleCode");
-                var nameIn = document.getElementById("inputNewRoleName");
-                if (!codeIn || !nameIn) return;
-
-                // Formateamos el código limpiando espacios para generar una clave limpia
-                var codeValue = codeIn.value.trim().toUpperCase().replace(/\s+/g, '_');
-                var nameValue = nameIn.value.trim();
-
-                if (codeValue === "" || nameValue === "") {
-                    alert("⚠️ Por favor, rellene ambos campos para poder procesar el nuevo rol.");
-                    return;
-                }
-
-                // Estructura indexada por código para forzar la inserción limpia en el nodo
-                var roleData = {};
-                roleData[codeValue] = { code: codeValue, name: nameValue };
-                
-                // DETONADOR DE FUERZA REST: Usamos el método PATCH sin cabeceras restrictivas para evadir el bloqueo de CORS de Google
-                fetch("https://firebaseio.com", {
-                    method: "PATCH",
-                    mode: "cors", // Fuerza la compatibilidad cruzada nativa de GitHub Pages
-                    body: JSON.stringify(roleData)
-                })
-                .then(function(res) {
-                    if (!res.ok) throw new Error("Fallo de escritura Cloud");
-                    return res.json();
-                })
-                .then(function() {
-                    alert("✅ ¡Éxito de Sincronización Cloud!\n\nNuevo rol corporativo [" + codeValue + "] inyectado correctamente al servidor de Firebase.");
-                    
-                    // Limpiamos los campos del formulario para el próximo registro
-                    codeIn.value = "";
-                    nameIn.value = "";
-                    
-                    App.openRolesMenu(); // Refresca la tabla en vivo de forma instantánea
-                })
-                .catch(function(error) {
-                    console.error("Fallo crítico de red REST:", error);
-                    alert("❌ Error de red: Firebase denegó la inserción. Verifique las reglas o las cabeceras de la app.");
-                });
-            };
-            // B. FUNCIÓN PARA ELIMINAR UN ROL ESPECÍFICO DEL SERVIDOR
-            App.deleteRoleCloud = function(roleId, roleName) {
-                if (roleId === "admin_base" || roleId === "supervisor_base" || roleId === "executive_base") {
-                    alert("🚨 CONTROL DE SEGURIDAD: Los roles base del sistema de integridad no pueden ser removidos de la plataforma.");
-                    return;
-                }
-
-                if (confirm("⚠️ ¿Está completamente seguro de que desea ELIMINAR el rol: " + roleName.toUpperCase() + "?\n\nEsta acción quitará el registro del servidor cloud de forma permanente.")) {
-                    fetch("https://firebaseio.com" + roleId + ".json", { 
-                        method: "DELETE" 
-                    })
-                    .then(function(res) {
-                        if (!res.ok) throw new Error("Delete rejected");
-                        alert("✅ El rol ha sido revocado y removido de la base de datos de Firebase.");
-                        App.openRolesMenu();
-                    })
-                    .catch(function(error) {
-                        console.error("Error al eliminar nodo en Firebase:", error);
-                        alert("❌ Error al intentar eliminar el registro cloud.");
-                    });
-                }
-            };
-
-            // C. FORMULARIO EN CALIENTE INTERNO PARA MODIFICAR UN ROL EXISTENTE
-            App.editRoleFormInline = function(roleId, currentCode, currentName) {
+            /* ================= App.openAvatarSelectionModal ================= */
+            App.openAvatarSelectionModal = function() {
+                document.getElementById("modalOverlay").classList.remove("hidden");
+                var list = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🤖", "🚀", "🎯"];
+                var grid = ""; list.forEach(function(em) { grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; });
                 document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header">
-                        <h3>✏️ Modificar Rol Corporativo</h3>
-                        <button onclick="App.openRolesMenu()">&larr; Volver</button>
-                    </div>
-                    <form onsubmit="App.handleUpdateRoleCloud(event, '${roleId}')" class="admin-config-form-layout">
-                        <div class="form-group">
-                            <label>Código Identificador (No editable)</label>
-                            <input type="text" disabled class="form-control" value="${currentCode}" style="background-color:#e2e8f0; color:#64748b; cursor:not-allowed;">
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre Descriptivo del Rol</label>
-                            <input type="text" id="inputEditRoleNameText" required class="form-control" value="${currentName}">
-                        </div>
-                        <div class="modal-action-row-footer">
-                            <button type="button" onclick="App.openRolesMenu()" class="btn-secondary-cancel">Cancelar</button>
-                            <button type="submit" class="btn-primary-submit">Actualizar Cambios</button>
-                        </div>
-                    </form>`;
+                    <div class="modal-inner-header"><h3>👤 Personalizar Tu Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+                    <div class="admin-config-form-layout">
+                        <div class="form-group admin-config-card"><label>Cargar Tu Foto Real desde tu PC</label>
+                            <div class="input-inline-row"><input type="file" id="inputAvatarFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button></div></div>
+                        <div class="form-group admin-config-card"><label>O elegir un Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
+                        <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button></div>
+                    </div>`;
             };
 
-            // D. PROCESADOR DE ENVIÓ DE MODIFICACIÓN DE ROL VIA PATCH REST (REPARADO CON HEADERS)
-            App.handleUpdateRoleCloud = function(event, roleId) {
-                event.preventDefault();
-                var updatedName = document.getElementById("inputEditRoleNameText").value.trim();
-                
-                if (updatedName === "") return;
-
-                // Si es un rol preestablecido local, lo guardamos en la memoria local; si no, viaja a la nube
-                if (roleId === "admin_base" || roleId === "supervisor_base" || roleId === "executive_base") {
-                    alert("✅ Rol de fábrica actualizado localmente.");
-                    App.openRolesMenu();
-                    return;
-                }
-
-                fetch("https://firebaseio.com" + roleId + ".json", {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ name: updatedName })
-                })
-                .then(function(res) {
-                    if (!res.ok) throw new Error("Patch rejected");
-                    return res.json();
-                })
-                .then(function() {
-                    alert("✅ Cambios consolidados de forma exitosa en el servidor cloud.");
-                    App.openRolesMenu(); // Retorna a la tabla de roles purificada
-                })
-                .catch(function(error) {
-                    console.error("Error al actualizar nodo en Firebase:", error);
-                    alert("❌ Error de comunicación con la base de datos cloud.");
-                });
+            App.handleUploadAvatarFromPC = function() {
+                var fileInput = document.getElementById("inputAvatarFilePC");
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    localStorage.setItem("gerente_avatar_personal", e.target.result);
+                    document.getElementById("modalOverlay").classList.add("hidden");
+                    alert("✅ Tu foto de perfil ha sido fijada con éxito.");
+                };
+                reader.readAsDataURL(fileInput.files[0]);
             };
 
+            App.handleSelectEmojiAvatarInline = function(emoji) {
+                localStorage.setItem("gerente_avatar_personal", emoji);
+                document.getElementById("modalOverlay").classList.add("hidden");
+                alert("✅ Avatar actualizado: " + emoji);
+            };
 
-                        // PROCESADOR DEL LOGOTIPO CORPORATIVO DE ACCESO (CANAL A INDEPENDIENTE REPARADO)
+            /* ================= App.openAdminMenu ================= */
+            App.openAdminMenu = function() {
+                document.getElementById("modalOverlay").classList.remove("hidden");
+                var exp = AppDB.data?.config?.passwordExpiryDays || 90;
+                var ttl = AppDB.data?.config?.title || "";
+                document.getElementById("modalContent").innerHTML = `
+                    <div class="modal-inner-header"><h3>Panel de Personal y Políticas</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+                    <div class="form-group admin-config-card">
+                        <label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
+                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
+                        <div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Logo</button></div>
+                        <label class="mt-2">Expiración de Contraseñas</label><select id="selectPasswordExpiry" class="form-control full-width"><option value="30" ${exp==30?'selected':''}>Vencimiento cada 30 Días</option><option value="60" ${exp==60?'selected':''}>Vencimiento cada 60 Días</option><option value="90" ${exp==90?'selected':''}>Vencimiento cada 90 Días</option></select></div>
+                    <div class="maintenance-critical-card"><label>🚨 Mantenimiento Crítico</label><button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button></div>
+                    <div class="modal-grid-buttons"><button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button><button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button></div>
+                    <div class="modal-grid-buttons"><button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button><button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button></div>
+                    <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
+            };
+
             App.handleUploadSystemLogoFromPC = function() {
                 var fileInput = document.getElementById("inputLogoFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                    alert("⚠️ Por favor, seleccione primero una imagen corporativa en su computadora.");
-                    return;
-                }
-                
-                // CORRECCIÓN EXACTA: Se captura el archivo en la posición 0 del arreglo
-                var elArchivoLogo = fileInput.files[0];
-                
-                // Control de peso para el servidor cloud (Máximo 800 KB)
-                if (elArchivoLogo.size > 800 * 1024) {
-                    alert("⚠️ La imagen es muy pesada. Elija un logotipo de menos de 800 KB.");
-                    return;
-                }
-
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     var base64Logo = e.target.result;
-                    
-                    // 1. Grabado en Canal A (Memoria local de la PC para el Login)
                     localStorage.setItem("system_brand_logo_main", base64Logo);
-                    
-                    // 2. Inyección directa en la nube de Firebase Realtime Database
-                    if (typeof firebase !== 'undefined') {
-                        firebase.database().ref("config/logoBase64").set(base64Logo)
-                            .then(function() {
-                                alert("✅ ¡Éxito! El Logotipo principal del Login ha sido guardado e implantado en la nube.");
-                                document.getElementById("modalOverlay").classList.add("hidden");
-                            })
-                            .catch(function() {
-                                alert("⚠️ Logotipo guardado localmente, pero hubo un desfase de red con la nube.");
-                            });
-                    } else {
-                        alert("✅ Logotipo guardado.");
-                        document.getElementById("modalOverlay").classList.add("hidden");
-                    }
+                    if (typeof firebase !== 'undefined') firebase.database().ref("config/logoBase64").set(base64Logo);
+                    alert("✅ El Logotipo principal del Login ha sido implantado de forma independiente.");
                 };
-                reader.readAsDataURL(elArchivoLogo); // Procesa el archivo binario de forma correcta
-            };
-
-            App.executeHardResetDatabaseCloud = function() {
-                if (confirm("🚨 ¿Desea reiniciar el servidor?")) {
-                    if (prompt("Digite: REINICIAR") === "REINICIAR") { AppDB.seedInitialData(); location.reload(); }
-                }
+                reader.readAsDataURL(fileInput.files[0]);
             };
 
             /* ================= NÓMINA OPERATIVA MEDIANTE LLAMADAS REST API DIRECTAS ================= */
@@ -689,59 +471,7 @@ App.openRolesMenu = function() {
                     .then(function() { alert("✅ Privilegios guardados."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
             };
 
-                        /* === LÓGICA DE AVATAR PERSISTENTE EN DISCO DURO LOCAL REPARADA === */
-            App.handleUploadAvatarFromPC = function() {
-                var fileInput = document.getElementById("inputAvatarFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                    alert("⚠️ Por favor, seleccione primero un archivo de imagen en su computadora.");
-                    return;
-                }
-                
-                // CORRECCIÓN MAESTRA: Se extrae el archivo exacto en la posición 0
-                var elArchivoReal = fileInput.files[0];
-                
-                // Control de peso de seguridad (Máximo 500 KB)
-                if (elArchivoReal.size > 500 * 1024) { 
-                    alert("⚠️ La foto es muy pesada. Elija una imagen optimizada de menos de 500 KB.");
-                    return;
-                }
-
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    var base64Str = e.target.result;
-                    
-                    // Canal B: Grabado físico indestructible en el disco local de la PC
-                    localStorage.setItem("gerente_avatar_personal", base64Str);
-                    
-                    // Forzamos la actualización inmediata del círculo visual en el Dashboard
-                    var frameDash = document.getElementById("userAvatarFrame");
-                    if (frameDash) {
-                        frameDash.innerHTML = `<img src="${base64Str}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                    }
-                    
-                    document.getElementById("modalOverlay").classList.add("hidden");
-                    alert("✅ ¡Éxito! Tu foto de perfil ha sido fijada de forma permanente.");
-                };
-                reader.readAsDataURL(elArchivoReal);
-            };
-
-            App.handleSelectEmojiAvatarInline = function(emoji) {
-                // Canal B: Grabado físico del emoticono elegido
-                localStorage.setItem("gerente_avatar_personal", emoji);
-                
-                // Actualización al ras en la pantalla
-                var frameDash = document.getElementById("userAvatarFrame");
-                if (frameDash) {
-                    frameDash.innerHTML = emoji;
-                }
-                
-                document.getElementById("modalOverlay").classList.add("hidden");
-                alert("✅ Avatar actualizado: " + emoji);
-            };
-
         }, 1500);
     </script>
 </body>
 </html>
-
-
