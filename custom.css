@@ -1275,3 +1275,11 @@ body:has(#viewDashboard.hidden) footer {
     text-align: left !important;
     letter-spacing: 0.02em !important;
 }
+
+/* --- ESTILO SEPARADO PARA LOS BOTONES DE ACCIÓN DE LA TABLA DE ROLES --- */
+.modal-overlay .btn-table-action-blue {
+    padding: 0.3rem 0.6rem; 
+    font-size: 10px; 
+    color: var(--btn-blue-primary);
+}
+

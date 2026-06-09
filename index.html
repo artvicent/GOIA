@@ -326,10 +326,11 @@
                     </div>`;
 
                     // REEMPLAZO EXACTO EN LA VARIABLE DE TU INDEX.HTML DENTRO DE APP.OPENROLESMENU:
-        var rolesPorDefectoHtml = `
-            <tr><td><strong>ADMIN</strong></td><td>Administrador de Sistema</td><td><button onclick="App.editRoleFormInline('admin_base', 'ADMIN', 'Administrador de Sistema')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button></td></tr>
-            <tr><td><strong>SUPERVISOR</strong></td><td>Supervisor de Carga</td><td><button onclick="App.editRoleFormInline('supervisor_base', 'SUPERVISOR', 'Supervisor de Carga')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button></td></tr>
-            <tr><td><strong>EXECUTIVE</strong></td><td>Ejecutivo / Auditor</td><td><button onclick="App.editRoleFormInline('executive_base', 'EXECUTIVE', 'Ejecutivo / Auditor')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button></td></tr>`;
+            // REEMPLAZO EXACTO EN LA VARIABLE DE TU INDEX.HTML DENTRO DE APP.OPENROLESMENU:
+    var rolesPorDefectoHtml = `
+        <tr><td><strong>ADMIN</strong></td><td>Administrador de Sistema</td><td><button onclick="App.editRoleFormInline('admin_base', 'ADMIN', 'Administrador de Sistema')" class="btn-secondary btn-table-action-blue">✏️</button></td></tr>
+        <tr><td><strong>SUPERVISOR</strong></td><td>Supervisor de Carga</td><td><button onclick="App.editRoleFormInline('supervisor_base', 'SUPERVISOR', 'Supervisor de Carga')" class="btn-secondary btn-table-action-blue">✏️</button></td></tr>
+        <tr><td><strong>EXECUTIVE</strong></td><td>Ejecutivo / Auditor</td><td><button onclick="App.editRoleFormInline('executive_base', 'EXECUTIVE', 'Ejecutivo / Auditor')" class="btn-secondary btn-table-action-blue">✏️</button></td></tr>`;
 
 
                 // 3. Consulta REST directa a tu base de datos cloud de Google Firebase
