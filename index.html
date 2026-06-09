@@ -175,6 +175,7 @@
     <script src="app-admin-logs.js"></script>
 
         <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
+       <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO CON SELECTOR DE TIEMPO RESTAURADO -->
     <script>
         setInterval(function() {
             // Sincronizador indestructible de textos e imágenes corporativas desde Firebase
@@ -201,9 +202,8 @@
         setTimeout(function() {
             if (typeof App !== 'undefined') {
 
-                /* ================= App.openAssignmentModal: INTERFAZ DE CARGA INMEDIATA COHERENTE ================= */
+                /* ================= App.openAssignmentModal: CON TIEMPO DE ASIGNACIÓN RESTAURADO ================= */
                 App.openAssignmentModal = function() {
-                    // 1. Levantamos la estructura blanca del formulario de forma instantánea para evitar la barra vacía
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     
                     document.getElementById("modalContent").innerHTML = `
@@ -224,6 +224,12 @@
                                 <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
                             </div>
 
+                            <!-- CAMPO ESENCIAL RESTAURADO: Entrada numérica estricta para el tiempo en minutos -->
+                            <div class="form-group">
+                                <label>Tiempo Estimado de Gestión (Minutos)</label>
+                                <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
+                            </div>
+
                             <div class="form-group">
                                 <label>Origen / Referencia</label>
                                 <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
@@ -235,7 +241,7 @@
                             </div>
                         </form>`;
 
-                    // 2. Ejecutamos la consulta en paralelo. Si tarda, por defecto inyecta el número 0 de forma segura
+                    // Consulta del contador de tickets en paralelo
                     if (typeof firebase !== 'undefined') {
                         firebase.database().ref("config/ticketCounter").once("value", function(snapshot) {
                             var nextTicket = snapshot.val();
@@ -317,6 +323,7 @@
                             alert("Confirmación incorrecta. Operación abortada de forma segura.");
                         }
                     }
+
                 };
             }
         }, 1500);
