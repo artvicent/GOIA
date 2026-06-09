@@ -288,17 +288,46 @@
                     <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
             };
 
+                        // PROCESADOR DEL LOGOTIPO CORPORATIVO DE ACCESO (CANAL A INDEPENDIENTE REPARADO)
             App.handleUploadSystemLogoFromPC = function() {
                 var fileInput = document.getElementById("inputLogoFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    alert("⚠️ Por favor, seleccione primero una imagen corporativa en su computadora.");
+                    return;
+                }
+                
+                // CORRECCIÓN EXACTA: Se captura el archivo en la posición 0 del arreglo
+                var elArchivoLogo = fileInput.files[0];
+                
+                // Control de peso para el servidor cloud (Máximo 800 KB)
+                if (elArchivoLogo.size > 800 * 1024) {
+                    alert("⚠️ La imagen es muy pesada. Elija un logotipo de menos de 800 KB.");
+                    return;
+                }
+
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     var base64Logo = e.target.result;
-                    localStorage.setItem("system_brand_logo_main", base64Logo); // Grabado en Canal A
-                    if (typeof firebase !== 'undefined') firebase.database().ref("config/logoBase64").set(base64Logo);
-                    alert("✅ El Logotipo principal del Login ha sido implantado de forma independiente.");
+                    
+                    // 1. Grabado en Canal A (Memoria local de la PC para el Login)
+                    localStorage.setItem("system_brand_logo_main", base64Logo);
+                    
+                    // 2. Inyección directa en la nube de Firebase Realtime Database
+                    if (typeof firebase !== 'undefined') {
+                        firebase.database().ref("config/logoBase64").set(base64Logo)
+                            .then(function() {
+                                alert("✅ ¡Éxito! El Logotipo principal del Login ha sido guardado e implantado en la nube.");
+                                document.getElementById("modalOverlay").classList.add("hidden");
+                            })
+                            .catch(function() {
+                                alert("⚠️ Logotipo guardado localmente, pero hubo un desfase de red con la nube.");
+                            });
+                    } else {
+                        alert("✅ Logotipo guardado.");
+                        document.getElementById("modalOverlay").classList.add("hidden");
+                    }
                 };
-                reader.readAsDataURL(fileInput.files);
+                reader.readAsDataURL(elArchivoLogo); // Procesa el archivo binario de forma correcta
             };
 
             App.executeHardResetDatabaseCloud = function() {
