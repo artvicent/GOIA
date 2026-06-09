@@ -176,11 +176,12 @@
 
         <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
        <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO CON SELECTOR DE TIEMPO RESTAURADO -->
+        <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA (PARTE 1 DE 2) -->
     <script>
         setInterval(function() {
-            // Sincronizador indestructible de textos e imágenes corporativas desde Firebase
+            // Sincronizador de textos e imágenes corporativas desde Firebase Realtime Database
             if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
-                // 1. Sincroniza el título de la gerencia en la barra negra
+                // 1. Sincroniza el título de la gerencia en la barra superior negra
                 if (AppDB.data.config.title) {
                     var elTituloCloud = AppDB.data.config.title;
                     var bannerGerencia = document.getElementById("displayGerenciaName");
@@ -202,63 +203,67 @@
         setTimeout(function() {
             if (typeof App !== 'undefined') {
 
-                /* ================= App.openAssignmentModal: CON TIEMPO DE ASIGNACIÓN RESTAURADO ================= */
+                /* ================= App.openAssignmentModal: CONSULTA PRIMERO, DIBUJA DESPUÉS ================= */
                 App.openAssignmentModal = function() {
-                    document.getElementById("modalOverlay").classList.remove("hidden");
-                    
-                    document.getElementById("modalContent").innerHTML = `
-                        <div class="modal-inner-header">
-                            <h3>🎫 Generar Nueva Asignación de Ticket</h3>
-                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
-                        </div>
-                        
-                        <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                            <div class="form-group admin-config-card">
-                                <label style="color: var(--btn-blue-primary); font-size: 13px; text-transform: none;">
-                                    🔢 Próximo Ticket a Registrar: <span id="displayNextTicketNum" style="font-weight: 800;">Cargando...</span>
-                                </label>
-                            </div>
+                    var fallbackTicket = 0;
+                    if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && typeof AppDB.data.config.ticketCounter !== 'undefined') {
+                        fallbackTicket = AppDB.data.config.ticketCounter;
+                    }
 
-                            <div class="form-group">
-                                <label>Meta / Carga Numérica</label>
-                                <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
+                    // Función interna que renderiza el modal con el número de ticket resuelto en caliente
+                    var renderModalConTicket = function(numeroTicket) {
+                        document.getElementById("modalOverlay").classList.remove("hidden");
+                        document.getElementById("modalContent").innerHTML = `
+                            <div class="modal-inner-header">
+                                <h3>🎫 Generar Nueva Asignación de Ticket</h3>
+                                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
                             </div>
-
-                            <!-- CAMPO ESENCIAL RESTAURADO: Entrada numérica estricta para el tiempo en minutos -->
-                            <div class="form-group">
-                                <label>Tiempo Estimado de Gestión (Minutos)</label>
-                                <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Origen / Referencia</label>
-                                <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
-                            </div>
-
-                            <div class="modal-action-row-footer">
-                                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
-                                <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
-                            </div>
-                        </form>`;
-
-                    // Consulta del contador de tickets en paralelo
-                    if (typeof firebase !== 'undefined') {
-                        firebase.database().ref("config/ticketCounter").once("value", function(snapshot) {
-                            var nextTicket = snapshot.val();
-                            if (nextTicket === null) nextTicket = 0;
                             
-                            var lblTicket = document.getElementById("displayNextTicketNum");
-                            if (lblTicket) lblTicket.innerText = "#" + nextTicket;
-                        }, function(error) {
-                            var lblTicket = document.getElementById("displayNextTicketNum");
-                            if (lblTicket) lblTicket.innerText = "#0 (Modo Local)";
-                        });
+                            <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
+                                <div class="form-group admin-config-card">
+                                    <label style="color: var(--btn-blue-primary); font-size: 13px; text-transform: none; margin: 0; padding: 0;">
+                                        🔢 Próximo Ticket a Registrar: <span style="font-weight: 800; font-size: 14px;">#${numeroTicket}</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Meta / Carga Numérica</label>
+                                    <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Tiempo Estimado de Gestión (Minutos)</label>
+                                    <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Origen / Referencia</label>
+                                    <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
+                                </div>
+
+                                <div class="modal-action-row-footer">
+                                    <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+                                    <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
+                                </div>
+                            </form>`;
+                    };
+
+                    // Consultamos Firebase en milisegundos antes de levantar la pantalla blanca
+                    if (typeof firebase !== 'undefined') {
+                        firebase.database().ref("config/ticketCounter").once("value")
+                            .then(function(snapshot) {
+                                var currentTicket = snapshot.val();
+                                var nextTicketNum = (currentTicket === null) ? 0 : currentTicket;
+                                renderModalConTicket(nextTicketNum);
+                            })
+                            .catch(function(error) {
+                                console.warn("Error al leer ticket, usando backup:", error);
+                                renderModalConTicket(fallbackTicket);
+                            });
                     } else {
-                        var lblTicket = document.getElementById("displayNextTicketNum");
-                        if (lblTicket) lblTicket.innerText = "#0 (Desconectado)";
+                        renderModalConTicket(fallbackTicket);
                     }
                 };
-
                 /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
                 App.openAdminMenu = function() {
                     document.getElementById("modalOverlay").classList.remove("hidden");
@@ -323,12 +328,9 @@
                             alert("Confirmación incorrecta. Operación abortada de forma segura.");
                         }
                     }
-
                 };
             }
         }, 1500);
     </script>
-
-
 </body>
 </html>
