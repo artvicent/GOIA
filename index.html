@@ -175,13 +175,7 @@
     <script src="app-admin-logs.js"></script>
 
         <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
-       <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO CON SELECTOR DE TIEMPO RESTAURADO -->
-        <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA (PARTE 1 DE 2) -->
-        <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA COMPLETA -->
-        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS -->
-        <!-- CONTROL GRÁFICO MAESTRO: CONTROL DE TICKETS MEDIANTE FETCH COMPATIBLE CORPORATIVO -->
-        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA SÍNCRONA REST DE UN SOLO BLOQUE -->
-        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS Y CORREGIDA -->
+        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
     <script>
         // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
         setInterval(function() {
@@ -207,7 +201,7 @@
                 window.App = {};
             }
 
-            /* ================= App.openAssignmentModal: GENERADOR DE TICKETS REST (ANTI UNDEFINED) ================= */
+            /* ================= App.openAssignmentModal: CON CONEXIÓN AL CATÁLOGO DE GESTIONES ================= */
             App.openAssignmentModal = function() {
                 var backupTicket = 0;
                 if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
@@ -216,7 +210,8 @@
                     }
                 }
                 
-                var renderModal = function(num) {
+                // Función interna que dibuja la ventana flotante inyectando el catálogo dinámico
+                var renderModal = function(num, optionsHtml) {
                     var numeroValidado = (isNaN(num) || num === undefined || num === null) ? 0 : num;
 
                     document.getElementById("modalOverlay").classList.remove("hidden");
@@ -231,6 +226,16 @@
                                     🔢 Próximo Ticket a Registrar: <span>#${numeroValidado}</span>
                                 </label>
                             </div>
+                            
+                            <!-- SELECCIÓN DINÁMICA: Jala las gestiones reales guardadas en tu catálogo -->
+                            <div class="form-group">
+                                <label>Seleccionar Gestión a Realizar</label>
+                                <select id="assignSource" required class="form-control">
+                                    <option value="" disabled selected>-- Elija una gestión del catálogo --</option>
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+
                             <div class="form-group">
                                 <label>Meta / Carga Numérica</label>
                                 <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
@@ -239,10 +244,6 @@
                                 <label>Tiempo Estimado de Gestión (Minutos)</label>
                                 <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
                             </div>
-                            <div class="form-group">
-                                <label>Origen / Referencia</label>
-                                <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
-                            </div>
                             <div class="modal-action-row-footer">
                                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
                                 <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
@@ -250,26 +251,47 @@
                         </form>`;
                 };
 
-                // Consulta REST limpia con tu enlace real y verificado de Firebase Cloud
+                // Consulta encadenada REST: Buscamos el catálogo de gestiones en la nube
                 fetch("https://firebaseio.com")
-                    .then(function(res) { 
-                        if (!res.ok) throw new Error("Network error");
-                        return res.json(); 
-                    })
-                    .then(function(data) { 
-                        if (data === null || data === undefined) {
-                            renderModal(0);
-                        } else {
-                            var numeroCloud = parseInt(data);
-                            renderModal(isNaN(numeroCloud) ? backupTicket : numeroCloud);
+                    .then(function(res) { return res.json(); })
+                    .then(function(managementsData) {
+                        var optionsHtml = "";
+                        
+                        if (managementsData) {
+                            Object.keys(managementsData).forEach(function(key) {
+                                var item = managementsData[key];
+                                if (item && item.name) {
+                                    optionsHtml += `<option value="${item.name}">${item.name}</option>`;
+                                }
+                            });
                         }
+                        
+                        if (optionsHtml === "") {
+                            optionsHtml = `
+                                <option value="Auditoría de Cuentas">Auditoría de Cuentas</option>
+                                <option value="Validación de Registros">Validación de Registros</option>
+                                <option value="Control de Reclamos">Control de Reclamos</option>`;
+                        }
+
+                        // Pasamos al segundo fetch para consultar el número correlativo de ticket
+                        fetch("https://firebaseio.com")
+                            .then(function(res) { return res.json(); })
+                            .then(function(ticketData) {
+                                var numeroCloud = (ticketData === null) ? 0 : parseInt(ticketData);
+                                renderModal(numeroCloud, optionsHtml);
+                            })
+                            .catch(function() {
+                                renderModal(backupTicket, optionsHtml);
+                            });
                     })
-                    .catch(function(error) { 
-                        console.warn("Fallo de respuesta cloud, levantando backup local:", error);
-                        renderModal(backupTicket); 
+                    .catch(function() {
+                        var optionsHtml = `
+                            <option value="Auditoría de Cuentas">Auditoría de Cuentas</option>
+                            <option value="Validación de Registros">Validación de Registros</option>
+                            <option value="Control de Reclamos">Control de Reclamos</option>`;
+                        renderModal(backupTicket, optionsHtml);
                     });
             };
-
             /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON HOJAS DE ESTILOS LIMPIAS ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
@@ -330,7 +352,6 @@
             };
         }, 1500);
     </script>
-
 </body>
 </html>
 
