@@ -177,215 +177,122 @@
         <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA (PARTE 1 DE 2) -->
+            <!-- CONTROL GRÁFICO CORPORATIVO: INTERFAZ UNIFICADA (PARTE 1 DE 3) -->
     <script>
-        // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
+        // 1. Sincronizador en vivo de cabecera y logotipo de Login
         setInterval(function() {
-            if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
-                if (AppDB.data.config.title) {
-                    var banner = document.getElementById("displayGerenciaName");
-                    if (banner && banner.innerText !== AppDB.data.config.title) {
-                        banner.innerText = AppDB.data.config.title;
-                    }
+            if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
+                var cfg = AppDB.data.config;
+                if (cfg.title) {
+                    var b = document.getElementById("displayGerenciaName");
+                    if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
                 }
-                if (AppDB.data.config.logoBase64) {
-                    var logo = document.getElementById("appLogoImg");
-                    if (logo && logo.src !== AppDB.data.config.logoBase64) {
-                        logo.src = AppDB.data.config.logoBase64;
-                    }
+                if (cfg.logoBase64) {
+                    var l = document.getElementById("appLogoImg");
+                    if (l && l.src !== cfg.logoBase64) l.src = cfg.logoBase64;
                 }
             }
         }, 500);
 
-        // 2. Inicializador inmediato de botones de interfaz de usuario
+        // 2. Inicializador inmediato de ganchos de escucha SPA
         setTimeout(function() {
-            if (typeof App === 'undefined') { window.App = {}; }
+            if (typeof App === 'undefined') window.App = {};
 
-            /* ================= App.openAssignmentModal: CON CONEXIÓN AL CATÁLOGO DE GESTIONES ================= */
+            /* ================= App.openAssignmentModal ================= */
             App.openAssignmentModal = function() {
-                var backupTicket = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? parseInt(AppDB.data.config.ticketCounter) : 0;
-                
-                var renderModal = function(num, optionsHtml) {
-                    var numeroValidado = (isNaN(num) || num === undefined || num === null) ? 0 : num;
+                var backup = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? parseInt(AppDB.data.config.ticketCounter) : 0;
+                var render = function(num, opts) {
+                    var valid = (isNaN(num) || num === null) ? 0 : num;
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     document.getElementById("modalContent").innerHTML = `
-                        <div class="modal-inner-header">
-                            <h3>🎫 Generar Nueva Asignación de Ticket</h3>
-                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
-                        </div>
+                        <div class="modal-inner-header"><h3>🎫 Generar Asignación de Ticket</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
                         <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                            <div class="form-group admin-config-card ticket-info-badge">
-                                <label class="ticket-label-highlight">
-                                    🔢 Próximo Ticket a Registrar: <span>#${numeroValidado}</span>
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label>Seleccionar Gestión a Realizar</label>
-                                <select id="assignSource" required class="form-control">
-                                    <option value="" disabled selected>-- Elija una gestión del catálogo --</option>
-                                    ${optionsHtml}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Meta / Carga Numérica</label>
-                                <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
-                            </div>
-                            <div class="form-group">
-                                <label>Tiempo Estimado de Gestión (Minutos)</label>
-                                <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
-                            </div>
-                            <div class="modal-action-row-footer">
-                                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
-                                <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
-                            </div>
+                            <div class="form-group admin-config-card ticket-info-badge"><label class="ticket-label-highlight">🔢 Próximo Ticket: <span>#${valid}</span></label></div>
+                            <div class="form-group"><label>Gestión a Realizar</label><select id="assignSource" required class="form-control"><option value="" disabled selected>-- Elija del catálogo --</option>${opts}</select></div>
+                            <div class="form-group"><label>Meta / Carga</label><input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150"></div>
+                            <div class="form-group"><label>Tiempo Estimado (Minutos)</label><input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30"></div>
+                            <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Emitir Ticket</button></div>
                         </form>`;
                 };
-
-                fetch("https://firebaseio.com")
-                    .then(function(res) { return res.json(); })
-                    .then(function(managementsData) {
-                        var optionsHtml = "";
-                        if (managementsData) {
-                            Object.keys(managementsData).forEach(function(key) {
-                                var item = managementsData[key];
-                                if (item && item.name) { optionsHtml += `<option value="${item.name}">${item.name}</option>`; }
-                            });
-                        }
-                        if (optionsHtml === "") {
-                            optionsHtml = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option><option value="Validación de Registros">Validación de Registros</option>`;
-                        }
-                        fetch("https://firebaseio.com")
-                            .then(function(res) { return res.json(); })
-                            .then(function(ticketData) { renderModal(ticketData === null ? 0 : parseInt(ticketData), optionsHtml); })
-                            .catch(function() { renderModal(backupTicket, optionsHtml); });
-                    })
-                    .catch(function() {
-                        var optionsHtml = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option><option value="Validación de Registros">Validación de Registros</option>`;
-                        renderModal(backupTicket, optionsHtml);
-                    });
+                fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(manData){
+                    var opts = ""; if(manData) Object.keys(manData).forEach(function(k){ if(manData[k]?.name) opts += `<option value="${manData[k].name}">${manData[k].name}</option>`; });
+                    if(opts==="") opts = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`;
+                    fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(tk){render(tk===null?0:parseInt(tk), opts);}).catch(function(){render(backup,opts);});
+                }).catch(function(){render(backup,`<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`);});
             };
-            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
-            App.openAdminMenu = function() {
+            /* ================= App.openAvatarSelectionModal ================= */
+            App.openAvatarSelectionModal = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
-                var currentExpiry = (typeof AppDB !== 'undefined' && AppDB.data?.config?.passwordExpiryDays) ? AppDB.data.config.passwordExpiryDays : 90;
-                var currentTitle = (typeof AppDB !== 'undefined' && AppDB.data?.config?.title) ? AppDB.data.config.title : "";
-
+                var list = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🤖", "🚀", "🎯"];
+                var grid = ""; 
+                list.forEach(function(em) { 
+                    grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; 
+                });
                 document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header">
-                        <h3>Panel de Personal y Políticas</h3>
-                        <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
-                    </div>
-                    <div class="form-group admin-config-card">
-                        <label>Nombre de Gerencia / Programa</label>
-                        <div class="input-inline-row">
-                            <input type="text" id="inputEditGerencia" class="form-control" value="${currentTitle}">
-                            <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
-                        </div>
-                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
-                        <div class="input-inline-row">
-                            <input type="file" id="inputLogoFilePC" class="form-control" accept="image/png, image/jpeg, image/jpg">
-                            <button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Foto</button>
-                        </div>
-                        <label class="mt-2">Expiración de Contraseñas del Personal</label>
-                        <select id="selectPasswordExpiry" class="form-control full-width">
-                            <option value="30" ${currentExpiry==30?'selected':''}>Vencimiento cada 30 Días</option>
-                            <option value="60" ${currentExpiry==60?'selected':''}>Vencimiento cada 60 Días</option>
-                            <option value="90" ${currentExpiry==90?'selected':''}>Vencimiento cada 90 Días</option>
-                        </select>
-                    </div>
-                    <div class="maintenance-critical-card">
-                        <label>🚨 Mantenimiento Crítico de Servidor</label>
-                        <p>Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría de forma definitiva.</p>
-                        <button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button>
-                    </div>
-                    <div class="modal-grid-buttons">
-                        <button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button>
-                        <button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button>
-                    </div>
-                    <div class="modal-grid-buttons">
-                        <button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button>
-                        <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button>
-                    </div>
-                    <div class="modal-grid-buttons modal-single-row">
-                        <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
+                    <div class="modal-inner-header"><h3>👤 Personalizar Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+                    <div class="admin-config-form-layout">
+                        <div class="form-group admin-config-card"><label>Opción 1: Cargar Foto (.png / .jpg) desde PC</label>
+                            <div class="input-inline-row"><input type="file" id="inputAvatarFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button></div></div>
+                        <div class="form-group admin-config-card"><label>Opción 2: Selector de Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
+                        <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button></div>
                     </div>`;
             };
 
-            App.executeHardResetDatabaseCloud = function() {
-                if (confirm("⚠️ ATENCIÓN SUPERVISOR: ¿Desea REINICIAR LA BASE DE DATOS?\n\nEsta operación borrará todas las actividades.")) {
-                    if (prompt("Para confirmar la purga, digite: REINICIAR") === "REINICIAR") {
-                        if (typeof AppDB !== 'undefined' && typeof AppDB.seedInitialData === 'function') {
-                            AppDB.seedInitialData(); alert("¡Base de datos restablecida a cero!"); location.reload();
-                        }
-                    }
-                }
-            };
-
-            /* =========================================================================
-             * INYECCIÓN CORE REPARADORA: ACCIONES ADMINISTRATIVAS VIA REST API COMPATIBLE
-             * ========================================================================= */
-            App.deleteUserCloud = function(userId, username) {
-                if (userId === "admin" || username === "arturo.noto") {
-                    alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser eliminado."); return;
-                }
-                if (confirm("⚠️ ¿Desea ELIMINAR permanentemente a " + username.toUpperCase() + " de la nómina?")) {
-                    fetch("https://firebaseio.com" + userId + ".json", { method: "DELETE" })
-                        .then(function() { alert("✅ Usuario removido de la nube."); App.listUsersAdmin(); })
-                        .catch(function() { alert("❌ Error al eliminar el registro."); });
-                }
-            };
-
-            App.toggleBlockUser = function(userId, username, currentStatus) {
-                if (userId === "admin" || username === "arturo.noto") {
-                    alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser bloqueado."); return;
-                }
-                var newStatus = (currentStatus === "blocked") ? "active" : "blocked";
-                if (confirm("¿Desea cambiar el estado de " + username.toUpperCase() + " a: " + newStatus.toUpperCase() + "?")) {
-                    fetch("https://firebaseio.com" + userId + ".json", {
-                        method: "PATCH",
-                        body: JSON.stringify({ status: newStatus })
-                    })
-                    .then(function() { alert("✅ Estado actualizado en Firebase."); App.listUsersAdmin(); })
-                    .catch(function() { alert("❌ Error al modificar las restricciones."); });
-                }
-            };
-
-            App.editUserForm = function(userId, username, currentRole, currentGerencia) {
+            /* ================= App.openAdminMenu ================= */
+            App.openAdminMenu = function() {
+                document.getElementById("modalOverlay").classList.remove("hidden");
+                var exp = AppDB.data?.config?.passwordExpiryDays || 90;
+                var ttl = AppDB.data?.config?.title || "";
                 document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header">
-                        <h3>🔑 Editar Roles y Permisos: ${username.toUpperCase()}</h3>
-                        <button onclick="App.listUsersAdmin()">&larr; Volver</button>
-                    </div>
-                    <form id="formEditUserRole" onsubmit="App.handleSaveUserRoles(event, '${userId}')" class="admin-config-form-layout">
-                        <div class="form-group">
-                            <label>Rol Operativo en el Sistema</label>
-                            <select id="editUserRoleSelect" class="form-control full-width">
-                                <option value="executive" ${currentRole==='executive'?'selected':''}>Ejecutivo / Auditor</option>
-                                <option value="supervisor" ${currentRole==='supervisor'?'selected':''}>Supervisor de Carga</option>
-                                <option value="admin" ${currentRole==='admin'?'selected':''}>Administrador de Sistema</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Asignación de Gerencia Fija</label>
-                            <input type="text" id="editUserGerenciaInput" class="form-control" value="${currentGerencia || ''}">
-                        </div>
-                        <div class="modal-action-row-footer">
-                            <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
-                            <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
-                        </div>
+                    <div class="modal-inner-header"><h3>Panel de Personal y Políticas</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+                    <div class="form-group admin-config-card"><label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
+                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label><div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir</button></div>
+                        <label class="mt-2">Expiración de Contraseñas</label><select id="selectPasswordExpiry" class="form-control full-width"><option value="30" ${exp==30?'selected':''}>Vencimiento cada 30 Días</option><option value="60" ${exp==60?'selected':''}>Vencimiento cada 60 Días</option><option value="90" ${exp==90?'selected':''}>Vencimiento cada 90 Días</option></select></div>
+                    <div class="maintenance-critical-card"><label>🚨 Mantenimiento Crítico</label><button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button></div>
+                    <div class="modal-grid-buttons"><button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button><button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button></div>
+                    <div class="modal-grid-buttons"><button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button><button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button></div>
+                    <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
+            };
+            App.executeHardResetDatabaseCloud = function() {
+                if (confirm("🚨 ¿Desea reiniciar el servidor?")) {
+                    if (prompt("Digite: REINICIAR") === "REINICIAR") { AppDB.seedInitialData(); location.reload(); }
+                }
+            };
+
+            /* ================= ACCIONES DE NÓMINA REST API DEFINITIVAS ================= */
+            App.deleteUserCloud = function(id, name) {
+                if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
+                if (confirm("⚠️ ¿Eliminar a " + name.toUpperCase() + "?")) {
+                    fetch("https://firebaseio.com" + id + ".json", { method: "DELETE" })
+                        .then(function() { alert("✅ Eliminado."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
+                }
+            };
+
+            App.toggleBlockUser = function(id, name, status) {
+                if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
+                var next = (status === "blocked") ? "active" : "blocked";
+                if (confirm("¿Cambiar estado de " + name.toUpperCase() + " a " + next.toUpperCase() + "?")) {
+                    fetch("https://firebaseio.com" + id + ".json", { method: "PATCH", body: JSON.stringify({ status: next }) })
+                        .then(function() { alert("✅ Estado modificado."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
+                }
+            };
+
+            App.editUserForm = function(id, name, role, ger) {
+                document.getElementById("modalContent").innerHTML = `
+                    <div class="modal-inner-header"><h3>🔑 Editar Roles: ${name.toUpperCase()}</h3><button onclick="App.listUsersAdmin()">&larr; Volver</button></div>
+                    <form onsubmit="App.handleSaveUserRoles(event, '${id}')" class="admin-config-form-layout">
+                        <div class="form-group"><label>Rol Operativo</label><select id="editUserRoleSelect" class="form-control full-width"><option value="executive" ${role==='executive'?'selected':''}>Ejecutivo / Auditor</option><option value="supervisor" ${role==='supervisor'?'selected':''}>Supervisor</option><option value="admin" ${role==='admin'?'selected':''}>Administrador</option></select></div>
+                        <div class="form-group"><label>Gerencia Asignada</label><input type="text" id="editUserGerenciaInput" class="form-control" value="${ger || ''}"></div>
+                        <div class="modal-action-row-footer"><button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Guardar</button></div>
                     </form>`;
             };
 
-            App.handleSaveUserRoles = function(event, userId) {
+            App.handleSaveUserRoles = function(event, id) {
                 event.preventDefault();
-                var newRole = document.getElementById("editUserRoleSelect").value;
-                var newGerencia = document.getElementById("editUserGerenciaInput").value.trim();
-                
-                fetch("https://firebaseio.com" + userId + ".json", {
-                    method: "PATCH",
-                    body: JSON.stringify({ role: newRole, gerencia: newGerencia })
-                })
-                .then(function() { alert("✅ Privilegios actualizados de forma exitosa."); App.listUsersAdmin(); })
-                .catch(function() { alert("❌ Error al guardar las modificaciones."); });
+                var r = document.getElementById("editUserRoleSelect").value;
+                var g = document.getElementById("editUserGerenciaInput").value.trim();
+                fetch("https://firebaseio.com" + id + ".json", { method: "PATCH", body: JSON.stringify({ role: r, gerencia: g }) })
+                    .then(function() { alert("✅ Privilegios guardados."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
             };
 
         }, 1500);
