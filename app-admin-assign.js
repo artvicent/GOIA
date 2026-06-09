@@ -163,3 +163,62 @@ App.handleCreateTicketAssignment = function(event) {
             });
     });
 };
+// =========================================================================
+// MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: CAPTURA DE TIEMPO EN MINUTOS
+// =========================================================================
+App.handleCreateTicketAssignment = function(event) {
+    event.preventDefault();
+
+    var targetInput = document.getElementById("assignTarget");
+    var durationInput = document.getElementById("assignDuration");
+    var sourceInput = document.getElementById("assignSource");
+
+    if (!targetInput || !durationInput || !sourceInput) return;
+
+    var targetValue = parseInt(targetInput.value);
+    var durationValue = parseInt(durationInput.value);
+    var sourceValue = sourceInput.value.trim();
+
+    var counterRef = firebase.database().ref("config/ticketCounter");
+
+    // Ejecución transaccional para el consecutivo correlativo de tickets
+    counterRef.transaction(function(currentValue) {
+        return (currentValue === null) ? 0 : currentValue + 1;
+    }, function(error, committed, snapshot) {
+        if (error) {
+            alert("❌ Error de sincronización cloud al generar el número de ticket.");
+            return;
+        }
+
+        var assignedTicketNum = snapshot.val();
+
+        // Estructura de item con minutos de expiración integrados de forma nativa
+        var assignmentData = {
+            id: assignedTicketNum,
+            title: "Ticket #" + assignedTicketNum,
+            description: "Gestión automatizada de auditoría para carga entrante.",
+            target: targetValue,
+            duration: durationValue, // Minutos esenciales preservados en el nodo
+            processed: 0,
+            source: sourceValue,
+            status: "pending",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        firebase.database().ref("assignments/" + assignedTicketNum).set(assignmentData)
+            .then(function() {
+                alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nTiempo de resolución configurado en " + durationValue + " minutos.");
+                document.getElementById("modalOverlay").classList.add("hidden");
+                
+                if (typeof App.renderDashboardData === 'function') {
+                    App.renderDashboardData();
+                } else {
+                    location.reload();
+                }
+            })
+            .catch(function(err) {
+                console.error("Error al registrar actividad: ", err);
+                alert("❌ Fallo de comunicación con el servidor cloud.");
+            });
+    });
+};
