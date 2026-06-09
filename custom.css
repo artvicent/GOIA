@@ -924,3 +924,28 @@ body:has(#viewDashboard.hidden) footer {
 .modal-overlay .btn-primary:hover {
     background-color: var(--btn-blue-hover);
 }
+
+/* --- ESTILOS EXCLUSIVOS DEL GENERADOR DE TICKETS INMUNE --- */
+.modal-overlay .ticket-info-badge {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8fafc;
+}
+
+.modal-overlay .ticket-label-highlight {
+    color: var(--btn-blue-primary);
+    font-size: 13px;
+    text-transform: none;
+    font-weight: 600;
+}
+
+.modal-overlay .ticket-label-highlight span {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--text-main-slate);
+    margin-left: 0.25rem;
+}
+
+.modal-overlay .input-inline-row {
+    margin-bottom: 0.5rem;
+}

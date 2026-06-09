@@ -178,26 +178,38 @@
        <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO CON SELECTOR DE TIEMPO RESTAURADO -->
         <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA (PARTE 1 DE 2) -->
         <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA COMPLETA -->
+        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS -->
     <script>
+        // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
         setInterval(function() {
             if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
                 if (AppDB.data.config.title) {
                     var banner = document.getElementById("displayGerenciaName");
-                    if (banner && banner.innerText !== AppDB.data.config.title) banner.innerText = AppDB.data.config.title;
+                    if (banner && banner.innerText !== AppDB.data.config.title) {
+                        banner.innerText = AppDB.data.config.title;
+                    }
                 }
                 if (AppDB.data.config.logoBase64) {
                     var logo = document.getElementById("appLogoImg");
-                    if (logo && logo.src !== AppDB.data.config.logoBase64) logo.src = AppDB.data.config.logoBase64;
+                    if (logo && logo.src !== AppDB.data.config.logoBase64) {
+                        logo.src = AppDB.data.config.logoBase64;
+                    }
                 }
             }
         }, 500);
 
+        // 2. Inicializador inmediato de botones de interfaz de usuario
         setTimeout(function() {
-            if (typeof App === 'undefined') return;
+            if (typeof App === 'undefined') {
+                window.App = {};
+            }
 
-            /* ================= App.openAssignmentModal: FORMULARIO DE TICKETS SÍNCRONO ================= */
+            /* ================= App.openAssignmentModal: INTERFAZ DE TICKETS PURA ================= */
             App.openAssignmentModal = function() {
-                var backupTicket = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? AppDB.data.config.ticketCounter : 0;
+                var backupTicket = 0;
+                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && typeof AppDB.data.config.ticketCounter !== 'undefined') {
+                    backupTicket = AppDB.data.config.ticketCounter;
+                }
                 
                 var renderModal = function(num) {
                     document.getElementById("modalOverlay").classList.remove("hidden");
@@ -207,9 +219,9 @@
                             <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
                         </div>
                         <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                            <div class="form-group admin-config-card">
-                                <label style="color:var(--btn-blue-primary); font-size:13px; text-transform:none; margin:0;">
-                                    🔢 Próximo Ticket a Registrar: <span style="font-weight:800; font-size:14px;">#${num}</span>
+                            <div class="form-group admin-config-card ticket-info-badge">
+                                <label class="ticket-label-highlight">
+                                    🔢 Próximo Ticket a Registrar: <span>#${num}</span>
                                 </label>
                             </div>
                             <div class="form-group">
@@ -231,19 +243,32 @@
                         </form>`;
                 };
 
-                if (typeof firebase !== 'undefined') {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     firebase.database().ref("config/ticketCounter").once("value")
-                        .then(function(snap) { renderModal(snap.val() === null ? 0 : snap.val()); })
-                        .catch(function() { renderModal(backupTicket); });
+                        .then(function(snap) { 
+                            var val = snap.val();
+                            renderModal(val === null ? 0 : val); 
+                        })
+                        .catch(function() { 
+                            renderModal(backupTicket); 
+                        });
                 } else {
                     renderModal(backupTicket);
                 }
             };
 
-            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO AJUSTES PC ================= */
+            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO PURO ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
-                var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
+                var currentExpiry = 90;
+                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.passwordExpiryDays) {
+                    currentExpiry = AppDB.data.config.passwordExpiryDays;
+                }
+
+                var currentTitle = "";
+                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
+                    currentTitle = AppDB.data.config.title;
+                }
 
                 document.getElementById("modalContent").innerHTML = `
                     <div class="modal-inner-header">
@@ -253,11 +278,11 @@
                     <div class="form-group admin-config-card">
                         <label>Nombre de Gerencia / Programa</label>
                         <div class="input-inline-row">
-                            <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title || ''}">
+                            <input type="text" id="inputEditGerencia" class="form-control" value="${currentTitle}">
                             <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
                         </div>
                         <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
-                        <div class="input-inline-row" style="margin-bottom:0.5rem;">
+                        <div class="input-inline-row">
                             <input type="file" id="inputLogoFilePC" class="form-control" accept="image/png, image/jpeg, image/jpg">
                             <button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Foto</button>
                         </div>
@@ -289,13 +314,15 @@
             App.executeHardResetDatabaseCloud = function() {
                 if (confirm("⚠️ ATENCIÓN SUPERVISOR: ¿Desea REINICIAR LA BASE DE DATOS?\n\nEsta operación borrará todas las actividades.")) {
                     if (prompt("Para confirmar la purga, digite: REINICIAR") === "REINICIAR") {
-                        AppDB.seedInitialData();
-                        alert("¡Base de datos restablecida a cero!");
-                        location.reload();
+                        if (typeof AppDB !== 'undefined' && typeof AppDB.seedInitialData === 'function') {
+                            AppDB.seedInitialData();
+                            alert("¡Base de datos restablecida a cero!");
+                            location.reload();
+                        }
                     }
                 }
             };
-        }, 1500);
+        }, 500);
     </script>
 </body>
 </html>
