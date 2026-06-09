@@ -181,6 +181,7 @@
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS -->
         <!-- CONTROL GRÁFICO MAESTRO: CONTROL DE TICKETS MEDIANTE FETCH COMPATIBLE CORPORATIVO -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA SÍNCRONA REST DE UN SOLO BLOQUE -->
+        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS Y CORREGIDA -->
     <script>
         // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
         setInterval(function() {
@@ -200,20 +201,24 @@
             }
         }, 500);
 
-        // 2. Inicializador inmediato de botones de interfaz de usuario (Ajustado con cierres exactos)
+        // 2. Inicializador inmediato de botones de interfaz de usuario
         setTimeout(function() {
             if (typeof App === 'undefined') {
                 window.App = {};
             }
 
-            /* ================= App.openAssignmentModal: GENERADOR DE TICKETS REST MEDIANTE FETCH ================= */
+            /* ================= App.openAssignmentModal: GENERADOR DE TICKETS REST (ANTI UNDEFINED) ================= */
             App.openAssignmentModal = function() {
-                var nextTicketNum = 0;
-                if (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter !== 'undefined') {
-                    nextTicketNum = AppDB.data.config.ticketCounter;
+                var backupTicket = 0;
+                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config) {
+                    if (typeof AppDB.data.config.ticketCounter !== 'undefined' && AppDB.data.config.ticketCounter !== null) {
+                        backupTicket = parseInt(AppDB.data.config.ticketCounter);
+                    }
                 }
                 
                 var renderModal = function(num) {
+                    var numeroValidado = (isNaN(num) || num === undefined || num === null) ? 0 : num;
+
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     document.getElementById("modalContent").innerHTML = `
                         <div class="modal-inner-header">
@@ -223,7 +228,7 @@
                         <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
                             <div class="form-group admin-config-card ticket-info-badge">
                                 <label class="ticket-label-highlight">
-                                    🔢 Próximo Ticket a Registrar: <span>#${num}</span>
+                                    🔢 Próximo Ticket a Registrar: <span>#${numeroValidado}</span>
                                 </label>
                             </div>
                             <div class="form-group">
@@ -245,11 +250,24 @@
                         </form>`;
                 };
 
-                // Consulta REST directa compatible con tu db.js para evadir errores de once()
+                // Consulta REST limpia con tu enlace real y verificado de Firebase Cloud
                 fetch("https://firebaseio.com")
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { renderModal(data === null ? 0 : parseInt(data)); })
-                    .catch(function() { renderModal(nextTicketNum); });
+                    .then(function(res) { 
+                        if (!res.ok) throw new Error("Network error");
+                        return res.json(); 
+                    })
+                    .then(function(data) { 
+                        if (data === null || data === undefined) {
+                            renderModal(0);
+                        } else {
+                            var numeroCloud = parseInt(data);
+                            renderModal(isNaN(numeroCloud) ? backupTicket : numeroCloud);
+                        }
+                    })
+                    .catch(function(error) { 
+                        console.warn("Fallo de respuesta cloud, levantando backup local:", error);
+                        renderModal(backupTicket); 
+                    });
             };
 
             /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON HOJAS DE ESTILOS LIMPIAS ================= */
@@ -310,8 +328,9 @@
                     }
                 }
             };
-        }, 1500); // El cierre de llave y paréntesis quedo perfectamente estructurado aquí
+        }, 1500);
     </script>
+
 </body>
 </html>
 
