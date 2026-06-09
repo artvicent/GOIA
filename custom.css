@@ -1182,3 +1182,69 @@ body:has(#viewDashboard.hidden) footer {
 .split-main-panel .executive-table tbody tr:hover {
     background-color: #f8fafc;
 }
+
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * REEMPLAZO DE CONTROL DE IDENTIDAD EN FILA (PÁGINAS 8 Y 9 DE TU PDF)
+ */
+
+/* CERROJO DE FILA: Fuerza al perfil completo a alinearse estrictamente al inicio izquierdo */
+.profile-identity-block {
+    display: flex !important;
+    flex-direction: row !important; /* Alineación lineal obligatoria de izquierda a derecha */
+    align-items: center !important; /* Centrado vertical interno perfecto entre el círculo y el texto */
+    justify-content: flex-start !important;
+    gap: 0.75rem !important; /* Espacio exacto de separación corporativa entre la foto y tu nombre */
+    box-sizing: border-box !important;
+}
+
+/* AVATAR CIRCULAR: Se posiciona rígidamente en el primer lugar de la fila */
+.avatar-frame {
+    width: 3rem !important;
+    height: 3rem !important;
+    background-color: #f1f5f9 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.5rem !important;
+    border: 1px solid var(--border-color-soft) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    order: 1 !important; /* Fuerza al círculo a renderizarse PRIMERO a la extrema izquierda */
+}
+
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 4B-2: AMARRE DE TEXTOS DE IDENTIDAD (PÁGINA 10 DE TU PDF)
+ */
+
+/* CAJA DE TEXTO: Se clava a la derecha de la foto con alineación izquierda estricta */
+.profile-text-labels {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important; /* Fuerza a que los textos nazcan pegados a la izquierda */
+    text-align: left !important;
+    order: 2 !important; /* Fuerza a tu nombre y rol a renderizarse inmediatamente después del avatar */
+    box-sizing: border-box !important;
+}
+
+.profile-text-labels h2 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--text-main-slate) !important;
+    margin: 0 !important;
+    text-align: left !important;
+    line-height: 1.2 !important;
+}
+
+.profile-text-labels p {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted-blue) !important;
+    margin: 0.15rem 0 0 0 !important; /* Separación mínima controlada abajo de tu nombre */
+    text-align: left !important;
+    letter-spacing: 0.02em !important;
+}
