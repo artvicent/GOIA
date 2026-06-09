@@ -289,17 +289,18 @@
             };
 
             /* ================= App.openRolesMenu: MÓDULO DE GESTIÓN DE ROLES CLOUD REST ================= */
+            /* ================= App.openRolesMenu: MÓDULO DE GESTIÓN DE ROLES CLOUD REST BLINDADO ================= */
             App.openRolesMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
                 
-                // 1. Dibujamos la estructura inicial del modal con la retícula de creación limpia
+                // 1. Dibujamos la estructura inicial de la interfaz administrativa
                 document.getElementById("modalContent").innerHTML = `
                     <div class="modal-inner-header">
                         <h3>🔑 Control Maestro de Roles y Permisos</h3>
                         <button onclick="App.openAdminMenu()">&larr; Volver</button>
                     </div>
                     
-                    <div class="admin-config-card font-group">
+                    <div class="admin-config-card form-group">
                         <label>Registrar Nuevo Rol Corporativo</label>
                         <div class="input-inline-row">
                             <input type="text" id="inputNewRoleCode" class="form-control" placeholder="Ej: AUDITOR_SENIOR">
@@ -324,15 +325,24 @@
                         </table>
                     </div>`;
 
-                // 2. Jalamos el listado real de roles desde Firebase de forma inmediata
+                // 2. Definición de Roles Base por defecto (Backup Indestructible si Firebase responde vacío)
+                var rolesPorDefectoHtml = `
+                    <tr><td><strong>ADMIN</strong></td><td>Administrador de Sistema</td><td><span style="font-size:11px; color:var(--text-muted-blue); font-weight:600;">SISTEMA</span></td></tr>
+                    <tr><td><strong>SUPERVISOR</strong></td><td>Supervisor de Carga</td><td><span style="font-size:11px; color:var(--text-muted-blue); font-weight:600;">SISTEMA</span></td></tr>
+                    <tr><td><strong>EXECUTIVE</strong></td><td>Ejecutivo / Auditor</td><td><span style="font-size:11px; color:var(--text-muted-blue); font-weight:600;">SISTEMA</span></td></tr>`;
+
+                // 3. Consulta REST directa a tu base de datos cloud de Google Firebase
                 fetch("https://firebaseio.com")
-                    .then(function(res) { return res.json(); })
+                    .then(function(res) { 
+                        return res.json(); 
+                    })
                     .then(function(data) {
                         var tbody = document.getElementById("tableRolesCloudBody");
                         if (!tbody) return;
                         
                         var html = "";
-                        if (data) {
+                        // Si la base de datos cloud ya tiene roles creados, los lista dinámicamente uno por uno
+                        if (data !== null && typeof data === 'object') {
                             Object.keys(data).forEach(function(key) {
                                 var r = data[key];
                                 if (r && r.code) {
@@ -349,13 +359,19 @@
                             });
                         }
                         
-                        tbody.innerHTML = (html === "") ? `<tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">No hay roles adicionales creados.</td></tr>` : html;
+                        // Si el nodo de Firebase está en blanco o dio null, inyecta la nómina base + los roles que crees
+                        tbody.innerHTML = rolesPorDefectoHtml + html;
                     })
-                    .catch(function() {
+                    .catch(function(error) {
+                        console.warn("Fallo de red o nodo vacío en Firebase, activando el backup local:", error);
                         var tbody = document.getElementById("tableRolesCloudBody");
-                        if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:1rem; color:#dc2626;">Error de red al consultar el servidor.</td></tr>`;
+                        if (tbody) {
+                            // El sistema se mantiene operativo inyectando los roles base de seguridad de inmediato
+                            tbody.innerHTML = rolesPorDefectoHtml;
+                        }
                     });
             };
+
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
             
             // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
