@@ -949,3 +949,112 @@ body:has(#viewDashboard.hidden) footer {
 .modal-overlay .input-inline-row {
     margin-bottom: 0.5rem;
 }
+
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * CORRECCIÓN DE ENCAPSULADO RÍGIDO DE ENCABEZADO (ANTI DESBORDE HORIZONTAL)
+ */
+
+/* EL CERROJO OPERATIVO: Fuerza al encabezado del botón azul a encajar dentro del recuadro blanco */
+.split-main-panel .panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap; /* Permite que los elementos bajen en línea si el monitor es estrecho */
+    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box; /* Obliga al navegador a meter los márgenes dentro del ancho real */
+}
+
+/* Agrupador de los menús desplegables de mes y estado */
+.split-main-panel .filters-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * PARTE 6A-2: CONTROLES DE FILTRADO, BOTÓN AZUL Y AJUSTE DE ANCHO DE LA TABLA
+ */
+
+.split-main-panel .filter-select {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.split-main-panel .filter-select:hover {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+}
+
+/* DISEÑO COMPACTO DEL BOTÓN AZUL INSTITUCIONAL */
+.split-main-panel #btnNewAssignment {
+    background-color: var(--btn-blue-primary);
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.split-main-panel #btnNewAssignment:hover {
+    background-color: var(--btn-blue-hover);
+    transform: translateY(-1px);
+}
+
+/* --- TABLA PRINCIPAL AL ANCHO MÁXIMO DEL CONTENEDOR BLANCO --- */
+.split-main-panel .table-container {
+    width: 100%;
+    overflow-x: auto; /* Desplazamiento interno suave si las columnas se estiran */
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.split-main-panel .executive-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+.split-main-panel .executive-table th {
+    background-color: #f8fafc;
+    padding: 0.85rem 1.25rem;
+    font-weight: 700;
+    color: var(--text-label-gray);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.split-main-panel .executive-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.split-main-panel .executive-table tbody tr:hover {
+    background-color: #f8fafc;
+}
