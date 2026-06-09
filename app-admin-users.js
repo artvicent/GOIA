@@ -299,3 +299,126 @@ App.handleSelectEmojiAvatarInline = function(emojiSelected) {
             alert("❌ Fallo en el servidor al intentar guardar el avatar.");
         });
 };
+
+// =========================================================================
+// MÓDULO ADMINISTRATIVO MAESTRO: EDICIÓN, BLOQUEO Y ELIMINACIÓN DE PERSONAL
+// =========================================================================
+
+// 1. FUNCIÓN PARA ELIMINAR UN USUARIO DE FORMA DEFINITIVA DE FIREBASE
+App.deleteUserCloud = function(userId, username) {
+    if (userId === "admin" || username === "arturo.noto") {
+        alert("🚨 CONTROL DE SEGURIDAD: No es posible eliminar al Administrador Principal del sistema.");
+        return;
+    }
+
+    var confirmacion = confirm("⚠️ ATENCIÓN SUPERVISOR:\n\n¿Está completamente seguro de que desea ELIMINAR permanentemente a " + username.toUpperCase() + " de la nómina de la gerencia?");
+    
+    if (confirmacion) {
+        // Remoción directa del nodo en Firebase Realtime Database
+        firebase.database().ref("users/" + userId).remove()
+            .then(function() {
+                alert("✅ Usuario eliminado correctamente de la base de datos cloud.");
+                // Refrescamos la lista en vivo si la función está disponible, sino recargamos
+                if (typeof App.listUsersAdmin === "function") {
+                    App.listUsersAdmin();
+                } else {
+                    location.reload();
+                }
+            })
+            .catch(function(error) {
+                console.error("Error al eliminar usuario:", error);
+                alert("❌ Fallo en el servidor: No se pudieron aplicar los cambios de remoción.");
+            });
+    }
+};
+
+// 2. FUNCIÓN PARA ALTERNAR EL ESTADO DE ACCESO (BLOQUEAR / DESBLOQUEAR)
+App.toggleBlockUser = function(userId, username, currentStatus) {
+    if (userId === "admin" || username === "arturo.noto") {
+        alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser bloqueado.");
+        return;
+    }
+
+    // Si el estado actual es 'blocked', lo pasamos a 'active', de lo contrario lo bloqueamos
+    var newStatus = (currentStatus === "blocked") ? "active" : "blocked";
+    var mensajeAccion = (newStatus === "blocked") ? "BLOQUEAR el acceso a " : "DESBLOQUEAR el acceso a ";
+
+    var confirmacion = confirm("¿Desea " + mensajeAccion + username.toUpperCase() + " en la plataforma?");
+    
+    if (confirmacion) {
+        // Actualización síncrona del campo status en Firebase
+        firebase.database().ref("users/" + userId + "/status").set(newStatus)
+            .then(function() {
+                alert("✅ Estado de cuenta actualizado: " + (newStatus === "blocked" ? "🚫 BLOQUEADO" : "🔓 ACTIVO"));
+                if (typeof App.listUsersAdmin === "function") {
+                    App.listUsersAdmin();
+                } else if (typeof App.openRolesMenu === "function") {
+                    App.openRolesMenu();
+                } else {
+                    location.reload();
+                }
+            })
+            .catch(function() {
+                alert("❌ Error de comunicación con la nube al modificar las restricciones.");
+            });
+    }
+};
+
+// 3. FUNCIÓN PARA LEVANTAR EL FORMULARIO DE EDICIÓN DE ROLES Y PERMISOS
+App.editUserForm = function(userId, username, currentRole, currentGerencia) {
+    // Dibujamos la interfaz limpia para la modificación de los privilegios del empleado
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>🔑 Editar Permisos y Roles: ${username.toUpperCase()}</h3>
+            <button onclick="App.openAdminMenu()">&larr; Volver</button>
+        </div>
+        
+        <form id="formEditUserRole" onsubmit="App.handleSaveUserRoles(event, '${userId}')" class="admin-config-form-layout">
+            <div class="form-group">
+                <label>Rol de Operador en el Sistema</label>
+                <select id="editUserRoleSelect" class="form-control full-width">
+                    <option value="executive" ${currentRole === 'executive' ? 'selected' : ''}>Ejecutivo / Auditor</option>
+                    <option value="supervisor" ${currentRole === 'supervisor' ? 'selected' : ''}>Supervisor de Carga</option>
+                    <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Administrador de Sistema</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Asignación de Gerencia Fija</label>
+                <input type="text" id="editUserGerenciaInput" class="form-control" value="${currentGerencia || ''}" placeholder="Ej: Gerencia de Adquirencia">
+            </div>
+
+            <div class="modal-action-row-footer">
+                <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
+                <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
+            </div>
+        </form>`;
+};
+
+// 4. PROCESADOR SÍNCRONO DE ACTUALIZACIÓN DE PRIVILEGIOS EN FIREBASE
+App.handleSaveUserRoles = function(event, userId) {
+    event.preventDefault();
+
+    var roleSelect = document.getElementById("editUserRoleSelect");
+    var gerenciaInput = document.getElementById("editUserGerenciaInput");
+
+    if (!roleSelect || !gerenciaInput) return;
+
+    var newRole = roleSelect.value;
+    var newGerencia = gerenciaInput.value.trim();
+
+    // Actualizamos el nodo completo en Firebase Cloud
+    var userUpdate = {
+        role: newRole,
+        gerencia: newGerencia
+    };
+
+    firebase.database().ref("users/" + userId).update(userUpdate)
+        .then(function() {
+            alert("✅ ¡Éxito! Privilegios y asignaciones modificadas en la base de datos.");
+            App.listUsersAdmin(); // Regresa de inmediato a la nómina del personal actualizada
+        })
+        .catch(function() {
+            alert("❌ Fallo del servidor al intentar actualizar los roles de seguridad.");
+        });
+};
