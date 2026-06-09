@@ -378,7 +378,7 @@
             // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API PURIFICADAS (CON CABECERAS JSON) ================= */
 
-            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE (REPARADA DE RAÍZ)
+            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE SANEADA AL 100%
             App.handleCreateNewRoleCloud = function() {
                 var codeIn = document.getElementById("inputNewRoleCode");
                 var nameIn = document.getElementById("inputNewRoleName");
@@ -394,16 +394,13 @@
 
                 var roleData = { code: codeValue, name: nameValue };
                 
-                // BLINDAJE DE RED: Se inyectan las cabeceras Headers estrictas para que Firebase acepte la escritura
+                // Petición REST limpia compatible con la arquitectura de tu archivo db.js
                 fetch("https://firebaseio.com", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
                     body: JSON.stringify(roleData)
                 })
                 .then(function(res) {
-                    if (!res.ok) throw new Error("Server rejected write");
+                    if (!res.ok) throw new Error("Fallo en servidor");
                     return res.json();
                 })
                 .then(function() {
@@ -411,7 +408,7 @@
                     App.openRolesMenu(); // Refresca la tabla interna automáticamente con el nuevo dato en vivo
                 })
                 .catch(function(error) {
-                    console.error("Fallo de escritura en Firebase REST API:", error);
+                    console.error("Fallo de escritura en Firebase:", error);
                     alert("❌ Error de red: Firebase denegó la inserción. Verifique las reglas o las cabeceras de la app.");
                 });
             };
