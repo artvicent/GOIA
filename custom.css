@@ -416,6 +416,26 @@ main {
  * PARTE 3 DE 3: FILTROS, TABLAS, MODALES AL FRENTE (Z-INDEX 5000) Y AJUSTE DE LIENZO 90VH
  */
 
+ /* --- ENCAPSULADO RÍGIDO DE ENCABEZADO DE TABLA (ANTI DESBORDE) --- */
+.split-main-panel .panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap; /* Permite que los elementos se acomoden si la pantalla es pequeña */
+    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box; /* Fuerza a que los paddings no ensanchen la caja */
+}
+
+.split-main-panel .filters-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
 .split-main-panel .filter-select {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;

@@ -99,4 +99,67 @@ App.deleteAssignmentCloud = function(index) {
         AppDB.data.assignments.splice(index, 1);
         AppDB.save();
     }
+
+};
+
+// =========================================================================
+// MÓDULO LOGÍSTICO AUTOINCREMENTAL: CONTROL INDUSTRIAL DE TICKETS DESDE 0
+// =========================================================================
+App.handleCreateTicketAssignment = function(event) {
+    event.preventDefault();
+
+    var targetInput = document.getElementById("assignTarget");
+    var sourceInput = document.getElementById("assignSource");
+
+    if (!targetInput || !sourceInput) return;
+
+    var targetValue = parseInt(targetInput.value);
+    var sourceValue = sourceInput.value.trim();
+
+    // Referencia al contador global transaccional en Firebase Realtime Database
+    var counterRef = firebase.database().ref("config/ticketCounter");
+
+    // Ejecutamos una transacción atómica para evitar que dos usuarios pisen el mismo número de ticket
+    counterRef.transaction(function(currentValue) {
+        // Si no existe el nodo en Firebase, inicializa por primera vez en 0
+        return (currentValue === null) ? 0 : currentValue + 1;
+    }, function(error, committed, snapshot) {
+        if (error) {
+            alert("❌ Error de sincronización al generar el número de ticket.");
+            return;
+        }
+
+        // El número de ticket asignado es el valor consolidado tras el incremento
+        var assignedTicketNum = snapshot.val();
+
+        // Estructura del nuevo Item de Gestión Ejecutiva Automatizada
+        var assignmentData = {
+            id: assignedTicketNum,
+            title: "Ticket #" + assignedTicketNum, // El título ahora es el código único incremental
+            description: "Gestión automatizada de auditoría para carga entrante.",
+            target: targetValue,
+            processed: 0, // Inicia desde cero absoluto de procesadas
+            source: sourceValue,
+            status: "pending",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        // Guardamos el registro bajo su propio ID de Ticket en la base de datos cloud
+        firebase.database().ref("assignments/" + assignedTicketNum).set(assignmentData)
+            .then(function() {
+                alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
+                document.getElementById("modalOverlay").classList.add("hidden");
+                
+                // Si tienes un método de render, lo disparamos para refrescar la tabla en vivo
+                if (typeof App.renderDashboardData === 'function') {
+                    App.renderDashboardData();
+                } else {
+                    location.reload();
+                }
+            })
+            .catch(function(err) {
+                console.error("Error al registrar actividad: ", err);
+                alert("❌ Fallo de comunicación con el servidor cloud de Firebase.");
+            });
+    });
 };
