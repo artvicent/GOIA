@@ -289,73 +289,73 @@
             };
 
             /* ================= App.openRolesMenu: MÓDULO DE GESTIÓN DE ROLES CLOUD REST ================= */
-App.openRolesMenu = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    
-    // 1. Dibujamos la estructura inicial del modal con la retícula de creación limpia
-    document.getElementById("modalContent").innerHTML = `
-        <div class="modal-inner-header">
-            <h3>🔑 Control Maestro de Roles y Permisos</h3>
-            <button onclick="App.openAdminMenu()">&larr; Volver</button>
-        </div>
-        
-        <div class="admin-config-card font-group">
-            <label>Registrar Nuevo Rol Corporativo</label>
-            <div class="input-inline-row">
-                <input type="text" id="inputNewRoleCode" class="form-control" placeholder="Ej: AUDITOR_SENIOR">
-                <input type="text" id="inputNewRoleName" class="form-control" placeholder="Ej: Auditor Senior">
-                <button onclick="App.handleCreateNewRoleCloud()" class="btn-primary">Añadir</button>
-            </div>
-        </div>
+            App.openRolesMenu = function() {
+                document.getElementById("modalOverlay").classList.remove("hidden");
+                
+                // 1. Dibujamos la estructura inicial del modal con la retícula de creación limpia
+                document.getElementById("modalContent").innerHTML = `
+                    <div class="modal-inner-header">
+                        <h3>🔑 Control Maestro de Roles y Permisos</h3>
+                        <button onclick="App.openAdminMenu()">&larr; Volver</button>
+                    </div>
+                    
+                    <div class="admin-config-card font-group">
+                        <label>Registrar Nuevo Rol Corporativo</label>
+                        <div class="input-inline-row">
+                            <input type="text" id="inputNewRoleCode" class="form-control" placeholder="Ej: AUDITOR_SENIOR">
+                            <input type="text" id="inputNewRoleName" class="form-control" placeholder="Ej: Auditor Senior">
+                            <button onclick="App.handleCreateNewRoleCloud()" class="btn-primary">Añadir</button>
+                        </div>
+                    </div>
 
-        <label class="report-export-label-title">Roles Registrados en la Nube</label>
-        <div class="table-container custom-scrollbar" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem;">
-            <table class="executive-table" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Código / Id</th>
-                        <th>Nombre del Rol</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tableRolesCloudBody">
-                    <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">Cargando roles del servidor...</td></tr>
-                </tbody>
-            </table>
-        </div>`;
+                    <label class="report-export-label-title">Roles Registrados en la Nube</label>
+                    <div class="table-container custom-scrollbar" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem;">
+                        <table class="executive-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Código / Id</th>
+                                    <th>Nombre del Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableRolesCloudBody">
+                                <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">Cargando roles del servidor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>`;
 
-    // 2. Jalamos el listado real de roles desde Firebase de forma inmediata
-    fetch("https://firebaseio.com")
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            var tbody = document.getElementById("tableRolesCloudBody");
-            if (!tbody) return;
-            
-            var html = "";
-            if (data) {
-                Object.keys(data).forEach(function(key) {
-                    var r = data[key];
-                    if (r && r.code) {
-                        html += `
-                            <tr>
-                                <td><strong>${r.code.toUpperCase()}</strong></td>
-                                <td>${r.name}</td>
-                                <td>
-                                    <button onclick="App.editRoleFormInline('${key}', '${r.code}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button>
-                                    <button onclick="App.deleteRoleCloud('${key}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:#dc2626;">🗑️</button>
-                                </td>
-                            </tr>`;
-                    }
-                });
-            }
-            
-            tbody.innerHTML = (html === "") ? `<tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">No hay roles adicionales creados.</td></tr>` : html;
-        })
-        .catch(function() {
-            var tbody = document.getElementById("tableRolesCloudBody");
-            if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:1rem; color:#dc2626;">Error de red al consultar el servidor.</td></tr>`;
-        });
-};
+                // 2. Jalamos el listado real de roles desde Firebase de forma inmediata
+                fetch("https://firebaseio.com")
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        var tbody = document.getElementById("tableRolesCloudBody");
+                        if (!tbody) return;
+                        
+                        var html = "";
+                        if (data) {
+                            Object.keys(data).forEach(function(key) {
+                                var r = data[key];
+                                if (r && r.code) {
+                                    html += `
+                                        <tr>
+                                            <td><strong>${r.code.toUpperCase()}</strong></td>
+                                            <td>${r.name}</td>
+                                            <td>
+                                                <button onclick="App.editRoleFormInline('${key}', '${r.code}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button>
+                                                <button onclick="App.deleteRoleCloud('${key}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:#dc2626;">🗑️</button>
+                                            </td>
+                                        </tr>`;
+                                }
+                            });
+                        }
+                        
+                        tbody.innerHTML = (html === "") ? `<tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">No hay roles adicionales creados.</td></tr>` : html;
+                    })
+                    .catch(function() {
+                        var tbody = document.getElementById("tableRolesCloudBody");
+                        if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:1rem; color:#dc2626;">Error de red al consultar el servidor.</td></tr>`;
+                    });
+            };
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
             
             // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
