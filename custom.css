@@ -240,25 +240,52 @@ main {
     z-index: 20;
 }
 
+/**
+ * SISTEMA DE CONTROL DE GESTIONES - HOJA DE ESTILOS MAESTRA (custom.css)
+ * ANCLAJE MAGNÉTICO ABSOLUTO DE IDENTIDAD A LA EXTREMA IZQUIERDA (PÁGINAS 8 Y 9)
+ */
+
+/* BARRA MAESTRA: Sostiene la fila completa de la cabecera interna */
 .dashboard-top-bar {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color-soft);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-    width: 100%;
-    gap: 1rem;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important; /* Alinea los bloques al origen izquierdo de forma nativa */
+    align-items: center !important;
+    border-bottom: 1px solid var(--border-color-soft) !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+    gap: 1rem !important;
+    box-sizing: border-box !important;
 }
 
+/* CERROJO DE FILA: Se convierte en un imán que vuela y se clava a la extrema izquierda */
 .profile-identity-block {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1rem;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    margin-right: auto !important; /* EFECTO IMÁN: Empuja la botonera hacia la derecha y se clava a la izquierda */
+    gap: 0.75rem !important;
+    box-sizing: border-box !important;
 }
+
+/* AVATAR REDONDO: Fijado milimétricamente en el primer lugar del bloque */
+.avatar-frame {
+    width: 3rem !important;
+    height: 3rem !important;
+    background-color: #f1f5f9 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.5rem !important;
+    border: 1px solid var(--border-color-soft) !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    order: 1 !important; /* Primer elemento en pantalla de izquierda a derecha */
+}
+
 
 .avatar-frame {
     width: 3rem;
