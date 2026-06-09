@@ -176,6 +176,7 @@
 
         <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
         <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
+        <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
     <script>
         setInterval(function() {
             // Sincronizador indestructible de textos e imágenes corporativas desde Firebase
@@ -202,7 +203,7 @@
         setTimeout(function() {
             if (typeof App !== 'undefined') {
 
-                /* ================= MODAL NUEVO: GENERADOR DE TICKETS AUTOINCREMENTAL ================= */
+                /* ================= App.openAssignmentModal: GENERADOR DE TICKETS AUTOINCREMENTAL ================= */
                 App.openAssignmentModal = function() {
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     
@@ -241,7 +242,7 @@
                     });
                 };
 
-                /* ================= PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
+                /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
                 App.openAdminMenu = function() {
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
@@ -309,5 +310,6 @@
             }
         }, 1500);
     </script>
+
 </body>
 </html>
