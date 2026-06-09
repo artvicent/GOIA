@@ -174,9 +174,7 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-        <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
-        <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
-        <!-- CONTROL GRÁFICO PURIFICADO: Sincronizador en vivo libre de inyecciones estéticas -->
+        <!-- CONTROL GRÁFICO PURIFICADO: SINCRONIZADOR EN VIVO EXENTO DE RETARDOS CLOUD -->
     <script>
         setInterval(function() {
             // Sincronizador indestructible de textos e imágenes corporativas desde Firebase
@@ -203,43 +201,56 @@
         setTimeout(function() {
             if (typeof App !== 'undefined') {
 
-                /* ================= App.openAssignmentModal: GENERADOR DE TICKETS AUTOINCREMENTAL ================= */
+                /* ================= App.openAssignmentModal: INTERFAZ DE CARGA INMEDIATA COHERENTE ================= */
                 App.openAssignmentModal = function() {
+                    // 1. Levantamos la estructura blanca del formulario de forma instantánea para evitar la barra vacía
                     document.getElementById("modalOverlay").classList.remove("hidden");
                     
-                    // Consultamos el contador actual en Firebase para mostrar el número de ticket que se va a generar
-                    firebase.database().ref("config/ticketCounter").once("value", function(snapshot) {
-                        var nextTicket = snapshot.val() || 0;
+                    document.getElementById("modalContent").innerHTML = `
+                        <div class="modal-inner-header">
+                            <h3>🎫 Generar Nueva Asignación de Ticket</h3>
+                            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+                        </div>
                         
-                        document.getElementById("modalContent").innerHTML = `
-                            <div class="modal-inner-header">
-                                <h3>🎫 Generar Nueva Asignación de Ticket</h3>
-                                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+                        <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
+                            <div class="form-group admin-config-card">
+                                <label style="color: var(--btn-blue-primary); font-size: 13px; text-transform: none;">
+                                    🔢 Próximo Ticket a Registrar: <span id="displayNextTicketNum" style="font-weight: 800;">Cargando...</span>
+                                </label>
                             </div>
+
+                            <div class="form-group">
+                                <label>Meta / Carga Numérica</label>
+                                <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Origen / Referencia</label>
+                                <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
+                            </div>
+
+                            <div class="modal-action-row-footer">
+                                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+                                <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
+                            </div>
+                        </form>`;
+
+                    // 2. Ejecutamos la consulta en paralelo. Si tarda, por defecto inyecta el número 0 de forma segura
+                    if (typeof firebase !== 'undefined') {
+                        firebase.database().ref("config/ticketCounter").once("value", function(snapshot) {
+                            var nextTicket = snapshot.val();
+                            if (nextTicket === null) nextTicket = 0;
                             
-                            <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                                <div class="form-group admin-config-card">
-                                    <label style="color: var(--btn-blue-primary); font-size: 13px; text-transform: none;">
-                                        🔢 Próximo Ticket a Registrar: <span style="font-weight: 800;">#${nextTicket}</span>
-                                    </label>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Meta / Carga Numérica</label>
-                                    <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Origen / Referencia</label>
-                                    <input type="text" id="assignSource" required class="form-control" placeholder="Ej: WhatsApp, Correo, Oficina">
-                                </div>
-
-                                <div class="modal-action-row-footer">
-                                    <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
-                                    <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
-                                </div>
-                            </form>`;
-                    });
+                            var lblTicket = document.getElementById("displayNextTicketNum");
+                            if (lblTicket) lblTicket.innerText = "#" + nextTicket;
+                        }, function(error) {
+                            var lblTicket = document.getElementById("displayNextTicketNum");
+                            if (lblTicket) lblTicket.innerText = "#0 (Modo Local)";
+                        });
+                    } else {
+                        var lblTicket = document.getElementById("displayNextTicketNum");
+                        if (lblTicket) lblTicket.innerText = "#0 (Desconectado)";
+                    }
                 };
 
                 /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON AJUSTES DE PC ================= */
@@ -310,6 +321,7 @@
             }
         }, 1500);
     </script>
+
 
 </body>
 </html>
