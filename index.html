@@ -288,6 +288,165 @@
                     <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
             };
 
+            /* ================= App.openRolesMenu: MÓDULO DE GESTIÓN DE ROLES CLOUD REST ================= */
+App.openRolesMenu = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // 1. Dibujamos la estructura inicial del modal con la retícula de creación limpia
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>🔑 Control Maestro de Roles y Permisos</h3>
+            <button onclick="App.openAdminMenu()">&larr; Volver</button>
+        </div>
+        
+        <div class="admin-config-card font-group">
+            <label>Registrar Nuevo Rol Corporativo</label>
+            <div class="input-inline-row">
+                <input type="text" id="inputNewRoleCode" class="form-control" placeholder="Ej: AUDITOR_SENIOR">
+                <input type="text" id="inputNewRoleName" class="form-control" placeholder="Ej: Auditor Senior">
+                <button onclick="App.handleCreateNewRoleCloud()" class="btn-primary">Añadir</button>
+            </div>
+        </div>
+
+        <label class="report-export-label-title">Roles Registrados en la Nube</label>
+        <div class="table-container custom-scrollbar" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem;">
+            <table class="executive-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Código / Id</th>
+                        <th>Nombre del Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableRolesCloudBody">
+                    <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">Cargando roles del servidor...</td></tr>
+                </tbody>
+            </table>
+        </div>`;
+
+    // 2. Jalamos el listado real de roles desde Firebase de forma inmediata
+    fetch("https://firebaseio.com")
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            var tbody = document.getElementById("tableRolesCloudBody");
+            if (!tbody) return;
+            
+            var html = "";
+            if (data) {
+                Object.keys(data).forEach(function(key) {
+                    var r = data[key];
+                    if (r && r.code) {
+                        html += `
+                            <tr>
+                                <td><strong>${r.code.toUpperCase()}</strong></td>
+                                <td>${r.name}</td>
+                                <td>
+                                    <button onclick="App.editRoleFormInline('${key}', '${r.code}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:var(--btn-blue-primary);">✏️</button>
+                                    <button onclick="App.deleteRoleCloud('${key}', '${r.name}')" class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:10px; color:#dc2626;">🗑️</button>
+                                </td>
+                            </tr>`;
+                    }
+                });
+            }
+            
+            tbody.innerHTML = (html === "") ? `<tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue);">No hay roles adicionales creados.</td></tr>` : html;
+        })
+        .catch(function() {
+            var tbody = document.getElementById("tableRolesCloudBody");
+            if (tbody) tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:1rem; color:#dc2626;">Error de red al consultar el servidor.</td></tr>`;
+        });
+};
+            /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
+            
+            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
+            App.handleCreateNewRoleCloud = function() {
+                var codeIn = document.getElementById("inputNewRoleCode");
+                var nameIn = document.getElementById("inputNewRoleName");
+                if (!codeIn || !nameIn) return;
+
+                var codeValue = codeIn.value.trim().toUpperCase().replace(/\s+/g, '_');
+                var nameValue = nameIn.value.trim();
+
+                if (codeValue === "" || nameValue === "") {
+                    alert("⚠️ Por favor, rellene ambos campos para poder procesar el nuevo rol.");
+                    return;
+                }
+
+                var roleData = { code: codeValue, name: nameValue };
+                
+                // Envío directo a Firebase mediante un método POST síncrono
+                fetch("https://firebaseio.com", {
+                    method: "POST",
+                    body: JSON.stringify(roleData)
+                })
+                .then(function() {
+                    alert("✅ ¡Éxito! Nuevo rol corporativo inyectado al servidor.");
+                    App.openRolesMenu(); // Refresca la tabla interna automáticamente
+                })
+                .catch(function() {
+                    alert("❌ Error de red: No se pudo salvar el rol en la nube.");
+                });
+            };
+
+            // B. FUNCIÓN PARA ELIMINAR UN ROL ESPECÍFICO DEL SERVIDOR
+            App.deleteRoleCloud = function(roleId, roleName) {
+                if (confirm("⚠️ ¿Está seguro de que desea ELIMINAR el rol: " + roleName.toUpperCase() + "?\n\nEsta acción podría desconfigurar al personal que lo tenga asignado actualmente.")) {
+                    fetch("https://firebaseio.com" + roleId + ".json", { 
+                        method: "DELETE" 
+                    })
+                    .then(function() {
+                        alert("✅ El rol ha sido revocado y removido de Firebase.");
+                        App.openRolesMenu();
+                    })
+                    .catch(function() {
+                        alert("❌ Error al intentar eliminar el registro cloud.");
+                    });
+                }
+            };
+
+            // C. FORMULARIO EN CALIENTE INTERNO PARA MODIFICAR UN ROL EXISTENTE
+            App.editRoleFormInline = function(roleId, currentCode, currentName) {
+                document.getElementById("modalContent").innerHTML = `
+                    <div class="modal-inner-header">
+                        <h3>✏️ Modificar Rol Corporativo</h3>
+                        <button onclick="App.openRolesMenu()">&larr; Volver</button>
+                    </div>
+                    <form onsubmit="App.handleUpdateRoleCloud(event, '${roleId}')" class="admin-config-form-layout">
+                        <div class="form-group">
+                            <label>Código Identificador (No editable)</label>
+                            <input type="text" disabled class="form-control" value="${currentCode}" style="background-color:#e2e8f0; color:#64748b;">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Descriptivo del Rol</label>
+                            <input type="text" id="inputEditRoleNameText" required class="form-control" value="${currentName}">
+                        </div>
+                        <div class="modal-action-row-footer">
+                            <button type="button" onclick="App.openRolesMenu()" class="btn-secondary-cancel">Cancelar</button>
+                            <button type="submit" class="btn-primary-submit">Actualizar Cambios</button>
+                        </div>
+                    </form>`;
+            };
+
+            // D. PROCESADOR DE ENVIÓ DE MODIFICACIÓN DE ROL VIA PATCH REST
+            App.handleUpdateRoleCloud = function(event, roleId) {
+                event.preventDefault();
+                var updatedName = document.getElementById("inputEditRoleNameText").value.trim();
+                
+                if (updatedName === "") return;
+
+                fetch("https://firebaseio.com" + roleId + ".json", {
+                    method: "PATCH",
+                    body: JSON.stringify({ name: updatedName })
+                })
+                .then(function() {
+                    alert("✅ Cambios consolidados de forma exitosa en el servidor.");
+                    App.openRolesMenu(); // Retorna a la tabla de roles purificada
+                })
+                .catch(function() {
+                    alert("❌ Error de comunicación con la base de datos cloud.");
+                });
+            };
+
                         // PROCESADOR DEL LOGOTIPO CORPORATIVO DE ACCESO (CANAL A INDEPENDIENTE REPARADO)
             App.handleUploadSystemLogoFromPC = function() {
                 var fileInput = document.getElementById("inputLogoFilePC");
