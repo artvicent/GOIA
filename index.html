@@ -374,16 +374,13 @@
             };
 
             /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API INDEPENDIENTES ================= */
-            
-            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE
-            /* ================= ACCIONES MAESTRAS DE ROLES VIA REST API PURIFICADAS (CON CABECERAS JSON) ================= */
-
-            // A. FUNCIÓN PARA AGREGAR UN NUEVO ROL EN LA NUBE SANEADA AL 100%
+          
             App.handleCreateNewRoleCloud = function() {
                 var codeIn = document.getElementById("inputNewRoleCode");
                 var nameIn = document.getElementById("inputNewRoleName");
                 if (!codeIn || !nameIn) return;
 
+                // Formateamos el código limpiando espacios para que sirva como ID único (Ej: AUDITOR_SENIOR)
                 var codeValue = codeIn.value.trim().toUpperCase().replace(/\s+/g, '_');
                 var nameValue = nameIn.value.trim();
 
@@ -392,26 +389,34 @@
                     return;
                 }
 
-                var roleData = { code: codeValue, name: nameValue };
+                // Estructura limpia que se guardará indexada bajo su propio código identificador
+                var roleData = {};
+                roleData[codeValue] = { code: codeValue, name: nameValue };
                 
-                // Petición REST limpia compatible con la arquitectura de tu archivo db.js
+                // REPARACIÓN REST: Apuntamos directamente a la raíz de roles usando PATCH para forzar la creación del nodo
                 fetch("https://firebaseio.com", {
-                    method: "POST",
+                    method: "PATCH",
                     body: JSON.stringify(roleData)
                 })
                 .then(function(res) {
-                    if (!res.ok) throw new Error("Fallo en servidor");
+                    if (!res.ok) throw new Error("Fallo en servidor Cloud");
                     return res.json();
                 })
                 .then(function() {
-                    alert("✅ ¡Éxito de Sincronización Cloud!\n\nNuevo rol corporativo inyectado correctamente al servidor de Firebase.");
+                    alert("✅ ¡Éxito de Sincronización Cloud!\n\nNuevo rol corporativo [" + codeValue + "] inyectado correctamente al servidor de Firebase.");
+                    
+                    // Limpiamos los campos del formulario para permitir el siguiente registro
+                    codeIn.value = "";
+                    nameIn.value = "";
+                    
                     App.openRolesMenu(); // Refresca la tabla interna automáticamente con el nuevo dato en vivo
                 })
                 .catch(function(error) {
-                    console.error("Fallo de escritura en Firebase:", error);
+                    console.error("Fallo crítico de escritura REST:", error);
                     alert("❌ Error de red: Firebase denegó la inserción. Verifique las reglas o las cabeceras de la app.");
                 });
             };
+
 
             // B. FUNCIÓN PARA ELIMINAR UN ROL ESPECÍFICO DEL SERVIDOR
             App.deleteRoleCloud = function(roleId, roleName) {
