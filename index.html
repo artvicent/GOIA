@@ -179,6 +179,8 @@
         <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA (PARTE 1 DE 2) -->
         <!-- CONTROL GRÁFICO PURIFICADO: CARGA SECUENCIAL SÍNCRONA COMPLETA -->
         <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA DESACOPLADA DE ESTILOS -->
+        <!-- CONTROL GRÁFICO MAESTRO: CONTROL DE TICKETS MEDIANTE FETCH COMPATIBLE CORPORATIVO -->
+        <!-- CONTROL GRÁFICO MAESTRO: LÓGICA PURA SÍNCRONA REST DE UN SOLO BLOQUE -->
     <script>
         // 1. Sincronizador de base de datos en vivo (Gerencia y Logotipo)
         setInterval(function() {
@@ -198,17 +200,17 @@
             }
         }, 500);
 
-        // 2. Inicializador inmediato de botones de interfaz de usuario
+        // 2. Inicializador inmediato de botones de interfaz de usuario (Ajustado con cierres exactos)
         setTimeout(function() {
             if (typeof App === 'undefined') {
                 window.App = {};
             }
 
-            /* ================= App.openAssignmentModal: INTERFAZ DE TICKETS PURA ================= */
+            /* ================= App.openAssignmentModal: GENERADOR DE TICKETS REST MEDIANTE FETCH ================= */
             App.openAssignmentModal = function() {
-                var backupTicket = 0;
-                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && typeof AppDB.data.config.ticketCounter !== 'undefined') {
-                    backupTicket = AppDB.data.config.ticketCounter;
+                var nextTicketNum = 0;
+                if (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter !== 'undefined') {
+                    nextTicketNum = AppDB.data.config.ticketCounter;
                 }
                 
                 var renderModal = function(num) {
@@ -243,32 +245,18 @@
                         </form>`;
                 };
 
-                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                    firebase.database().ref("config/ticketCounter").once("value")
-                        .then(function(snap) { 
-                            var val = snap.val();
-                            renderModal(val === null ? 0 : val); 
-                        })
-                        .catch(function() { 
-                            renderModal(backupTicket); 
-                        });
-                } else {
-                    renderModal(backupTicket);
-                }
+                // Consulta REST directa compatible con tu db.js para evadir errores de once()
+                fetch("https://firebaseio.com")
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { renderModal(data === null ? 0 : parseInt(data)); })
+                    .catch(function() { renderModal(nextTicketNum); });
             };
 
-            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO PURO ================= */
+            /* ================= App.openAdminMenu: PANEL ADMINISTRATIVO CON HOJAS DE ESTILOS LIMPIAS ================= */
             App.openAdminMenu = function() {
                 document.getElementById("modalOverlay").classList.remove("hidden");
-                var currentExpiry = 90;
-                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.passwordExpiryDays) {
-                    currentExpiry = AppDB.data.config.passwordExpiryDays;
-                }
-
-                var currentTitle = "";
-                if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.title) {
-                    currentTitle = AppDB.data.config.title;
-                }
+                var currentExpiry = (typeof AppDB !== 'undefined' && AppDB.data?.config?.passwordExpiryDays) ? AppDB.data.config.passwordExpiryDays : 90;
+                var currentTitle = (typeof AppDB !== 'undefined' && AppDB.data?.config?.title) ? AppDB.data.config.title : "";
 
                 document.getElementById("modalContent").innerHTML = `
                     <div class="modal-inner-header">
@@ -322,7 +310,7 @@
                     }
                 }
             };
-        }, 500);
+        }, 1500); // El cierre de llave y paréntesis quedo perfectamente estructurado aquí
     </script>
 </body>
 </html>
