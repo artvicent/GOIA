@@ -167,10 +167,11 @@ main {
     background-color: #ffffff;
 }
 
+/* --- CAMBIO EN TU BOTÓN DE LOGIN (PÁGINA 6) --- */
 .btn-primary-login {
-    background-color: var(--btn-blue-primary);
+    background-color: #0f172a; /* Mutado de azul a negro sólido corporativo */
     color: #ffffff;
-    border: 1px solid var(--btn-blue-primary);
+    border: 1px solid #0f172a;
     padding: 0.75rem;
     border-radius: 0.75rem;
     font-size: 0.875rem;
@@ -184,9 +185,32 @@ main {
 }
 
 .btn-primary-login:hover {
-    background-color: var(--btn-blue-hover);
-    border-color: var(--btn-blue-hover);
+    background-color: #1e293b; /* Efecto pizarra al pasar el cursor */
+    border-color: #1e293b;
 }
+
+/* --- CAMBIO EN TU BOTÓN DE AJUSTES DEL DASHBOARD (PÁGINA 10) --- */
+#btnAdminPanel {
+    background-color: #be123c; /* Revestido en rojo/carmesí ejecutivo premium */
+    color: #ffffff;
+    border: 1px solid #be123c;
+    padding: 0.55rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+#btnAdminPanel:hover {
+    background-color: #9f1239; /* Rojo más profundo en hover */
+    border-color: #9f1239;
+    transform: translateY(-1px);
+}
+
 
 /* --- LOGOTIPO ESCALADO PROPORCIONAL PREMIUM --- */
 .logo-wrapper {
@@ -379,22 +403,122 @@ main {
     width: 100%;
 }
 
+./**
+ * SISTEMA DE CONTROL DE GESTIONES - ENCAPSULADO CON SOLUCIÓN DE RECUADRO SIMÉTRIC
+
+/* RECUADRO MAESTRO: Encapsula los filtros y la tabla juntos sin que nada flote suelto */
 .split-main-panel {
     width: 100%;
-    background: #ffffff;
+    background-color: #ffffff;
     padding: 1.5rem;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     border: 1px solid #e2e8f0;
+    box-sizing: border-box;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 }
 
-.panel-header-row {
+/* LA SOLUCIÓN: La fila de los filtros y el botón azul bajan y se integran al ras del margen interno */
+.split-main-panel .panel-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    margin-bottom: 1.5rem; /* Margen limpio que separa los filtros de los títulos de la tabla */
+    width: 100%;
+    box-sizing: border-box;
 }
+
+.split-main-panel .filters-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-sizing: border-box;
+}
+
+.split-main-panel .filters-wrapper h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-label-gray);
+    margin: 0;
+}
+
+.split-main-panel .filter-select {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.split-main-panel .filter-select:hover {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+}
+
+.split-main-panel #btnNewAssignment {
+    background-color: var(--btn-blue-primary);
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.65rem 1.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.split-main-panel #btnNewAssignment:hover {
+    background-color: var(--btn-blue-hover);
+    transform: translateY(-1px);
+}
+
+.split-main-panel .table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.split-main-panel .executive-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+.split-main-panel .executive-table th {
+    background-color: #f8fafc;
+    padding: 0.85rem 1.25rem;
+    font-weight: 700;
+    color: var(--text-label-gray);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.split-main-panel .executive-table td {
+    padding: 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.split-main-panel .executive-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
 
 .filters-wrapper {
     display: flex;
