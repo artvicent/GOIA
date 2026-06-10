@@ -1461,7 +1461,7 @@ body:has(#viewDashboard.hidden) footer {
     margin-left: 6px;
 }
 
-/* ================= EFECTO GLOW ROTATIVO VERDE: TOP EFICIENCIA ================= */
+/* ================= EFECTO GLOW ROTATIVO CAPA COMPLETA VERDE ================= */
 
 .merit-podium-container {
     display: flex;
@@ -1473,7 +1473,7 @@ body:has(#viewDashboard.hidden) footer {
 
 .podium-icon {
     font-size: 16px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .podium-text {
@@ -1483,53 +1483,57 @@ body:has(#viewDashboard.hidden) footer {
     letter-spacing: 0.3px;
 }
 
-/* CONTENEDOR DEL ANILLO: Oculta el exceso del degradado para simular un borde fino */
+/* CONTENEDOR DEL ANILLO EXTERIOR */
 .podium-glow-wrapper {
     position: relative;
     width: auto;
     height: auto;
-    padding: 2px; /* Este espacio determina el grosor del borde giratorio */
+    padding: 2px; /* Grosor de la luz rotativa */
     border-radius: 20px;
     overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 14px rgba(0, 255, 135, 0.25);
+    transition: all 0.3s ease;
 }
 
-/* EL CORDÓN DE LUZ: Gira en segundo plano en 360 grados */
+/* EL CORDÓN DE LUZ: Verde Neón hiper-brillante orbitando */
 .podium-glow-wrapper::before {
     content: '';
     position: absolute;
-    width: 150%;
-    height: 300%;
-    /* Degradado cónico: Genera el haz de luz verde intenso contra un fondo oscuro */
-    background: conic-gradient(transparent 180deg, #00ff87 270deg, #059669 360deg, transparent);
-    animation: rotateGlowBorder 4s infinite linear; /* Velocidad controlada para no distraer */
+    width: 160%;
+    height: 320%;
+    /* Haz de luz en verde eléctrico puro que gira continuamente */
+    background: conic-gradient(transparent 180deg, #00ff87 270deg, #10b981 360deg, transparent);
+    animation: rotateGlowBorder 3.5s infinite linear;
 }
 
-/* CUERPO INTERNO DEL ÓVALO: Tapa el centro del degradado y muestra el nombre */
+/* CUERPO INTERNO DEL ÓVALO: Fondo verde esmeralda profundo */
 .podium-badge-oval {
     position: relative;
-    z-index: 2; /* Se posiciona por encima del destello */
-    background: #0f172a; /* Fondo ultra oscuro idéntico al banner para simular vacío */
-    padding: 4px 14px;
+    z-index: 2;
+    /* Degradado interno verde oscuro para crear contraste con el borde neón */
+    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%); 
+    padding: 5px 14px;
     border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid rgba(52, 211, 153, 0.15); /* Fino borde interno de acople */
 }
 
-/* Texto interno con el nombre del colaborador */
+/* TEXTO CON EL NOMBRE DEL ANALISTA MÁS EFICIENTE */
 #topUserWorker {
     color: #ffffff;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    /* Sombra fuerte para asegurar que las letras blancas resalten sobre el fondo verde */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 4px rgba(0, 255, 135, 0.4);
 }
 
-/* ANIMACIÓN DE ROTACIÓN EN ALTA DEFINICIÓN */
+/* ANIMACIÓN DE ROTACIÓN */
 @keyframes rotateGlowBorder {
     0% {
         transform: rotate(0deg);
@@ -1541,9 +1545,13 @@ body:has(#viewDashboard.hidden) footer {
 
 /* Efecto Hover interactivo al pasar el mouse por el podio */
 .merit-podium-container:hover .podium-glow-wrapper {
-    box-shadow: 0 0 20px rgba(0, 255, 135, 0.55);
-    transform: scale(1.02);
-    transition: all 0.3s ease;
+    box-shadow: 0 0 22px rgba(0, 255, 135, 0.6);
+    transform: scale(1.03);
+}
+
+.merit-podium-container:hover .podium-badge-oval {
+    /* Al pasar el mouse, el fondo interno se ilumina levemente */
+    background: linear-gradient(135deg, #047857 0%, #064e3b 100%);
 }
 
 
