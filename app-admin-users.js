@@ -6,7 +6,18 @@
 
 // Desplegar el panel general de administración para usuarios autorizados
 App.openAdminMenu = function() {
+    // 1. Validar que la base de datos local y su configuración estén listas
+    if (!AppDB || !AppDB.data) {
+        alert("Error: El motor de base de datos AppDB no está inicializado.");
+        return;
+    }
+    if (!AppDB.data.config) {
+        AppDB.data.config = { title: "Gerencia General de Adquirencia", ticketCounter: 0 };
+    }
+
     document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // Evitar caídas del sistema leyendo el valor por defecto de forma segura
     var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
 
     document.getElementById("modalContent").innerHTML = `
@@ -18,37 +29,54 @@ App.openAdminMenu = function() {
         <div class="form-group admin-config-card">
             <label>Nombre de Gerencia / Programa</label>
             <div class="input-inline-row">
-                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title}">
+                <input type="text" id="inputEditGerencia" class="form-control" value="${AppDB.data.config.title || ''}">
                 <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
             </div>
             
             <label class="mt-2">Expiración de Contraseñas del Personal</label>
-            <select id="selectPasswordExpiry" class="form-control full-width">
-                <option value="30" ${currentExpiry==30?'selected':''}>Vencimiento cada 30 Días</option>
-                <option value="60" ${currentExpiry==60?'selected':''}>Vencimiento cada 60 Días</option>
-                <option value="90" ${currentExpiry==90?'selected':''}>Vencimiento cada 90 Días</option>
+            <select id="selectPasswordExpiry" class="form-control full-width" onchange="App.handleUpdateExpiryPolicyInline()">
+                <option value="30" ${currentExpiry == 30 ? 'selected' : ''}>Vencimiento cada 30 Días</option>
+                <option value="60" ${currentExpiry == 60 ? 'selected' : ''}>Vencimiento cada 60 Días</option>
+                <option value="90" ${currentExpiry == 90 ? 'selected' : ''}>Vencimiento cada 90 Días</option>
             </select>
         </div>
 
         <!-- MÓDULO DE REINICIO DE FÁBRICA SÍNCRONO CON FIREBASE -->
-        <div class="maintenance-critical-card">
-            <label>🚨 Mantenimiento Crítico de Servidor</label>
-            <p>Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
-            <button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button>
+        <div class="maintenance-critical-card" style="margin-top: 15px; padding: 12px; border: 1px dashed #ef4444; border-radius: 6px; background: #fef2f2;">
+            <label style="color: #b91c1c; font-weight: bold; display: block; margin-bottom: 4px;">🚨 Mantenimiento Crítico de Servidor</label>
+            <p style="color: #7f1d1d; font-size: 11px; margin: 0 0 10px 0; line-height: 1.4;">Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
+            
+            <!-- ENLAZADO CON EL PROTOCOLO DE PURGA SEGURO DE APPDB -->
+            <button onclick="App.handleFactoryResetCloud()" class="btn-danger-reset" style="width:100%; padding:8px; background:#dc2626; color:white; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:11px;">
+                💥 REINICIAR BASE DE DATOS DE FÁBRICA
+            </button>
         </div>
 
-        <div class="modal-grid-buttons">
-            <button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button>
-            <button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button>
+        <div class="modal-grid-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;">
+            <button onclick="App.openRolesMenu()" class="btn-primary bg-navy" style="padding: 10px; font-weight: bold;">🔑 ROLES Y PERMISOS</button>
+            <button onclick="App.openManagementsMenu()" class="btn-primary bg-sky" style="padding: 10px; font-weight: bold;">📋 CATALOGO GESTIONES</button>
         </div>
-        <div class="modal-grid-buttons">
-            <button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button>
-            <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button>
+        <div class="modal-grid-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+            <button onclick="App.openCreateUserForm()" class="btn-primary" style="padding: 10px; font-weight: bold;">➕ Crear Usuario</button>
+            <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold" style="padding: 10px; font-weight: bold;">👥 Nómina Personal</button>
         </div>
-        <div class="modal-single-row">
-            <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button>
+        <div class="modal-single-row" style="margin-top: 8px;">
+            <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson" style="width: 100%; padding: 10px; font-weight: bold; background: #991b1b; color: white; border: none; border-radius: 4px;">
+                🔎 VER HISTORIAL DE AUDITORÍA (LOGS)
+            </button>
         </div>`;
 };
+
+// Función auxiliar para guardar la política de vencimiento de claves sin romper el flujo
+App.handleUpdateExpiryPolicyInline = function() {
+    var select = document.getElementById("selectPasswordExpiry");
+    if (!select || typeof AppDB === 'undefined' || !AppDB.data) return;
+    
+    AppDB.data.config.passwordExpiryDays = parseInt(select.value) || 90;
+    AppDB.addLog(App.currentUser?.username || "admin", "POLITICA_SEGURIDAD", "Expiración de claves cambiada a " + select.value + " días");
+    AppDB.save();
+};
+
 
 // Procesar el cambio de nombre corporativo de la gerencia en la nube
 App.saveAdministrativeConfig = function() {
