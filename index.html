@@ -116,7 +116,7 @@
                             </select>
                         </div>
 
-                        <!-- BOTÓN CON SELECCIÓN DE CATÁLOGO Y CORRELATIVO AUTOMÁTICO DE TICKETS -->
+                        <!-- BOTÓN REPARADO CON CONCATENACIÓN DE CORRELATIVO EN VIVO -->
 <button id="btnNewAssignment" onclick="(function(){
     document.getElementById('modalOverlay').classList.remove('hidden');
     
@@ -149,7 +149,7 @@
         optsUsers += '<option value=&quot;' + activeUser + '&quot;>@' + activeUser + ' (Mi Propio Perfil)</option>';
     }
 
-    // Calcular visualmente el próximo número de ticket basándose en el contador de la nube
+    // CALCULO MATEMÁTICO REAL DEL CORRELATIVO
     const nextTicketNum = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? (parseInt(AppDB.data.config.ticketCounter) + 1) : 1;
 
     document.getElementById('modalContent').innerHTML = `
@@ -159,7 +159,7 @@
         </div>
         <form id='fAssign' onsubmit='App.executeCreateAssignment(event)' class='admin-config-card'>
             <div class='form-group ticket-info-badge' style='margin-bottom: 12px; padding: 6px; background: #f8fafc; border-left: 4px solid #2563eb;'>
-                <label style='font-weight: bold; color: #1e3a8a;'>Próximo Correlativo Cloud: <span style='color: #2563eb;'>#\${nextTicketNum}</span></label>
+                <label style='font-weight: bold; color: #1e3a8a;'>Próximo Correlativo Cloud: <span style='color: #2563eb;'>#` + nextTicketNum + `</span></label>
             </div>
             <div class='form-group'>
                 <label>Colaborador Destinatario (Asignado A)</label>
