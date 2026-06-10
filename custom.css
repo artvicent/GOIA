@@ -1461,7 +1461,8 @@ body:has(#viewDashboard.hidden) footer {
     margin-left: 6px;
 }
 
-/* CONTENEDOR FLUIDO DEL PODIO DE MÉRITO */
+/* ================= EFECTO GLOW ROTATIVO VERDE: TOP EFICIENCIA ================= */
+
 .merit-podium-container {
     display: flex;
     align-items: center;
@@ -1482,35 +1483,69 @@ body:has(#viewDashboard.hidden) footer {
     letter-spacing: 0.3px;
 }
 
-/* ÓVALO VERDE LLAMATIVO Y MOTIVACIONAL (EFECTO GAMIFICACIÓN) */
-.podium-badge-oval {
+/* CONTENEDOR DEL ANILLO: Oculta el exceso del degradado para simular un borde fino */
+.podium-glow-wrapper {
+    position: relative;
+    width: auto;
+    height: auto;
+    padding: 2px; /* Este espacio determina el grosor del borde giratorio */
+    border-radius: 20px;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Degradado esmeralda corporativo */
-    border: 1px solid #34d399;
-    padding: 4px 14px;
-    border-radius: 20px; /* Óvalo perfecto */
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-    transition: all 0.3s ease;
-    animation: subltePulseEffort 3s infinite ease-in-out; /* Pulso suave que atrae la vista sin distraer */
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
 }
 
-/* Nombre del analista dentro del óvalo */
+/* EL CORDÓN DE LUZ: Gira en segundo plano en 360 grados */
+.podium-glow-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 150%;
+    height: 300%;
+    /* Degradado cónico: Genera el haz de luz verde intenso contra un fondo oscuro */
+    background: conic-gradient(transparent 180deg, #00ff87 270deg, #059669 360deg, transparent);
+    animation: rotateGlowBorder 4s infinite linear; /* Velocidad controlada para no distraer */
+}
+
+/* CUERPO INTERNO DEL ÓVALO: Tapa el centro del degradado y muestra el nombre */
+.podium-badge-oval {
+    position: relative;
+    z-index: 2; /* Se posiciona por encima del destello */
+    background: #0f172a; /* Fondo ultra oscuro idéntico al banner para simular vacío */
+    padding: 4px 14px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Texto interno con el nombre del colaborador */
 #topUserWorker {
     color: #ffffff;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Efecto hover interactivo al pasar el mouse */
-.merit-podium-container:hover .podium-badge-oval {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+/* ANIMACIÓN DE ROTACIÓN EN ALTA DEFINICIÓN */
+@keyframes rotateGlowBorder {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
+
+/* Efecto Hover interactivo al pasar el mouse por el podio */
+.merit-podium-container:hover .podium-glow-wrapper {
+    box-shadow: 0 0 20px rgba(0, 255, 135, 0.55);
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+
 
 /* ANIMACIÓN DE PULSO SEMÁNTICO (PSI/PCI COMPLIANT) */
 @keyframes subltePulseEffort {
