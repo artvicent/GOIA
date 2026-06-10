@@ -81,7 +81,6 @@ App.renderDashboardData = function() {
             <td class="text-center"><span class="time-label-${statusClass}">${timeRemainingStr}</span></td>
             <td class="text-center">
                 <button onclick="App.openUpdateProgressModal(${index})" class="btn-secondary">Progreso</button>
-                ${AppDB.data.roles[App.currentUser.role].lvl >= 3 ? `<button onclick="App.deleteAssignmentCloud(${index})" class="btn-secondary btn-logout">Eliminar</button>` : ""}
             </td>
         `;
         tableBody.appendChild(tr);
