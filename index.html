@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Gestiones Ejecutivas</title>
-    <!-- Truco definitivo para destruir la caché del Live Server local -->
-    <link rel="stylesheet" href="custom.css?v=999">
+    <title>GOIA v2.02 - Sistema de Control de Gestiones Ejecutivas</title>
+    <!-- Destrucción activa de la caché corporativa en navegadores de la gerencia -->
+    <link rel="stylesheet" href="styles.css?v=2.02">
 </head>
 <body>
-
-    <!-- CAPA INTEGRADA DE FONDO CON OPACIDAD -->
+    <!-- CAPA INTEGRADA DE FONDO CORPORATIVO CON OPACIDAD -->
     <div class="background-master-container"></div>
-    <img src="1.jpeg" class="background-image-canvas" alt="Fondo">
+    <img src="1.jpeg" class="background-image-canvas" alt="Fondo Institucional">
 
     <!-- 1. ENCABEZADO SUPERIOR OSCURO INSTITUCIONAL -->
     <header id="topBanner">
@@ -21,23 +20,20 @@
         </div>
         <div id="meritPodium" class="merit-podium">
             <span>🏆 Top Eficiencia:</span>
-            <span id="topUserWorker">ARTURO NOTO</span>
+            <span id="topUserWorker">Cargando...</span>
         </div>
     </header>
 
     <main>
-        <!-- ================= VISTA A: FORMULARIO DE ACCESO COMPLETAMENTE REPARADO ================= -->
+        <!-- ================= VISTA A: FORMULARIO DE ACCESO REPARADO ================= -->
         <section id="viewLogin" class="view-card max-w-md">
             <div class="login-header">
-                <!-- REEMPLAZO EN INDEX.HTML: Bloque de logotipo optimizado y limpio -->
-            <div class="logo-wrapper">
-                <img id="appLogoImg" src="logo_gerencia.png" class="login-brand-logo" alt="Logo Credicard">
-            </div>
+                <div class="logo-wrapper">
+                    <img id="appLogoImg" src="logo_gerencia.png" class="login-brand-logo" alt="Logo Credicard">
+                </div>
                 <h1>Control de Gestiones</h1>
-                <p>Acceso Corporativo</p>
+                <p>Acceso Corporativo Seguro</p>
             </div>
-
-            <!-- ESTRUCTURA PURA: Se eliminan clases innecesarias para romper la fusión de la barra blanca -->
             <form id="formLogin" onsubmit="App.handleLogin(event)" autocomplete="off">
                 <div class="form-group">
                     <label>Usuario</label>
@@ -46,36 +42,31 @@
                 <div class="form-group">
                     <div class="form-group-header-row">
                         <label>Contraseña</label>
-                        <button type="button" onclick="App.showRecoveryFormGlobal()">¿Olvidó su clave / Bloqueado?</button>
+                        <button type="button" onclick="App.showRecoveryFormGlobal()">¿Olvidó su clave?</button>
                     </div>
                     <input type="password" id="loginPass" required class="form-control" placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn-primary-login">
-                    Ingresar al Sistema
-                </button>
+                <button type="submit" class="btn-primary-login">Ingresar al Sistema</button>
             </form>
         </section>
-        <!-- ================= VISTA B: DASHBOARD CORPORATIVO ================= -->
-        <section id="viewDashboard" class="view-card max-w-7xl hidden">
-            <!-- BARRA TOP INTEGRADA: Perfil amarrado a la izquierda y botones a la derecha -->
-            <div class="dashboard-top-bar">
-                
-                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">👤</div>
-                    <div class="profile-text-labels">
-                        <h2 id="dashWelcomeName">Colaborador</h2>
-                        <p id="dashUserRole">Rol</p>
-                    </div>
-                </div>
 
+        <!-- ================= VISTA B: DASHBOARD CORPORATIVO CENTRAL ================= -->
+        <section id="viewDashboard" class="view-card max-w-7xl hidden">
+            <div class="dashboard-top-bar">
+                <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame"></div>
+                <div class="profile-text-labels">
+                    <h2 id="dashWelcomeName">Colaborador</h2>
+                    <p id="dashUserRole">Rol Operativo</p>
+                </div>
                 <div class="action-buttons-group">
-                    <button onclick="App.openReportsMenu()" class="btn-secondary">📊 Reportes Consolidados</button>
+                    <button onclick="App.openReportsMenu()" class="btn-secondary">Reportes Consolidados</button>
                     <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden">⚙️ Ajustes y Usuarios</button>
-                    <button onclick="App.openAboutModal()" class="btn-secondary">ℹ️ Acerca de</button>
+                    <button onclick="App.openAboutModal()" class="btn-secondary">Acerca de</button>
                     <button onclick="App.logout()" class="btn-secondary btn-logout">Cerrar Sesión</button>
                 </div>
             </div>
 
-            <!-- CONTADORES DE ESTADO GENERAL -->
+            <!-- CONTADORES DE ESTADO GENERAL EN TIEMPO REAL -->
             <div class="grid-counters">
                 <div class="counter-card bg-total">
                     <p>Total Realizadas</p>
@@ -94,38 +85,25 @@
                     <p id="countPerformance" class="counter-num">0%</p>
                 </div>
             </div>
-            <!-- SECCIÓN CENTRAL CENTRALIZADA EN BLOQUE VERTICAL -->
+
             <div class="dashboard-split-layout">
-                <!-- PANEL SUPERIOR INTERNO: TABLA DE GESTIONES A ANCHO COMPLETO -->
+                <!-- TABLA DE GESTIONES PRINCIPAL -->
                 <div class="split-main-panel">
                     <div class="panel-header-row">
                         <div class="filters-wrapper">
-                            <h3>Filtros de Auditoría:</h3>
+                            <h3>Filtros:</h3>
                             <select id="filterAuditMonth" onchange="App.renderDashboardData()" class="filter-select">
-                                <option value="current">📅 Ciclo Activo (Mes en Curso)</option>
-                                <option value="1">📅 Enero 2026</option>
-                                <option value="2">📅 Febrero 2026</option>
-                                <option value="3">📅 Marzo 2026</option>
-                                <option value="4">📅 Abril 2026</option>
-                                <option value="5">📅 Mayo 2026</option>
-                                <option value="6">📅 Junio 2026</option>
-                                <option value="7">📅 Julio 2025</option>
-                                <option value="8">📅 Agosto 2025</option>
-                                <option value="9">📅 Septiembre 2025</option>
-                                <option value="10">📅 Octubre 2025</option>
-                                <option value="11">📅 Noviembre 2025</option>
-                                <option value="12">📅 Diciembre 2025</option>
+                                <option value="current">Ciclo Activo</option>
                             </select>
                             <select id="filterAssignmentStatus" onchange="App.renderDashboardData()" class="filter-select">
-                                <option value="all">🔍 Todas las Cargas</option>
-                                <option value="pending">⏳ Pendientes</option>
-                                <option value="completed">🏁 Culminadas</option>
-                                <option value="expired">🚨 Vencidas</option>
+                                <option value="all">Todas las Cargas</option>
+                                <option value="pending">Pendientes</option>
+                                <option value="completed">Culminadas</option>
+                                <option value="expired">Vencidas</option>
                             </select>
                         </div>
                         <button id="btnNewAssignment" onclick="App.openAssignmentModal()">+ Asignar Actividad</button>
                     </div>
-                    
                     <div class="table-container custom-scrollbar">
                         <table class="executive-table">
                             <thead>
@@ -143,7 +121,7 @@
                     </div>
                 </div>
 
-                <!-- PANEL INFERIOR FIJO: MONITOR DE PERFORMANCE ACOPLADO ABAJO -->
+                <!-- MONITOR LATERAL ACOPLADO -->
                 <div class="split-side-panel">
                     <h3>Monitor de Desempeño y Alertas</h3>
                     <div id="monitorContainer" class="monitor-panel custom-scrollbar"></div>
@@ -151,20 +129,16 @@
             </div>
         </section>
     </main>
+
     <footer>
-        ENTORNO DE EJECUCIÓN CLOUD SEGURO &copy; 2026 - SISTEMA DE INTEGRIDAD DE DATOS MÁXIMA
+        ENTORNO DE EJECUCIÓN CLOUD SEGURO &copy; 2026 - GERENCIA DE ADQUIRENCIA
     </footer>
 
+    <!-- CAPA FLOTANTE PARA MODALES DEL SISTEMA -->
     <div id="modalOverlay" class="modal-overlay hidden">
         <div id="modalContent" class="modal-content custom-scrollbar"></div>
     </div>
-
-    <!-- INYECTOR MAESTRO COMPATIBLE: Carga directa e inmune al Firewall corporativo -->
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
-
-    <!-- Hilo lógico secuencial de carga estructurada de red -->
+    <!-- Hilos lógicos secuenciales obligatorios del ecosistema GOIA -->
     <script src="db.js"></script>
     <script src="app-core.js"></script>
     <script src="app-executive.js"></script>
@@ -174,311 +148,347 @@
     <script src="app-admin-managements.js"></script>
     <script src="app-admin-logs.js"></script>
 
-        <!-- CONTROL GRÁFICO CORPORATIVO: CANALES DE MEMORIA DESACOPLADOS (PARTE 1 DE 2) -->
-        <!-- CONTROL GRÁFICO MAESTRO: INTERFAZ RESISTENTE A REFRESCOS DE SESIÓN (PARTE 1 DE 2) -->
     <script>
-        // 1. Sincronizador en vivo de cabecera corporativa y logotipos independientes
-        setInterval(function() {
-            if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
-                var cfg = AppDB.data.config;
-                if (cfg.title) {
-                    var b = document.getElementById("displayGerenciaName");
-                    if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
-                }
+    // 1. Sincronizador en caliente de marcas institucionales y persistencia de interfaz
+    setInterval(function() {
+        if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
+            var cfg = AppDB.data.config;
+            if (cfg.title) {
+                var b = document.getElementById("displayGerenciaName");
+                if (b && b.innerText !== cfg.title) b.innerText = cfg.title;
             }
-            var systemLogo = localStorage.getItem("system_brand_logo_main");
-            if (systemLogo) {
-                var imgLogin = document.getElementById("appLogoImg");
-                if (imgLogin && imgLogin.src !== systemLogo) imgLogin.src = systemLogo;
-            }
-            var managerAvatar = localStorage.getItem("gerente_avatar_personal");
-            if (managerAvatar) {
-                var frameDash = document.getElementById("userAvatarFrame");
-                if (frameDash) {
-                    if (managerAvatar.startsWith("data:image")) {
-                        if (!frameDash.innerHTML.includes("<img")) {
-                            frameDash.innerHTML = `<img src="${managerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                        }
-                    } else {
-                        if (frameDash.innerText !== managerAvatar) frameDash.innerText = managerAvatar;
+        }
+        var systemLogo = localStorage.getItem("system_brand_logo_main");
+        if (systemLogo) {
+            var imgLogin = document.getElementById("appLogoImg");
+            if (imgLogin && imgLogin.src !== systemLogo) imgLogin.src = systemLogo;
+        }
+        var managerAvatar = localStorage.getItem("gerente_avatar_personal");
+        if (managerAvatar) {
+            var frameDash = document.getElementById("userAvatarFrame");
+            if (frameDash) {
+                if (managerAvatar.startsWith("data:image")) {
+                    if (!frameDash.innerHTML.includes("<img")) {
+                        frameDash.innerHTML = `<img src="${managerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
                     }
+                } else {
+                    if (frameDash.innerText !== managerAvatar) frameDash.innerText = managerAvatar;
                 }
             }
-        }, 500);
+        }
+    }, 500);
 
-        // 2. Inicializador inmediato de ganchos de escucha SPA REST API
-        setTimeout(function() {
-            if (typeof App === 'undefined') window.App = {};
+    // Inicializador diferido para evitar colisiones con el DOM
+    setTimeout(function() {
+        if (typeof window.App === 'undefined') window.App = {};
+        /* ================= MÓDULO CORREGIDO: ASIGNACIÓN DE TICKETS ================= */
+        App.openAssignmentModal = function() {
+            var backup = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? 
+                parseInt(AppDB.data.config.ticketCounter) : 0;
+            
+            var optionsHtml = "";
+            // Extraer gestiones directamente del catálogo central cifrado
+            if (typeof AppDB !== 'undefined' && AppDB.data?.managements) {
+                AppDB.data.managements.forEach(function(item) {
+                    if (item && item.name) {
+                        optionsHtml += `<option value="${item.name}">${item.name}</option>`;
+                    }
+                });
+            }
+            if (optionsHtml === "") {
+                optionsHtml = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`;
+            }
 
-            /* ================= App.openAssignmentModal: SELECTOR DINÁMICO DE TICKETS ================= */
-            App.openAssignmentModal = function() {
-                var backup = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? parseInt(AppDB.data.config.ticketCounter) : 0;
-                var render = function(num, opts) {
-                    document.getElementById("modalOverlay").classList.remove("hidden");
-                    document.getElementById("modalContent").innerHTML = `
-                        <div class="modal-inner-header"><h3>🎫 Generar Asignación de Ticket</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
-                        <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
-                            <div class="form-group admin-config-card ticket-info-badge"><label class="ticket-label-highlight">🔢 Próximo Ticket: <span>#${(isNaN(num) || num === null) ? 0 : num}</span></label></div>
-                            <div class="form-group"><label>Gestión a Realizar</label><select id="assignSource" required class="form-control"><option value="" disabled selected>-- Elija del catálogo --</option>${opts}</select></div>
-                            <div class="form-group"><label>Meta / Carga</label><input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150"></div>
-                            <div class="form-group"><label>Tiempo Estimado (Minutos)</label><input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30"></div>
-                            <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Emitir Ticket</button></div>
-                        </form>`;
-                };
-                fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(manData){
-                    var opts = ""; if(manData) Object.keys(manData).forEach(function(k){ if(manData[k]?.name) opts += `<option value="${manData[k].name}">${manData[k].name}</option>`; });
-                    if(opts==="") opts = `<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`;
-                    fetch("https://firebaseio.com").then(function(r){return r.json();}).then(function(tk){render(tk===null?0:parseInt(tk), opts);}).catch(function(){render(backup,opts);});
-                }).catch(function(){render(backup,`<option value="Auditoría de Cuentas">Auditoría de Cuentas</option>`);});
-            };
-
-            /* ================= App.openRolesMenu: MATRIZ CORREGIDA LIBRE DE REFRESCOS DE PÁGINA ================= */
-            App.openRolesMenu = function() {
-                document.getElementById("modalOverlay").classList.remove("hidden");
-                
-                // CORRECCIÓN ATÓMICA: Cambiamos la etiqueta FORM por una estructura DIV y el botón por type="button"
-                document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header">
-                        <h3>CONTROL DE ROLES Y PRIVILEGIOS</h3>
-                        <button onclick="App.openAdminMenu()" class="btn-secondary" style="font-size:12px; padding:4px 10px;">&larr; Volver</button>
+            document.getElementById("modalOverlay").classList.remove("hidden");
+            document.getElementById("modalContent").innerHTML = `
+                <div class="modal-inner-header">
+                    <h3>Generar Asignación de Ticket</h3>
+                    <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+                </div>
+                <form id="formNewAssignment" onsubmit="App.handleCreateTicketAssignment(event)" class="admin-config-form-layout">
+                    <div class="form-group admin-config-card ticket-info-badge">
+                        <label class="ticket-label-highlight">Próximo Ticket: <span>#${backup + 1}</span></label>
                     </div>
+                    <div class="form-group">
+                        <label>Gestión a Realizar</label>
+                        <select id="assignSource" required class="form-control">
+                            <option value="" disabled selected>-- Elija del catálogo --</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Meta / Carga</label>
+                        <input type="number" id="assignTarget" required class="form-control" min="1" placeholder="Ej: 150">
+                    </div>
+                    <div class="form-group">
+                        <label>Tiempo Estimado (Minutos)</label>
+                        <input type="number" id="assignDuration" required class="form-control" min="1" placeholder="Ej: 30">
+                    </div>
+                    <div class="modal-action-row-footer">
+                        <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+                        <button type="submit" class="btn-primary-submit">Emitir Ticket</button>
+                    </div>
+                </form>`;
+        };
+        /* ================= MÓDULO CENTRAL: CONTROL DE ROLES Y PRIVILEGIOS ================= */
+        App.openRolesMenu = function() {
+            document.getElementById("modalOverlay").classList.remove("hidden");
+            document.getElementById("modalContent").innerHTML = `
+                <div class="modal-inner-header">
+                    <h3>CONTROL DE ROLES Y PRIVILEGIOS</h3>
+                    <button onclick="App.openAdminMenu()" class="btn-secondary" style="font-size:12px; padding:4px 10px;">&larr; Volver</button>
+                </div>
+                <div class="admin-config-form-layout" style="gap:1rem;">
+                    <div class="input-inline-row" style="gap:0.75rem;">
+                        <input type="text" id="inputNewRoleName" class="form-control" placeholder="Nombre de Perfil (Ej: Especialista)" style="flex:2;">
+                        <input type="number" id="inputRoleHierarchy" class="form-control" min="1" max="4" placeholder="Jerarquía (1-4)" style="flex:1;">
+                    </div>
+                    <div class="admin-config-card" style="padding:0.75rem; background:#ffffff; border:1px solid #cbd5e1;">
+                        <label style="font-size:10px; font-weight:700; color:#1e293b; text-transform:uppercase; margin-bottom:0.5rem; display:block;">Asignación de Privilegios de Uso</label>
+                        <div class="input-inline-row" style="justify-content:space-between; width:100%; padding:4px 0;">
+                            <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px;"><input type="checkbox" id="chkPermCrear"> Crear</label>
+                            <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px;"><input type="checkbox" id="chkPermModificar"> Modificar</label>
+                            <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px;"><input type="checkbox" id="chkPermEliminar"> Eliminar</label>
+                            <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px;"><input type="checkbox" id="chkPermEjecutar" checked> Ejecutar</label>
+                        </div>
+                    </div>
+                    <button type="button" onclick="App.handleCreateNewRoleCloud()" class="btn-primary-login" style="margin:0; font-size:11px; font-weight:700; background-color:#0f172a;">
+                        + GUARDAR NUEVO PERFIL
+                    </button>
+                </div>
+                <div class="table-container custom-scrollbar" style="max-height:220px; overflow-y:auto; margin-top:1rem; border:none;">
+                    <table class="executive-table" style="width:100%;">
+                        <thead>
+                            <tr style="background:transparent;">
+                                <th style="font-size:10px; padding:8px 4px;">PERFIL</th>
+                                <th style="font-size:10px; padding:8px 4px; text-align:center;">MATRIZ PERMISOS</th>
+                                <th style="font-size:10px; padding:8px 4px; text-align:right;">ACCION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableRolesCloudBody"></tbody>
+                    </table>
+                </div>`;
+            App.handleRenderRolesMatrixTable();
+        };
+
+        App.handleRenderRolesMatrixTable = function() {
+            var rolesBaseHtml = `
+                <tr><td><strong>Gerente</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía: Lvl 4</span></td><td style="text-align:center;"><span class="badge-total">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; padding-right:10px;">Sistema</td></tr>
+                <tr><td><strong>Administrador</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía: Lvl 3</span></td><td style="text-align:center;"><span class="badge-total">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; padding-right:10px;">Sistema</td></tr>`;
+            
+            var tbody = document.getElementById("tableRolesCloudBody");
+            if (!tbody) return;
+            
+            var html = "";
+            if (typeof AppDB !== 'undefined' && AppDB.data?.roles) {
+                Object.keys(AppDB.data.roles).forEach(function(key) {
+                    var r = AppDB.data.roles[key];
+                    if (!r) return;
+                    var badges = "";
+                    if (r.crear) badges += `<span style="font-size:9px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 4px; margin-right:2px;">CREA</span>`;
+                    if (r.modificar) badges += `<span style="font-size:9px; font-weight:700; color:#16a34a; background:#f0fdf4; padding:2px 4px; margin-right:2px;">MOD</span>`;
+                    if (r.eliminar) badges += `<span style="font-size:9px; font-weight:700; color:#dc2626; background:#fef2f2; padding:2px 4px; margin-right:2px;">ELIM</span>`;
+                    if (r.ejecutar) badges += `<span style="font-size:9px; font-weight:700; color:#d97706; background:#fffbeb; padding:2px 4px;">EJEC</span>`;
                     
-                    <div class="admin-config-form-layout" style="gap:1rem;">
-                        <div class="input-inline-row" style="gap:0.75rem;">
-                            <input type="text" id="inputNewRoleName" class="form-control" placeholder="Nombre de Perfil (Ej: Especialista)" style="flex:2;">
-                            <input type="number" id="inputRoleHierarchy" class="form-control" min="1" max="4" placeholder="Jerarquía (1-4)" style="flex:1;">
-                        </div>
+                    html += `<tr>
+                        <td><strong>${key}</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía: Lvl ${r.lvl || 1}</span></td>
+                        <td style="text-align:center;">${badges || 'SIN PRIVILEGIOS'}</td>
+                        <td style="text-align:right; padding-right:4px;">
+                            <button onclick="App.deleteRoleFromMatrixCloud('${key}')" class="btn-secondary" style="padding:4px 8px; background:#ef4444; color:white; border:none; border-radius:4px;">&times;</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+            tbody.innerHTML = rolesBaseHtml + html;
+        };
 
-                        <div class="admin-config-card" style="padding:0.75rem; background:#ffffff; border:1px solid #cbd5e1;">
-                            <label style="font-size:10px; font-weight:700; color:#1e293b; text-transform:uppercase; margin-bottom:0.5rem; display:block;">Asignación de Privilegios de Uso</label>
-                            <div class="input-inline-row" style="justify-content:space-between; width:100%; padding:4px 0;">
-                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermCrear"> Crear</label>
-                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermModificar"> Modificar</label>
-                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEliminar"> Eliminar</label>
-                                <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:11px; text-transform:none;"><input type="checkbox" id="chkPermEjecutar" checked> Ejecutar</label>
-                            </div>
-                        </div>
-
-                        <!-- type="button" frena en seco el submit abusivo del navegador y salva la sesión -->
-                        <button type="button" onclick="App.handleCreateNewRoleCloud()" class="btn-primary-login" style="margin:0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; background-color:#0f172a; border-color:#0f172a;">
-                            + GUARDAR NUEVO PERFIL
-                        </button>
-                    </div>
-
-                    <div class="table-container custom-scrollbar" style="max-height:220px; overflow-y:auto; margin-top:1rem; border:none;">
-                        <table class="executive-table" style="width:100%;">
-                            <thead>
-                                <tr style="background:transparent;"><th style="font-size:10px; padding:8px 4px;">PERFIL</th><th style="font-size:10px; padding:8px 4px; text-align:center;">MATRIZ PERMISOS</th><th style="font-size:10px; padding:8px 4px; text-align:right;">BAJA</th></tr>
-                            </thead>
-                            <tbody id="tableRolesCloudBody">
-                                <tr><td colspan="3" style="text-align:center; padding:1rem; color:var(--text-muted-blue); font-size:12px;">Conectando con la nube...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>`;
-
-                App.handleRenderRolesMatrixTable();
-            };
-            /* ================= ACCIONES DE LA MATRIZ DE ROLES VIA REST API COMPATIBLES ================= */
-            App.handleRenderRolesMatrixTable = function() {
-                var rolesBaseHtml = `
-                    <tr><td><strong>Gerente</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía Nivel: 4</span></td><td style="text-align:center;"><span style="font-size:10px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:3px 6px; border-radius:4px; text-transform:uppercase;">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; font-weight:600; padding-right:10px;">Fijo</td></tr>
-                    <tr><td><strong>Administrador</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía Nivel: 3</span></td><td style="text-align:center;"><span style="font-size:10px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:3px 6px; border-radius:4px; text-transform:uppercase;">TOTAL PRIVILEGIOS</span></td><td style="text-align:right; font-size:12px; color:#94a3b8; font-weight:600; padding-right:10px;">Fijo</td></tr>`;
-
-                fetch("https://firebaseio.com")
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        var tbody = document.getElementById("tableRolesCloudBody");
-                        if (!tbody) return;
-
-                        var html = "";
-                        if (data !== null && typeof data === 'object') {
-                            Object.keys(data).forEach(function(key) {
-                                var r = data[key];
-                                if (r && r.name) {
-                                    var badges = "";
-                                    if (r.crear) badges += `<span style="font-size:9px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 4px; border-radius:3px; margin-right:2px;">CREA</span>`;
-                                    if (r.modificar) badges += `<span style="font-size:9px; font-weight:700; color:#16a34a; background:#f0fdf4; padding:2px 4px; border-radius:3px; margin-right:2px;">MOD</span>`;
-                                    if (r.eliminar) badges += `<span style="font-size:9px; font-weight:700; color:#dc2626; background:#fef2f2; padding:2px 4px; border-radius:3px; margin-right:2px;">ELIM</span>`;
-                                    if (r.ejecutar) badges += `<span style="font-size:9px; font-weight:700; color:#d97706; background:#fffbeb; padding:2px 4px; border-radius:3px;">EJEC</span>`;
-
-                                    if (badges === "") badges = `<span style="font-size:9px; color:#94a3b8;">SIN PRIVILEGIOS</span>`;
-
-                                    html += `
-                                        <tr>
-                                            <td><strong>${r.name}</strong><br><span style="font-size:10px; color:#64748b;">Jerarquía Nivel: ${r.hierarchy || 1}</span></td>
-                                            <td style="text-align:center;">${badges}</td>
-                                            <td style="text-align:right; padding-right:4px;">
-                                                <button onclick="App.deleteRoleFromMatrixCloud('${key}', '${r.name}')" class="btn-secondary" style="padding:4px 8px; background:#ef4444; border-color:#ef4444; color:#ffffff; font-weight:bold; border-radius:4px;">&times;</button>
-                                            </td>
-                                        </tr>`;
-                                }
-                            });
-                        }
-                        tbody.innerHTML = rolesBaseHtml + html;
-                    })
-                    .catch(function() {
-                        var tbody = document.getElementById("tableRolesCloudBody");
-                        if (tbody) tbody.innerHTML = rolesBaseHtml;
-                    });
-            };
-
-            App.handleCreateNewRoleCloud = function() {
+        App.handleCreateNewRoleCloud = function() {
             var nameIn = document.getElementById("inputNewRoleName");
             var hierIn = document.getElementById("inputRoleHierarchy");
             if (!nameIn || !hierIn) return;
-
+            
             var nameValue = nameIn.value.trim();
             var hierValue = parseInt(hierIn.value) || 1;
-            var roleIdCode = nameValue.toUpperCase().replace(/\s+/g, '_');
-
-            if (nameValue === "") {
-                alert("⚠️ Escriba un nombre para el nuevo perfil.");
+            
+            if (nameValue === "" || nameValue.toUpperCase() === "ADMINISTRADOR" || nameValue.toUpperCase() === "GERENTE") {
+                alert("Escriba un nombre de perfil operativo válido.");
                 return;
             }
+            
+            if (typeof AppDB === 'undefined' || !AppDB.data) return;
+            if (!AppDB.data.roles) AppDB.data.roles = {};
+            
+            var permsArray = [];
+            if (document.getElementById("chkPermCrear").checked) permsArray.push("crear");
+            if (document.getElementById("chkPermModificar").checked) permsArray.push("modificar");
+            if (document.getElementById("chkPermEliminar").checked) permsArray.push("eliminar");
+            if (document.getElementById("chkPermEjecutar").checked) permsArray.push("ejecutar");
 
-            // Paquete de datos plano listo para la API REST de Firebase
-            var payload = {
-                name: nameValue,
-                hierarchy: hierValue,
+            AppDB.data.roles[nameValue] = {
+                lvl: hierValue,
+                perms: permsArray,
                 crear: document.getElementById("chkPermCrear").checked,
                 modificar: document.getElementById("chkPermModificar").checked,
                 eliminar: document.getElementById("chkPermEliminar").checked,
                 ejecutar: document.getElementById("chkPermEjecutar").checked
             };
+            
+            AppDB.addLog(App.currentUser?.username || "admin", "CREAR_ROL", "Creado perfil operativo: " + nameValue);
+            AppDB.save();
+            
+            alert("¡Éxito! Perfil guardado e indexado en la nube.");
+            nameIn.value = ""; hierIn.value = "";
+            App.handleRenderRolesMatrixTable();
+        };
 
-                // REPARACIÓN MAESTRA: Apuntamos directamente a la URL específica del Rol con método PUT
-                fetch("https://firebaseio.com" + roleIdCode + ".json", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(function(res) {
-                    if (!res.ok) throw new Error("Rejected");
-                    alert("✅ ¡Éxito! Nuevo Perfil con su Matriz de Privilegios guardado correctamente.");
-                    
-                    // Limpia el formulario sin cerrar la sesión
-                    nameIn.value = "";
-                    hierIn.value = "";
-                    App.handleRenderRolesMatrixTable(); 
-                })
-                .catch(function(error) {
-                    console.error("Error crítico de escritura cloud:", error);
-                    alert("❌ Error de sincronización cloud: Verifique la red corporativa.");
-                });
-};
-
-            App.deleteRoleFromMatrixCloud = function(roleId, roleName) {
-                if (confirm("⚠️ ¿Desea remover el perfil " + roleName.toUpperCase() + " de la matriz cloud?")) {
-                    fetch("https://firebaseio.com" + roleId + ".json", { method: "DELETE" })
-                        .then(function() {
-                            alert("✅ Registro revocado correctamente.");
-                            App.handleRenderRolesMatrixTable();
-                        });
+        App.deleteRoleFromMatrixCloud = function(roleId) {
+            if (confirm(`¿Desea remover el perfil ${roleId.toUpperCase()} de la nube de forma permanente?`)) {
+                if (typeof AppDB !== 'undefined' && AppDB.data?.roles) {
+                    delete AppDB.data.roles[roleId];
+                    AppDB.addLog(App.currentUser?.username || "admin", "ELIMINAR_ROL", "Removido perfil: " + roleId);
+                    AppDB.save();
+                    App.handleRenderRolesMatrixTable();
                 }
-            };
-            /* ================= App.openAvatarSelectionModal ================= */
-            App.openAvatarSelectionModal = function() {
-                document.getElementById("modalOverlay").classList.remove("hidden");
-                var list = ["👤", "👨‍💻", "👩‍💻", "🦁", "🦅", "🦊", "🤖", "🚀", "🎯"];
-                var grid = ""; list.forEach(function(em) { grid += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; });
-                document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>👤 Personalizar Tu Foto de Perfil</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
-                    <div class="admin-config-form-layout">
-                        <div class="form-group admin-config-card"><label>Cargar Tu Foto Real desde tu PC</label>
-                            <div class="input-inline-row"><input type="file" id="inputAvatarFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadAvatarFromPC()" class="btn-upload-logo-pc">Cargar</button></div></div>
-                        <div class="form-group admin-config-card"><label>O elegir un Avatar Rápido</label><div class="avatar-buttons-grid-layout">${grid}</div></div>
-                        <div class="modal-action-row-footer"><button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button></div>
-                    </div>`;
-            };
+            }
+        };
+        /* ================= MÓDULO SEGURIZADO: CONTROL DE NÓMINA DE PERSONAL ================= */
+        App.listUsersAdmin = function() {
+            document.getElementById("modalContent").innerHTML = `
+                <div class="modal-inner-header">
+                    <h3>NÓMINA GENERAL DE PERSONAL</h3>
+                    <button onclick="App.openAdminMenu()" class="btn-secondary">&larr; Volver</button>
+                </div>
+                <div class="table-container custom-scrollbar" style="margin-top:1rem;">
+                    <table class="executive-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>COLABORADOR</th>
+                                <th>ROL OPERATIVO</th>
+                                <th>ESTADO</th>
+                                <th style="text-align:right;">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserListBody"></tbody>
+                    </table>
+                </div>`;
+            
+            var tbody = document.getElementById("adminUserListBody");
+            if (!tbody || typeof AppDB === 'undefined' || !AppDB.data?.users) return;
+            
+            var html = "";
+            Object.keys(AppDB.data.users).forEach(function(username) {
+                var u = AppDB.data.users[username];
+                var statusBadge = u.status === "active" ? `<span style="color:#16a34a; font-weight:bold;">ACTIVO</span>` : `<span style="color:#dc2626; font-weight:bold;">BLOQUEADO</span>`;
+                
+                html += `<tr>
+                    <td><strong>${u.names} ${u.lastnames}</strong><br><span style="font-size:10px; color:#64748b;">@${username}</span></td>
+                    <td>${u.role}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align:right; gap:4px; display:flex; justify-content:flex-end;">
+                        <button onclick="App.editUserForm('${username}', '${u.names}', '${u.role}', '${u.gerencia || ''}')" class="btn-secondary" style="padding:4px 6px;">✏️</button>
+                        <button onclick="App.toggleBlockUser('${username}', '${username}', '${u.status}')" class="btn-secondary" style="padding:4px 6px;">🔒</button>
+                        <button onclick="App.deleteUserCloud('${username}', '${username}')" class="btn-secondary" style="padding:4px 6px; background:#ef4444; color:white; border:none;">&times;</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        };
 
-            App.handleUploadAvatarFromPC = function() {
-                var fileInput = document.getElementById("inputAvatarFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    localStorage.setItem("gerente_avatar_personal", e.target.result);
-                    document.getElementById("modalOverlay").classList.add("hidden");
-                    alert("✅ Tu foto de perfil ha sido fijada con éxito.");
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            };
+        App.deleteUserCloud = function(id, name) {
+            if (id === "admin") { alert("Operación restringida por seguridad de fábrica."); return; }
+            if (confirm(`¿Eliminar de forma definitiva a @${name.toUpperCase()}?`)) {
+                if (typeof AppDB !== 'undefined' && AppDB.data?.users) {
+                    delete AppDB.data.users[id];
+                    AppDB.addLog(App.currentUser?.username || "admin", "ELIMINAR_USUARIO", "Removido usuario: " + id);
+                    AppDB.save();
+                    App.listUsersAdmin();
+                }
+            }
+        };
 
-            App.handleSelectEmojiAvatarInline = function(emoji) {
-                localStorage.setItem("gerente_avatar_personal", emoji);
-                document.getElementById("modalOverlay").classList.add("hidden");
-                alert("✅ Avatar actualizado: " + emoji);
-            };
+        App.toggleBlockUser = function(id, name, currentStatus) {
+            if (id === "admin") { alert("No se puede suspender el usuario maestro."); return; }
+            var nextStatus = currentStatus === "active" ? "blocked_admin" : "active";
+            if (confirm(`¿Cambiar estado de @${name.toUpperCase()} a ${nextStatus.toUpperCase()}?`)) {
+                if (typeof AppDB !== 'undefined' && AppDB.data?.users[id]) {
+                    AppDB.data.users[id].status = nextStatus;
+                    AppDB.addLog(App.currentUser?.username || "admin", "ALTERAR_ESTADO", `Usuario ${id} cambiado a ${nextStatus}`);
+                    AppDB.save();
+                    App.listUsersAdmin();
+                }
+            }
+        };
 
-            /* ================= App.openAdminMenu ================= */
-            App.openAdminMenu = function() {
-                document.getElementById("modalOverlay").classList.remove("hidden");
-                var exp = AppDB.data?.config?.passwordExpiryDays || 90;
-                var ttl = AppDB.data?.config?.title || "";
-                document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>Panel de Personal y Políticas</h3><button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button></div>
+        App.editUserForm = function(id, name, role, gerencia) {
+            document.getElementById("modalContent").innerHTML = `
+                <div class="modal-inner-header">
+                    <h3>Editar Roles: @${id.toUpperCase()}</h3>
+                    <button onclick="App.listUsersAdmin()">&larr; Volver</button>
+                </div>
+                <form onsubmit="App.handleSaveUserRoles(event, '${id}')" class="admin-config-form-layout">
+                    <div class="form-group">
+                        <label>Rol Asignado</label>
+                        <select id="editUserRoleSelect" class="form-control full-width">
+                            <option value="Analista" ${role==='Analista'?'selected':''}>Analista</option>
+                            <option value="Coordinador" ${role==='Coordinador'?'selected':''}>Coordinador</option>
+                            <option value="Administrador" ${role==='Administrador'?'selected':''}>Administrador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Gerencia Asignada</label>
+                        <input type="text" id="editUserGerenciaInput" class="form-control" value="${gerencia}">
+                    </div>
+                    <div class="modal-action-row-footer">
+                        <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
+                        <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
+                    </div>
+                </form>`;
+        };
+
+        App.handleSaveUserRoles = function(event, id) {
+            event.preventDefault();
+            var nuevoRol = document.getElementById("editUserRoleSelect").value;
+            var nuevaGerencia = document.getElementById("editUserGerenciaInput").value.trim();
+            
+            if (typeof AppDB !== 'undefined' && AppDB.data?.users[id]) {
+                AppDB.data.users[id].role = nuevoRol;
+                AppDB.data.users[id].gerencia = nuevaGerencia;
+                AppDB.addLog(App.currentUser?.username || "admin", "MODIFICAR_USUARIO", `Actualizado perfil de @${id}`);
+                AppDB.save();
+                alert("Privilegios del colaborador modificados.");
+                App.listUsersAdmin();
+            }
+        };
+        /* ================= MÓDULO ADICIONAL: PANEL DE AVATARES OPERATIVOS ================= */
+        App.openAvatarSelectionModal = function() {
+            document.getElementById("modalOverlay").classList.remove("hidden");
+            var emojis = ["👤", "👨‍💻", "👩‍💻", "📊", "🛡️", "⚙️", "📈", "💼", "🏢"];
+            var gridHtml = "";
+            emojis.forEach(function(em) { 
+                gridHtml += `<div onclick="App.handleSelectEmojiAvatarInline('${em}')" class="avatar-selector-grid-item">${em}</div>`; 
+            });
+            document.getElementById("modalContent").innerHTML = `
+                <div class="modal-inner-header">
+                    <h3>Personalizar Tu Foto de Perfil</h3>
+                    <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+                </div>
+                <div class="admin-config-form-layout">
                     <div class="form-group admin-config-card">
-                        <label>Nombre de Gerencia / Programa</label><div class="input-inline-row"><input type="text" id="inputEditGerencia" class="form-control" value="${ttl}"><button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button></div>
-                        <label class="mt-2">Imagen del Sistema (Logotipo Login)</label>
-                        <div class="input-inline-row"><input type="file" id="inputLogoFilePC" class="form-control" accept="image/*"><button onclick="App.handleUploadSystemLogoFromPC()" class="btn-upload-logo-pc">Subir Logo</button></div>
-                        <label class="mt-2">Expiración de Contraseñas</label><select id="selectPasswordExpiry" class="form-control full-width"><option value="30" ${exp==30?'selected':''}>Vencimiento cada 30 Días</option><option value="60" ${exp==60?'selected':''}>Vencimiento cada 60 Días</option><option value="90" ${exp==90?'selected':''}>Vencimiento cada 90 Días</option></select></div>
-                    <div class="maintenance-critical-card"><label>🚨 Mantenimiento Crítico</label><button onclick="App.executeHardResetDatabaseCloud()" class="btn-danger-reset">💥 REINICIAR BASE DE DATOS DE FÁBRICA</button></div>
-                    <div class="modal-grid-buttons"><button onclick="App.openRolesMenu()" class="btn-primary bg-navy">🔑 ROLES Y PERMISOS</button><button onclick="App.openManagementsMenu()" class="btn-primary bg-sky">📋 CATALOGO GESTIONES</button></div>
-                    <div class="modal-grid-buttons"><button onclick="App.openCreateUserForm()" class="btn-primary">➕ Crear Usuario</button><button onclick="App.listUsersAdmin()" class="btn-secondary font-bold">👥 Nómina Personal</button></div>
-                    <div class="modal-grid-buttons modal-single-row"><button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson">🔎 VER HISTORIAL DE AUDITORÍA (LOGS)</button></div>`;
-            };
+                        <label>Elegir un Avatar Institucional</label>
+                        <div class="avatar-buttons-grid-layout">${gridHtml}</div>
+                    </div>
+                    <div class="modal-action-row-footer">
+                        <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel full-width">Cerrar</button>
+                    </div>
+                </div>`;
+        };
 
-            App.handleUploadSystemLogoFromPC = function() {
-                var fileInput = document.getElementById("inputLogoFilePC");
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    var base64Logo = e.target.result;
-                    localStorage.setItem("system_brand_logo_main", base64Logo);
-                    if (typeof firebase !== 'undefined') firebase.database().ref("config/logoBase64").set(base64Logo);
-                    alert("✅ El Logotipo principal del Login ha sido implantado de forma independiente.");
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            };
-
-            /* ================= NÓMINA OPERATIVA MEDIANTE LLAMADAS REST API DIRECTAS ================= */
-            App.deleteUserCloud = function(id, name) {
-                if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
-                if (confirm("⚠️ ¿Eliminar a " + name.toUpperCase() + "?")) {
-                    fetch("https://firebaseio.com" + id + ".json", { method: "DELETE" })
-                        .then(function() { alert("✅ Usuario removido."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
-                }
-            };
-
-            App.toggleBlockUser = function(id, name, status) {
-                if (id === "admin" || name === "arturo.noto") { alert("🚨 Operación restringida."); return; }
-                var next = (status === "blocked") ? "active" : "blocked";
-                if (confirm("¿Cambiar estado de " + name.toUpperCase() + " a " + next.toUpperCase() + "?")) {
-                    fetch("https://firebaseio.com" + id + ".json", { method: "PATCH", body: JSON.stringify({ status: next }) })
-                        .then(function() { alert("✅ Restricción de acceso actualizada."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
-                }
-            };
-
-            App.editUserForm = function(id, name, role, ger) {
-                document.getElementById("modalContent").innerHTML = `
-                    <div class="modal-inner-header"><h3>🔑 Editar Roles: ${name.toUpperCase()}</h3><button onclick="App.listUsersAdmin()">&larr; Volver</button></div>
-                    <form onsubmit="App.handleSaveUserRoles(event, '${id}')" class="admin-config-form-layout">
-                        <div class="form-group"><label>Rol Operativo</label><select id="editUserRoleSelect" class="form-control full-width"><option value="executive" ${role==='executive'?'selected':''}>Ejecutivo / Auditor</option><option value="supervisor" ${role==='supervisor'?'selected':''}>Supervisor</option><option value="admin" ${role==='admin'?'selected':''}>Administrador</option></select></div>
-                        <div class="form-group"><label>Gerencia Asignada</label><input type="text" id="editUserGerenciaInput" class="form-control" value="${ger || ''}"></div>
-                        <div class="modal-action-row-footer"><button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button><button type="submit" class="btn-primary-submit">Guardar Cambios</button></div>
-                    </form>`;
-            };
-
-            App.handleSaveUserRoles = function(event, id) {
-                event.preventDefault();
-                var r = document.getElementById("editUserRoleSelect").value;
-                var g = document.getElementById("editUserGerenciaInput").value.trim();
-                fetch("https://firebaseio.com" + id + ".json", { method: "PATCH", body: JSON.stringify({ role: r, gerencia: g }) })
-                    .then(function() { alert("✅ Privilegios guardados."); App.listUsersAdmin(); }).catch(function() { alert("❌ Error."); });
-            };
-
-        }, 1500);
+        App.handleSelectEmojiAvatarInline = function(emoji) {
+            localStorage.setItem("gerente_avatar_personal", emoji);
+            document.getElementById("modalOverlay").classList.add("hidden");
+            alert("Avatar de sesión actualizado: " + emoji);
+        };
+    }, 1500);
     </script>
 </body>
 </html>
