@@ -1,27 +1,45 @@
 /**
  * ADMINISTRACIÓN PARTE B: ASIGNACIÓN DE CARGAS Y METAS (app-admin-assign.js)
  * LÓGICA DE CONTROL PURA - CERO ATRIBUTOS DE ESTILO EN LÍNEA
- * VERSIÓN CENTRALIZADA CLOUD - GOIA v2.02
+ * CONFIGURACIÓN DE GOBERNANZA Y ENLACES DOCUMENTALES - v2.02
  */
 
-// Asegurar existencia del objeto global antes de instanciar métodos
 if (typeof App === 'undefined') window.App = {};
 
 App.openAssignmentModal = function() {
-    // Levantar la capa flotante del esqueleto Single Page Application
     document.getElementById("modalOverlay").classList.remove("hidden");
     
-    let opts = "";
-    // Extraer en tiempo real los elementos activos del catálogo central cifrado
+    // 1. Extraer gestiones del catálogo centralizado
+    let optsManagements = "";
     if (AppDB.data && AppDB.data.managements) {
         AppDB.data.managements.forEach(function(m) {
             if (m && m.name) {
-                opts += `<option value="${m.id}">${m.name}</option>`;
+                optsManagements += `<option value="${m.id}">${m.name}</option>`;
             }
         });
     }
 
-    // Inyectar la interfaz de captura de datos de forma dinámica
+    // 2. CERROJO DE GOBERNANZA: Determinar quién puede recibir la asignación
+    let optsUsers = "";
+    const activeUser = App.currentUser ? App.currentUser.username : "admin";
+    const roleMeta = AppDB.data.roles[App.currentUser?.role];
+    const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
+    const isMasterOrStaff = (activeUser === "admin" || userLevel >= 2); // Admin, Gerente, Coordinador
+
+    if (isMasterOrStaff) {
+        // Personal de supervisión: Puede asignar tareas a toda la nómina cloud
+        if (AppDB.data && AppDB.data.users) {
+            Object.keys(AppDB.data.users).forEach(function(username) {
+                var u = AppDB.data.users[username];
+                optsUsers += `<option value="${username}">@${username} (${u.role})</option>`;
+            });
+        }
+    } else {
+        // Analistas y Especialistas (lvl 1): Solo se pueden asignar tareas a ellos mismos
+        optsUsers += `<option value="${activeUser}">@${activeUser} (Mi Propio Perfil)</option>`;
+    }
+
+    // 3. Inyectar la interfaz de captura con los nuevos campos de control
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
             <h3>Asignar Nueva Actividad / Ítem</h3>
@@ -33,8 +51,16 @@ App.openAssignmentModal = function() {
                 <input type="text" id="asigName" required class="form-control" placeholder="Ej: Control de Lotes Diarios">
             </div>
             <div class="form-group mt-2">
+                <label>Colaborador Destinatario (Asignado A)</label>
+                <select id="asigUserTarget" class="form-control full-width" required>${optsUsers}</select>
+            </div>
+            <div class="form-group mt-2">
                 <label>Catálogo de Gestión Asociado</label>
-                <select id="asigMgmt" class="form-control full-width">${opts}</select>
+                <select id="asigMgmt" class="form-control full-width">${optsManagements}</select>
+            </div>
+            <div class="form-group mt-2">
+                <label>Enlace de Correo (URL Zoho Mail / Soporte)</label>
+                <input type="url" id="asigMailLink" class="form-control" placeholder="https://zoho.com...">
             </div>
             <div class="form-group mt-2">
                 <label>Meta Numérica / Carga de Trabajo</label>
@@ -58,28 +84,41 @@ App.openAssignmentModal = function() {
 App.executeCreateAssignment = function(e) {
     e.preventDefault();
     
-    // Captura limpia de los parámetros lógicos de producción
     const name = document.getElementById("asigName").value.trim();
+    const userTarget = document.getElementById("asigUserTarget").value;
     const mgmtId = parseInt(document.getElementById("asigMgmt").value);
+    const mailLink = document.getElementById("asigMailLink").value.trim();
     const meta = parseInt(document.getElementById("asigMeta").value);
     const reference = document.getElementById("asigRef").value.trim();
     const durationMin = parseInt(document.getElementById("asigDuration").value);
     
-    // Vincular el ticket con el nombre descriptivo de su catálogo
     const targetMgmt = AppDB.data.managements.find(m => m.id === mgmtId);
     const mgmtName = targetMgmt ? targetMgmt.name : "Gestión General";
     
     const now = new Date();
     const deadline = new Date(now.getTime() + durationMin * 60000);
     
-    if (!AppDB.data.assignments) AppDB.data.assignments = {};
+    // REGLA DE ORO OPERATIVA: Impedir que un nivel 1 asigne tareas a otros colaboradores
+    const activeUser = App.currentUser ? App.currentUser.username : "admin";
+    const roleMeta = AppDB.data.roles[App.currentUser?.role];
+    const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
+    
+    if (userLevel < 2 && userTarget !== activeUser) {
+        alert("🚨 Violación de Gobernanza: Su rol de analista/especialista solo le faculta para auto-asignarse metas de producción.");
+        return false;
+    }
 
-    // Estructurar el identificador único correlativo provisional
-    const provisionalId = "ASIG_" + Date.now();
-    AppDB.data.assignments[provisionalId] = {
+    if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+        AppDB.data.assignments = [];
+    }
+
+    // Insertar el nuevo registro al vector síncrono mapeado
+    AppDB.data.assignments.push({
         name: name,
+        assignedTo: userTarget, // Usuario que procesará la actividad
         managementId: mgmtId,
         managementName: mgmtName,
+        mailUrl: mailLink || "", // Almacenamiento seguro del link de Zoho Mail
         meta: meta,
         target: meta,
         processed: 0,
@@ -90,14 +129,12 @@ App.executeCreateAssignment = function(e) {
         timeStart: now.toISOString(),
         timeEnd: deadline.toISOString(),
         duration: durationMin,
-        createdBy: (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin"
-    };
+        createdBy: activeUser
+    });
 
-    // Almacenamiento seguro central cifrado (XOR) en la nube
+    // Cifrado XOR y transmisión digital cloud
     AppDB.save();
-    
-    var operario = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-    AppDB.addLog(operario, "CREAR_ASIGNACION", `Creó tarea: ${name} para ref: ${reference}`);
+    AppDB.addLog(activeUser, "CREAR_ASIGNACION", `Tarea: ${name} asignada a @${userTarget} con Ref: ${reference}`);
     
     document.getElementById("modalOverlay").classList.add("hidden");
     alert("¡Asignación cargada con éxito en la red!");
@@ -105,14 +142,14 @@ App.executeCreateAssignment = function(e) {
     if (typeof App.renderDashboardData === 'function') App.renderDashboardData();
 };
 
-// BLINDAJE DE INTEGRIDAD CONTRA ALTERACIÓN DE INDICADORES MENSUALES (IED)
+// INMUNIDAD NATIVA DE GESTIONES PARA CUIDAR EL ÍNDICE IED
 App.deleteAssignmentCloud = function(index) {
-    console.warn("Intento de eliminación rechazado para resguardar las trazas históricas.");
-    alert("🚨 Operación denegada: Las gestiones operacionales en caliente poseen inmunidad de borrado para salvaguardar los indicadores de producción de la Gerencia.");
+    console.warn("Intento de remoción física bloqueado por auditoría interna.");
+    alert("🚨 Operación denegada: Las gestiones operacionales en caliente poseen inmunidad de borrado para salvaguardar los indicadores de la Gerencia.");
     return false;
 };
 // =========================================================================
-// MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: COMPATIBILIDAD CON ARREGLOS (v2.02)
+// MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: COMPATIBILIDAD CON ARREGLOS
 // =========================================================================
 App.handleCreateTicketAssignment = function(event) {
     event.preventDefault();
@@ -124,16 +161,19 @@ App.handleCreateTicketAssignment = function(event) {
             return;
         }
 
-        // 1. Capturar elementos interactivos del formulario inyectado v2.02
         var targetInput = document.getElementById("assignTarget");
         var durationInput = document.getElementById("assignDuration");
         var sourceInput = document.getElementById("assignSource");
+        var mailInput = document.getElementById("asigMailLink"); // Captura opcional de Zoho
+        var userSelect = document.getElementById("asigUserTarget");
 
         if (!targetInput || !sourceInput) return;
 
         var targetValue = parseInt(targetInput.value) || 0;
         var durationValue = durationInput ? (parseInt(durationInput.value) || 30) : 30;
         var sourceValue = sourceInput.value.trim();
+        var mailValue = mailInput ? mailInput.value.trim() : "";
+        var assignedUser = userSelect ? userSelect.value : (App.currentUser ? App.currentUser.username : "admin");
 
         if (sourceValue === "") {
             alert(" Seleccione un ítem válido del catálogo corporativo.");
@@ -144,65 +184,50 @@ App.handleCreateTicketAssignment = function(event) {
             return;
         }
 
-        // 2. CORRECCIÓN ARQUITECTÓNICA: Forzar estructura de Array [] para no romper app-executive.js
         if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
-        
-        // Si el nodo de asignaciones no existe o se volvió un objeto {}, lo re-inicializamos como array limpio
         if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
             AppDB.data.assignments = [];
         }
 
-        // 3. INCREMENTO SECUENCIAL SÍNCRONO DEL MANUAL
         var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
         AppDB.data.config.ticketCounter = assignedTicketNum;
 
         var startTimeIso = new Date().toISOString();
         var endTimeIso = new Date(Date.now() + durationValue * 60 * 1000).toISOString();
 
-        // 4. ARMAR EL OBJETO CON MAPEO HÍBRIDO TOTAL
         var nuevoTicketObject = {
             id: assignedTicketNum,
-            
-            // Requerimientos de visualización (index.html / app-executive.js)
-            name: "Ticket #" + assignedTicketNum + " - " + sourceValue, // Une el título y origen para que sea vistoso
+            name: "Ticket #" + assignedTicketNum + " - " + sourceValue,
+            assignedTo: assignedUser,
+            mailUrl: mailValue, // Guarda el link del correo en el ticket express
             timeStart: startTimeIso,
             timeEnd: endTimeIso,
             duration: durationValue,
-            deadline: endTimeIso, // Atributo de herencia síncrona de página 3
+            deadline: endTimeIso,
             createdAt: startTimeIso,
-            
-            // Preservación de campos tradicionales del catálogo
             title: "Ticket #" + assignedTicketNum,
             description: "Gestión automatizada de auditoría para carga entrante.",
             source: sourceValue,
             managementName: sourceValue,
             reference: "TCK-" + assignedTicketNum + "-2026",
-            
-            // Campos numéricos de control de producción e indicadores IED
             target: targetValue,
-            meta: targetValue, // Equivalencia directa con la página 3
+            meta: targetValue,
             processed: 0,
             status: "pending",
             timestamp: Date.now(),
             createdBy: (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin"
         };
 
-        // 5. INYECCIÓN ATÓMICA AL VECTOR (Mantiene viva la iteración de la tabla)
         AppDB.data.assignments.push(nuevoTicketObject);
 
-        // 6. Registrar la acción en el historial de auditoría interna
         var operarioLog = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-        AppDB.addLog(operarioLog, "EMITIR_TICKET", `Se emitió con éxito el Ticket #${assignedTicketNum} para la gestión: ${sourceValue}`);
+        AppDB.addLog(operarioLog, "EMITIR_TICKET", `Se emitió el Ticket #${assignedTicketNum} asignado a @${assignedUser}`);
         
-        // 7. TRANSMISIÓN DIGITAL CIFRADA AUTOMÁTICA (Guarda y sube a Firebase)
         AppDB.save();
 
-        alert(` ¡Ticket #${assignedTicketNum} Emitido con Éxito!\n\nTiempo de resolución configurado en ${durationValue} minutos.`);
-        
-        // 8. Cerrar la capa flotante de forma limpia
+        alert(` ¡Ticket #${assignedTicketNum} Emitido con Éxito para @${assignedUser.toUpperCase()}!`);
         document.getElementById("modalOverlay").classList.add("hidden");
 
-        // 9. Forzar el refresco de los contadores y las filas en la pantalla
         if (typeof App.renderDashboardData === 'function') {
             App.renderDashboardData();
         } else if (typeof App.handleRenderAssignmentsTable === 'function') {
