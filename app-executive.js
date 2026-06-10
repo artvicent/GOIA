@@ -331,3 +331,154 @@ setInterval(function() {
         App.calculateMeritPodiumPerformance();
     }
 }, 5000);
+
+/* =========================================================================
+   MÓDULO: BLOC DE NOTAS COLABORATIVO MULTI-PESTAÑA CLOUD (GOIA v2.02)
+   ========================================================================= */
+
+// Variable temporal para rastrear cuál pestaña tiene abierta el usuario en su pantalla
+App.currentActiveNotepadTab = 0;
+
+App.openCollaborativeNotepadModal = function() {
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // Inicializar el nodo de notas como un arreglo síncrono si está vacío en la nube
+    if (!AppDB.data.notepadNotes || !Array.isArray(AppDB.data.notepadNotes)) {
+        AppDB.data.notepadNotes = [
+            { title: "General", content: "<h3>Apuntes de la Gerencia</h3><p>Escriba aquí sus anotaciones en formato HTML...</p>" }
+        ];
+    }
+
+    App.handleRenderNotepadModalStructure();
+};
+
+App.handleRenderNotepadModalStructure = function() {
+    const notes = AppDB.data.notepadNotes;
+    
+    // Si la pestaña activa guardada quedó fuera de rango por una eliminación, reajustar
+    if (App.currentActiveNotepadTab >= notes.length) {
+        App.currentActiveNotepadTab = notes.length - 1;
+    }
+    if (App.currentActiveNotepadTab < 0) App.currentActiveNotepadTab = 0;
+
+    // 1. Construir la barra de pestañas (Tabs)
+    let tabsHtml = "";
+    notes.forEach(function(note, idx) {
+        const activeClass = (idx === App.currentActiveNotepadTab) ? "active" : "";
+        tabsHtml += `
+            <button onclick="App.handleSwitchNotepadTab(${idx})" class="notepad-tab-btn ${activeClass}">
+                📁 ${note.title || 'Nota'}
+            </button>
+        `;
+    });
+
+    const activeNote = notes[App.currentActiveNotepadTab] || { title: "", content: "" };
+
+    // 2. Inyectar la interfaz de edición y lectura HTML sin restricciones de roles
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>📝 Bloc de Notas Operacional (Compartido Cloud)</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-card">
+            <!-- Barra de Pestañas y Botón Agregar -->
+            <div class="notepad-tabs-container">
+                ${tabsHtml}
+                <button onclick="App.handleCreateNewNotepadTab()" class="notepad-btn-add">+ Nueva Pestaña</button>
+            </div>
+
+            <!-- Campos de Edición de la Pestaña Activa -->
+            <div class="form-group">
+                <label>Título de la Pestaña</label>
+                <input type="text" id="inputNotepadTitle" class="form-control" value="${activeNote.title || ''}" onchange="App.handleSaveNotepadLiveChanges()">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Contenido (Soporta etiquetas HTML como &lt;b&gt;, &lt;h3&gt;, &lt;li&gt;)</label>
+                <textarea id="textareaNotepadContent" class="notepad-editor-area" oninput="App.handleSaveNotepadLiveChanges()" placeholder="Escriba aquí... Ejemplo: &lt;b&gt;Urgente:&lt;/b&gt; Revisar lote 4.">${activeNote.content || ''}</textarea>
+            </div>
+
+            <!-- Previsualización en Vivo del HTML Renderizado -->
+            <label class="mt-2" style="display:block; font-weight:bold;">Visualización Dinámica del Texto:</label>
+            <div id="divNotepadPreview" class="notepad-preview-box">
+                ${activeNote.content || '<p style="color:#94a3b8;">Vacío</p>'}
+            </div>
+
+            <!-- Botón de Remoción disponible para Analistas y Administradores por igual -->
+            <div class="modal-action-row-footer" style="margin-top: 15px; display: flex; justify-content: space-between;">
+                <button onclick="App.handleDeleteCurrentNotepadTab()" class="btn-secondary" style="background:#ef4444; color:white; border:none; padding:8px 12px; font-weight:bold;">🗑️ Eliminar Pestaña</button>
+                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-primary" style="padding:8px 16px;">Guardar y Cerrar</button>
+            </div>
+        </div>
+    `;
+};
+
+App.handleSwitchNotepadTab = function(idx) {
+    App.currentActiveNotepadTab = idx;
+    App.handleRenderNotepadModalStructure();
+};
+
+App.handleCreateNewNotepadTab = function() {
+    const newTitle = prompt("Escriba el nombre para la nueva pestaña:", "Nueva Pestaña");
+    if (!newTitle || newTitle.trim() === "") return;
+
+    AppDB.data.notepadNotes.push({
+        title: newTitle.trim(),
+        content: "<h3>" + newTitle.trim() + "</h3><p>Espacio en blanco listo para anotaciones corporativas.</p>"
+    });
+
+    App.currentActiveNotepadTab = AppDB.data.notepadNotes.length - 1;
+    
+    // Sincronizar de forma inmediata con Firebase y reflejar log
+    AppDB.save();
+    AppDB.addLog(App.currentUser?.username || "admin", "NOTEPAD_NUEVA_PAG", "Se creó la pestaña de apuntes: " + newTitle);
+    
+    App.handleRenderNotepadModalStructure();
+};
+
+App.handleSaveNotepadLiveChanges = function() {
+    const titleIn = document.getElementById("inputNotepadTitle");
+    const contentIn = document.getElementById("textareaNotepadContent");
+    const previewBox = document.getElementById("divNotepadPreview");
+
+    if (!titleIn || !contentIn) return;
+
+    const notes = AppDB.data.notepadNotes;
+    if (notes[App.currentActiveNotepadTab]) {
+        notes[App.currentActiveNotepadTab].title = titleIn.value.trim();
+        notes[App.currentActiveNotepadTab].content = contentIn.value;
+        
+        // Actualizar la previsualización HTML en tiempo real en la pantalla del operador
+        if (previewBox) {
+            previewBox.innerHTML = contentIn.value || '<p style="color:#94a3b8;">Vacío</p>';
+        }
+
+        // Transmisión digital en caliente a Firebase sin bloquear la escritura
+        AppDB.save();
+    }
+};
+
+App.handleDeleteCurrentNotepadTab = function() {
+    const notes = AppDB.data.notepadNotes;
+    if (notes.length <= 1) {
+        alert("⚠️ Operación restringida: El sistema requiere conservar al menos una pestaña activa de respaldo.");
+        return;
+    }
+
+    const targetTitle = notes[App.currentActiveNotepadTab]?.title || "";
+    if (confirm("¿Desea eliminar la pestaña '" + targetTitle + "' y todos sus apuntes HTML de la nube de la gerencia?")) {
+        
+        // Remover el elemento del vector
+        AppDB.data.notepadNotes.splice(App.currentActiveNotepadTab, 1);
+        
+        // Registrar traza de borrado cruzado en los logs y subir cifrado
+        AppDB.addLog(App.currentUser?.username || "admin", "NOTEPAD_BORRAR_PAG", "Se eliminó la pestaña de apuntes: " + targetTitle);
+        AppDB.save();
+
+        // Reposicionar el foco visual y redibujar
+        App.currentActiveNotepadTab = 0;
+        App.handleRenderNotepadModalStructure();
+        alert("Pestaña revocada correctamente de la red cloud.");
+    }
+};

@@ -71,12 +71,16 @@
                     </div>
                 </div>
                 <!-- BLOQUE DE ACCIONES: UBICADO A LA EXTREMA DERECHA -->
+                               <!-- BLOQUE DE ACCIONES: UBICADO A LA EXTREMA DERECHA -->
                 <div class="action-buttons-group">
+                    <!-- NUEVO BOTÓN COLABORATIVO: ACCESIBLE PARA TODOS LOS ROLES -->
+                    <button onclick="App.openCollaborativeNotepadModal()" class="btn-secondary bg-notebook">📝 Bloc de Notas</button>
                     <button onclick="App.openReportsMenu()" class="btn-secondary">Reportes Consolidados</button>
                     <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden">⚙️ Ajustes y Usuarios</button>
                     <button onclick="App.openAboutModal()" class="btn-secondary">Acerca de</button>
                     <button onclick="App.logout()" class="btn-secondary btn-logout">Cerrar Sesión</button>
                 </div>
+
             </div>
 
             <!-- CONTADORES DE ESTADO GENERAL EN TIEMPO REAL -->
