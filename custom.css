@@ -1408,3 +1408,12 @@ body:has(#viewDashboard.hidden) footer {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+/* OCULTAR INPUT DE ARCHIVO NATIVO DE LA CABECERA */
+.hidden-file-input {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    position: absolute !important;
+}

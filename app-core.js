@@ -247,6 +247,59 @@ App.executeRecoveryWorkflow = function(e) {
     }
 };
 
+/* =========================================================================
+   MÓDULO ADICIONAL: PROCESAMIENTO Y PERSISTENCIA DE IMÁGENES EN LA NUBE
+   ========================================================================= */
+
+// Procesar y guardar de forma persistente la foto del Colaborador desde la PC
+App.handleUploadUserAvatarCloud = function(inputElement) {
+    // Validar que el elemento exista y contenga un archivo seleccionado
+    if (!inputElement || !inputElement.files || inputElement.files.length === 0) return;
+    
+    var file = inputElement.files[0]; // Extraer el archivo real de la PC
+    
+    // Restricción de seguridad: Máximo 1MB para optimizar el transporte de Firebase
+    if (file.size > 1024 * 1024) {
+        alert("⚠️ Archivo excedido: La foto de perfil no debe superar 1 Megabyte (1MB).");
+        return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var base64Image = e.target.result;
+        
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            alert("Error: El motor AppDB no está disponible.");
+            return;
+        }
+        if (!AppDB.data.config) AppDB.data.config = {};
+        
+        // Almacenar el string Base64 en el LocalStorage del navegador
+        localStorage.setItem("gerente_avatar_personal", base64Image);
+        
+        // Asociar la imagen a la cuenta activa en la estructura viva de la base de datos
+        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        if (!AppDB.data.users) AppDB.data.users = {};
+        if (AppDB.data.users[currentUserKey]) {
+            AppDB.data.users[currentUserKey].avatarData = base64Image;
+        }
+
+        // Registrar acción en el historial de auditoría interna
+        AppDB.addLog(currentUserKey, "CARGA_AVATAR", "El usuario actualizó su foto de perfil desde la PC.");
+        
+        // TRANSMISIÓN DIGITAL CIFRADA (Aplica XOR y sube de inmediato a Firebase)
+        AppDB.save();
+
+        // Actualizar visualmente el marco en caliente inyectando la etiqueta img
+        var frame = document.getElementById("userAvatarFrame");
+        if (frame) {
+            frame.innerHTML = `<img src="${base64Image}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+        }
+        alert("¡Éxito! Su foto de perfil se ha guardado y sincronizado de forma permanente en la nube.");
+    };
+    reader.readAsDataURL(file);
+};
+
 // Cargar la inicialización por defecto del sistema al levantar la ventana
 window.onload = function() {
     App.init();
