@@ -344,8 +344,15 @@ App.openAssignmentModal = function() {
 };
 
     // 1. Sincronizador en caliente de marcas institucionales y persistencia de interfaz
+    // BUSCA EL SETINTERVAL EN LA PARTE 3 DE TU INDEX.HTML Y DÉJALO ASÍ:
     setInterval(function() {
+        // NUEVA REGLA: Si el analista está editando una nota, congelamos la sincronización para no pisar sus letras
+        if (typeof App !== 'undefined' && App.notepadIsUserEditingRightNow === true) {
+            return; // Detiene temporalmente la descarga de Firebase para dar prioridad a la PC local
+        }
+
         if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
+        var cfg = AppDB.data.config;
             var cfg = AppDB.data.config;
             if (cfg.title) {
                 var b = document.getElementById("displayGerenciaName");

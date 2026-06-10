@@ -336,37 +336,36 @@ setInterval(function() {
    MÓDULO: BLOC DE NOTAS COLABORATIVO MULTI-PESTAÑA CLOUD (GOIA v2.02)
    ========================================================================= */
 
-// Variable temporal para rastrear cuál pestaña tiene abierta el usuario en su pantalla
 App.currentActiveNotepadTab = 0;
+App.notepadIsUserEditingRightNow = false; // Bloqueador de colisiones para el setInterval
 
 App.openCollaborativeNotepadModal = function() {
     document.getElementById("modalOverlay").classList.remove("hidden");
     
-    // Inicializar el nodo de notas como un arreglo síncrono si está vacío en la nube
+    // Inicializar el nodo si está vacío en la nube
     if (!AppDB.data.notepadNotes || !Array.isArray(AppDB.data.notepadNotes)) {
         AppDB.data.notepadNotes = [
             { title: "General", content: "<h3>Apuntes de la Gerencia</h3><p>Escriba aquí sus anotaciones en formato HTML...</p>" }
         ];
     }
 
+    App.notepadIsUserEditingRightNow = false;
     App.handleRenderNotepadModalStructure();
 };
 
 App.handleRenderNotepadModalStructure = function() {
     const notes = AppDB.data.notepadNotes;
     
-    // Si la pestaña activa guardada quedó fuera de rango por una eliminación, reajustar
     if (App.currentActiveNotepadTab >= notes.length) {
         App.currentActiveNotepadTab = notes.length - 1;
     }
     if (App.currentActiveNotepadTab < 0) App.currentActiveNotepadTab = 0;
 
-    // 1. Construir la barra de pestañas (Tabs)
     let tabsHtml = "";
     notes.forEach(function(note, idx) {
         const activeClass = (idx === App.currentActiveNotepadTab) ? "active" : "";
         tabsHtml += `
-            <button onclick="App.handleSwitchNotepadTab(${idx})" class="notepad-tab-btn ${activeClass}">
+            <button type="button" onclick="App.handleSwitchNotepadTab(${idx})" class="notepad-tab-btn ${activeClass}">
                 📁 ${note.title || 'Nota'}
             </button>
         `;
@@ -374,54 +373,57 @@ App.handleRenderNotepadModalStructure = function() {
 
     const activeNote = notes[App.currentActiveNotepadTab] || { title: "", content: "" };
 
-    // 2. Inyectar la interfaz de edición y lectura HTML sin restricciones de roles
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
             <h3>📝 Bloc de Notas Operacional (Compartido Cloud)</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+            <button type="button" onclick="App.handleCloseNotepadSafely()">&times;</button>
         </div>
         
         <div class="admin-config-card">
-            <!-- Barra de Pestañas y Botón Agregar -->
             <div class="notepad-tabs-container">
                 ${tabsHtml}
-                <button onclick="App.handleCreateNewNotepadTab()" class="notepad-btn-add">+ Nueva Pestaña</button>
+                <button type="button" onclick="App.handleCreateNewNotepadTab()" class="notepad-btn-add">+ Nueva Pestaña</button>
             </div>
 
-            <!-- Campos de Edición de la Pestaña Activa -->
             <div class="form-group">
                 <label>Título de la Pestaña</label>
-                <input type="text" id="inputNotepadTitle" class="form-control" value="${activeNote.title || ''}" onchange="App.handleSaveNotepadLiveChanges()">
+                <input type="text" id="inputNotepadTitle" class="form-control" value="${activeNote.title || ''}" onfocus="App.notepadIsUserEditingRightNow=true;" oninput="App.handleSaveNotepadLiveChanges()">
             </div>
             
             <div class="form-group mt-2">
-                <label>Contenido (Soporta etiquetas HTML como &lt;b&gt;, &lt;h3&gt;, &lt;li&gt;)</label>
-                <textarea id="textareaNotepadContent" class="notepad-editor-area" oninput="App.handleSaveNotepadLiveChanges()" placeholder="Escriba aquí... Ejemplo: &lt;b&gt;Urgente:&lt;/b&gt; Revisar lote 4.">${activeNote.content || ''}</textarea>
+                <label>Contenido (Soporta etiquetas HTML)</label>
+                <textarea id="textareaNotepadContent" class="notepad-editor-area" onfocus="App.notepadIsUserEditingRightNow=true;" oninput="App.handleSaveNotepadLiveChanges()" placeholder="Escriba aquí...">${activeNote.content || ''}</textarea>
             </div>
 
-            <!-- Previsualización en Vivo del HTML Renderizado -->
             <label class="mt-2" style="display:block; font-weight:bold;">Visualización Dinámica del Texto:</label>
             <div id="divNotepadPreview" class="notepad-preview-box">
                 ${activeNote.content || '<p style="color:#94a3b8;">Vacío</p>'}
             </div>
 
-            <!-- Botón de Remoción disponible para Analistas y Administradores por igual -->
             <div class="modal-action-row-footer" style="margin-top: 15px; display: flex; justify-content: space-between;">
-                <button onclick="App.handleDeleteCurrentNotepadTab()" class="btn-secondary" style="background:#ef4444; color:white; border:none; padding:8px 12px; font-weight:bold;">🗑️ Eliminar Pestaña</button>
-                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-primary" style="padding:8px 16px;">Guardar y Cerrar</button>
+                <button type="button" onclick="App.handleDeleteCurrentNotepadTab()" class="btn-secondary" style="background:#ef4444; color:white; border:none; padding:8px 12px; font-weight:bold;">🗑️ Eliminar Pestaña</button>
+                <button type="button" onclick="App.handleCloseNotepadSafely()" class="btn-primary" style="padding:8px 16px;">Guardar y Cerrar</button>
             </div>
         </div>
     `;
 };
 
 App.handleSwitchNotepadTab = function(idx) {
+    App.notepadIsUserEditingRightNow = false;
     App.currentActiveNotepadTab = idx;
     App.handleRenderNotepadModalStructure();
 };
 
 App.handleCreateNewNotepadTab = function() {
+    App.notepadIsUserEditingRightNow = true;
+    
     const newTitle = prompt("Escriba el nombre para la nueva pestaña:", "Nueva Pestaña");
-    if (!newTitle || newTitle.trim() === "") return;
+    if (!newTitle || newTitle.trim() === "") {
+        App.notepadIsUserEditingRightNow = false;
+        return;
+    }
+
+    if (!AppDB.data.notepadNotes) AppDB.data.notepadNotes = [];
 
     AppDB.data.notepadNotes.push({
         title: newTitle.trim(),
@@ -430,14 +432,17 @@ App.handleCreateNewNotepadTab = function() {
 
     App.currentActiveNotepadTab = AppDB.data.notepadNotes.length - 1;
     
-    // Sincronizar de forma inmediata con Firebase y reflejar log
+    // Forzar la escritura atómica directa en la base de datos
     AppDB.save();
     AppDB.addLog(App.currentUser?.username || "admin", "NOTEPAD_NUEVA_PAG", "Se creó la pestaña de apuntes: " + newTitle);
     
+    App.notepadIsUserEditingRightNow = false;
     App.handleRenderNotepadModalStructure();
 };
 
 App.handleSaveNotepadLiveChanges = function() {
+    App.notepadIsUserEditingRightNow = true;
+    
     const titleIn = document.getElementById("inputNotepadTitle");
     const contentIn = document.getElementById("textareaNotepadContent");
     const previewBox = document.getElementById("divNotepadPreview");
@@ -445,40 +450,51 @@ App.handleSaveNotepadLiveChanges = function() {
     if (!titleIn || !contentIn) return;
 
     const notes = AppDB.data.notepadNotes;
-    if (notes[App.currentActiveNotepadTab]) {
+    if (notes && notes[App.currentActiveNotepadTab]) {
         notes[App.currentActiveNotepadTab].title = titleIn.value.trim();
         notes[App.currentActiveNotepadTab].content = contentIn.value;
         
-        // Actualizar la previsualización HTML en tiempo real en la pantalla del operador
         if (previewBox) {
             previewBox.innerHTML = contentIn.value || '<p style="color:#94a3b8;">Vacío</p>';
         }
 
-        // Transmisión digital en caliente a Firebase sin bloquear la escritura
+        // Transmisión digital inmediata hacia Firebase Cloud
         AppDB.save();
     }
 };
 
 App.handleDeleteCurrentNotepadTab = function() {
+    App.notepadIsUserEditingRightNow = true;
     const notes = AppDB.data.notepadNotes;
-    if (notes.length <= 1) {
-        alert("⚠️ Operación restringida: El sistema requiere conservar al menos una pestaña activa de respaldo.");
+    
+    if (!notes || notes.length <= 1) {
+        alert("⚠️ Operación restringida: El sistema requiere conservar al menos una pestaña activa.");
+        App.notepadIsUserEditingRightNow = false;
         return;
     }
 
     const targetTitle = notes[App.currentActiveNotepadTab]?.title || "";
-    if (confirm("¿Desea eliminar la pestaña '" + targetTitle + "' y todos sus apuntes HTML de la nube de la gerencia?")) {
+    if (confirm("¿Desea eliminar la pestaña '" + targetTitle + "' de la nube de la gerencia?")) {
         
-        // Remover el elemento del vector
         AppDB.data.notepadNotes.splice(App.currentActiveNotepadTab, 1);
         
-        // Registrar traza de borrado cruzado en los logs y subir cifrado
-        AppDB.addLog(App.currentUser?.username || "admin", "NOTEPAD_BORRAR_PAG", "Se eliminó la pestaña de apuntes: " + targetTitle);
+        AppDB.addLog(App.currentUser?.username || "admin", "NOTEPAD_BORRAR_PAG", "Se eliminó la pestaña: " + targetTitle);
         AppDB.save();
 
-        // Reposicionar el foco visual y redibujar
         App.currentActiveNotepadTab = 0;
+        App.notepadIsUserEditingRightNow = false;
         App.handleRenderNotepadModalStructure();
-        alert("Pestaña revocada correctamente de la red cloud.");
+        alert("Pestaña revocada correctamente.");
+    } else {
+        App.notepadIsUserEditingRightNow = false;
     }
+};
+
+App.handleCloseNotepadSafely = function() {
+    // Liberar el sincronizador del index y cerrar modal de forma limpia
+    App.notepadIsUserEditingRightNow = false;
+    document.getElementById("modalOverlay").classList.add("hidden");
+    
+    // Guardado de consolidación final
+    AppDB.save();
 };
