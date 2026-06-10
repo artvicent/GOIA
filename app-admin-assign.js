@@ -112,11 +112,11 @@ App.deleteAssignmentCloud = function(index) {
     return false;
 };
 // =========================================================================
-// MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: CAPTURA DE TIEMPO EN MINUTOS
+// MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: COMPATIBILIDAD CON ARREGLOS (v2.02)
 // =========================================================================
 App.handleCreateTicketAssignment = function(event) {
     event.preventDefault();
-    console.log("Ejecutando canal seguro de emisión de tickets...");
+    console.log("Ejecutando canal síncrono de tickets adaptado a arrays...");
 
     try {
         if (typeof AppDB === 'undefined' || !AppDB.data) {
@@ -124,7 +124,7 @@ App.handleCreateTicketAssignment = function(event) {
             return;
         }
 
-        // Elementos interactivos del formulario inyectado v2.02
+        // 1. Capturar elementos interactivos del formulario inyectado v2.02
         var targetInput = document.getElementById("assignTarget");
         var durationInput = document.getElementById("assignDuration");
         var sourceInput = document.getElementById("assignSource");
@@ -144,49 +144,65 @@ App.handleCreateTicketAssignment = function(event) {
             return;
         }
 
-        // Estabilizar nodos de la raíz JSON en la nube
+        // 2. CORRECCIÓN ARQUITECTÓNICA: Forzar estructura de Array [] para no romper app-executive.js
         if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
-        if (!AppDB.data.assignments) AppDB.data.assignments = {};
+        
+        // Si el nodo de asignaciones no existe o se volvió un objeto {}, lo re-inicializamos como array limpio
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
 
-        // INCREMENTO SECUENCIAL SÍNCRONO: Reemplaza la transacción manual rota de Firebase
+        // 3. INCREMENTO SECUENCIAL SÍNCRONO DEL MANUAL
         var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
         AppDB.data.config.ticketCounter = assignedTicketNum;
 
         var startTimeIso = new Date().toISOString();
         var endTimeIso = new Date(Date.now() + durationValue * 60 * 1000).toISOString();
-        var ticketKey = "TICKET_" + assignedTicketNum;
 
-        // DOBLE MAPEO INTEGRAL: Compatibilidad absoluta entre esquemas de bases de datos
-        AppDB.data.assignments[ticketKey] = {
+        // 4. ARMAR EL OBJETO CON MAPEO HÍBRIDO TOTAL
+        var nuevoTicketObject = {
             id: assignedTicketNum,
             
-            // Requerimientos estructurales del nuevo index.html v2.02
-            name: sourceValue,
+            // Requerimientos de visualización (index.html / app-executive.js)
+            name: "Ticket #" + assignedTicketNum + " - " + sourceValue, // Une el título y origen para que sea vistoso
             timeStart: startTimeIso,
             timeEnd: endTimeIso,
             duration: durationValue,
+            deadline: endTimeIso, // Atributo de herencia síncrona de página 3
+            createdAt: startTimeIso,
             
-            // Preservación de herencia transaccional nativa
+            // Preservación de campos tradicionales del catálogo
             title: "Ticket #" + assignedTicketNum,
             description: "Gestión automatizada de auditoría para carga entrante.",
             source: sourceValue,
-            status: "pending",
+            managementName: sourceValue,
+            reference: "TCK-" + assignedTicketNum + "-2026",
+            
+            // Campos numéricos de control de producción e indicadores IED
             target: targetValue,
+            meta: targetValue, // Equivalencia directa con la página 3
             processed: 0,
-            timestamp: Date.now()
+            status: "pending",
+            timestamp: Date.now(),
+            createdBy: (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin"
         };
 
-        // Auditoría e inyección de datos cifrados con algoritmo XOR a Google Cloud
+        // 5. INYECCIÓN ATÓMICA AL VECTOR (Mantiene viva la iteración de la tabla)
+        AppDB.data.assignments.push(nuevoTicketObject);
+
+        // 6. Registrar la acción en el historial de auditoría interna
         var operarioLog = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
         AppDB.addLog(operarioLog, "EMITIR_TICKET", `Se emitió con éxito el Ticket #${assignedTicketNum} para la gestión: ${sourceValue}`);
         
-        // Transmisión digital inmediata
+        // 7. TRANSMISIÓN DIGITAL CIFRADA AUTOMÁTICA (Guarda y sube a Firebase)
         AppDB.save();
 
         alert(` ¡Ticket #${assignedTicketNum} Emitido con Éxito!\n\nTiempo de resolución configurado en ${durationValue} minutos.`);
+        
+        // 8. Cerrar la capa flotante de forma limpia
         document.getElementById("modalOverlay").classList.add("hidden");
 
-        // Refrescar de forma dinámica los componentes de la interfaz de usuario
+        // 9. Forzar el refresco de los contadores y las filas en la pantalla
         if (typeof App.renderDashboardData === 'function') {
             App.renderDashboardData();
         } else if (typeof App.handleRenderAssignmentsTable === 'function') {
