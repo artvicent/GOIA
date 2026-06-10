@@ -1283,3 +1283,79 @@ body:has(#viewDashboard.hidden) footer {
     color: var(--btn-blue-primary);
 }
 
+/* ================= BARRA SUPERIOR DEL DASHBOARD GOIA ================= */
+.dashboard-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+/* BLOQUE DE IDENTIFICACIÓN DE USUARIO (IZQUIERDA) */
+.user-profile-left-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-frame {
+    width: 48px;
+    height: 48px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.avatar-frame:hover {
+    transform: scale(1.05);
+    border-color: #2563eb;
+}
+
+.profile-text-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-text-labels h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.profile-text-labels p {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* BLOQUE DE ACCIONES DE NAVEGACIÓN (DERECHA) */
+.action-buttons-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-logout {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+}
+
+.btn-logout:hover {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+}

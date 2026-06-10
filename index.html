@@ -53,11 +53,18 @@
         <!-- ================= VISTA B: DASHBOARD CORPORATIVO CENTRAL ================= -->
         <section id="viewDashboard" class="view-card max-w-7xl hidden">
             <div class="dashboard-top-bar">
-                <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame"></div>
-                <div class="profile-text-labels">
-                    <h2 id="dashWelcomeName">Colaborador</h2>
-                    <p id="dashUserRole">Rol Operativo</p>
+                
+                <!-- BLOQUE DE IDENTIFICACIÓN: UBICADO A LA EXTREMA IZQUIERDA -->
+                <div class="user-profile-left-block">
+                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">
+                        👤
+                    </div>
+                    <div class="profile-text-labels">
+                        <h2 id="dashWelcomeName">Cargando Colaborador...</h2>
+                        <p id="dashUserRole">Rol Operativo</p>
+                    </div>
                 </div>
+                <!-- BLOQUE DE ACCIONES: UBICADO A LA EXTREMA DERECHA -->
                 <div class="action-buttons-group">
                     <button onclick="App.openReportsMenu()" class="btn-secondary">Reportes Consolidados</button>
                     <button id="btnAdminPanel" onclick="App.openAdminMenu()" class="btn-primary hidden">⚙️ Ajustes y Usuarios</button>
