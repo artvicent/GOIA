@@ -116,18 +116,20 @@
                             </select>
                         </div>
 
-                        <!-- BOTÓN DEFINITIVO CON INYECCIÓN DIRECTA DE INTERFAZ OPERATIVA -->
+                        <!-- BOTÓN REPARADO CON POBLACIÓN AUTOMÁTICA DE LISTAS CLOUD -->
 <button id="btnNewAssignment" onclick="(function(){
     document.getElementById('modalOverlay').classList.remove('hidden');
     
     let optsManagements = '';
     if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.managements) {
         AppDB.data.managements.forEach(function(m) {
-            if (m && m.name) optsManagements += `<option value='${m.id}'>${m.name}</option>`;
+            if (m && m.name) {
+                optsManagements += '<option value=&quot;' + m.id + '&quot;>' + m.name + '</option>';
+            }
         });
     }
     if (optsManagements === '') {
-        optsManagements = `<option value='1'>Auditoría de Cuentas</option><option value='2'>Gestión Operacional de Integridad</option>`;
+        optsManagements = '<option value=&quot;1&quot;>Auditoría de Cuentas</option><option value=&quot;2&quot;>Gestión Operacional de Integridad</option>';
     }
 
     let optsUsers = '';
@@ -140,11 +142,11 @@
         if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.users) {
             Object.keys(AppDB.data.users).forEach(function(username) {
                 var u = AppDB.data.users[username];
-                optsUsers += `<option value='${username}'>@${username} (${u.role || 'Operador'})</option>`;
+                optsUsers += '<option value=&quot;' + username + '&quot;>@' + username + ' (' + (u.role || 'Operador') + ')</option>';
             });
         }
     } else {
-        optsUsers += `<option value='${activeUser}'>@${activeUser} (Mi Propio Perfil)</option>`;
+        optsUsers += '<option value=&quot;' + activeUser + '&quot;>@' + activeUser + ' (Mi Propio Perfil)</option>';
     }
 
     document.getElementById('modalContent').innerHTML = `
@@ -159,11 +161,11 @@
             </div>
             <div class='form-group mt-2'>
                 <label>Colaborador Destinatario (Asignado A)</label>
-                <select id='asigUserTarget' class='form-control full-width' required>\${optsUsers}</select>
+                <select id='asigUserTarget' class='form-control full-width' required>` + optsUsers + `</select>
             </div>
             <div class='form-group mt-2'>
                 <label>Catálogo de Gestión Asociado</label>
-                <select id='asigMgmt' class='form-control full-width'>\${optsManagements}</select>
+                <select id='asigMgmt' class='form-control full-width'>` + optsManagements + `</select>
             </div>
             <div class='form-group mt-2'>
                 <label>Enlace de Correo Obligatorio (URL Zoho Mail)</label>
@@ -185,7 +187,7 @@
                 <button type='submit' class='btn-primary-submit'>Cargar Asignación</button>
                 <button type='button' onclick=&quot;document.getElementById('modalOverlay').classList.add('hidden')&quot; class='btn-secondary-cancel'>Cancelar</button>
             </div>
-        </form>\n`;
+        </form>`;
 })()">+ Asignar Actividad</button>
 
                         
