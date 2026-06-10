@@ -251,7 +251,11 @@ App.executeRecoveryWorkflow = function(e) {
    MÓDULO ADICIONAL: PROCESAMIENTO Y PERSISTENCIA DE IMÁGENES EN LA NUBE
    ========================================================================= */
 
-// Procesar y guardar de forma persistente la foto del Colaborador desde la PC
+/* =========================================================================
+   MÓDULO DE PROCESAMIENTO, BLINDAJE Y PERSISTENCIA DE IMÁGENES EN LA NUBE
+   ========================================================================= */
+
+// 1. Procesar y guardar de forma persistente la foto del Colaborador
 App.handleUploadUserAvatarCloud = function(inputElement) {
     // Validar que el elemento exista y contenga un archivo seleccionado
     if (!inputElement || !inputElement.files || inputElement.files.length === 0) return;
@@ -299,6 +303,89 @@ App.handleUploadUserAvatarCloud = function(inputElement) {
     };
     reader.readAsDataURL(file);
 };
+
+// 2. Procesar y guardar de forma persistente el Logotipo de la Gerencia
+App.handleUploadBrandLogoCloud = function(inputElement) {
+    // Validar que el elemento exista y contenga un archivo seleccionado
+    if (!inputElement || !inputElement.files || inputElement.files.length === 0) return;
+    
+    var file = inputElement.files[0]; // Extraer el archivo de logotipo de la PC
+    
+    // Restricción de seguridad: Máximo 1.5MB para optimizar el transporte de red de Firebase
+    if (file.size > 1.5 * 1024 * 1024) {
+        alert("⚠️ Archivo excedido: El logotipo corporativo no debe superar 1.5 Megabytes.");
+        return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var base64Logo = e.target.result;
+        
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            alert("Error: El motor AppDB no está disponible.");
+            return;
+        }
+        if (!AppDB.data.config) AppDB.data.config = {};
+        
+        // Sembrar el logo institucional en el nodo central de configuración y en memoria local
+        AppDB.data.config.brandLogoBase64 = base64Logo;
+        localStorage.setItem("system_brand_logo_main", base64Logo);
+
+        // Registrar traza en el historial interno de auditoría
+        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        AppDB.addLog(currentUserKey, "MODIFICAR_LOGO_CORP", "Se ha actualizado el logotipo institucional de la pantalla de acceso.");
+        
+        // TRANSMISIÓN DIGITAL CIFRADA EN TIEMPO REAL (Aplica XOR y sube a Firebase)
+        AppDB.save();
+
+        // Refrescar el elemento visual en la pantalla de login de inmediato
+        var logoImg = document.getElementById("appLogoImg");
+        if (logoImg) {
+            logoImg.src = base64Logo;
+        }
+        alert("¡Éxito! El logotipo institucional se ha actualizado y blindado en la nube contra borrados de caché.");
+    };
+    reader.readAsDataURL(file);
+};
+
+// =========================================================================
+// INICIALIZADOR GLOBAL Y SINCRONIZADOR AL CARGAR LA VENTANA (WINDOW ONLOAD)
+// =========================================================================
+window.onload = function() {
+    // 1. Ejecutar la inicialización nativa del núcleo del programa
+    if (typeof App.init === "function") {
+        App.init();
+    }
+
+    // 2. DISPARADOR DE CONEXIÓN CLOUD: Pintar marcas de diseño al levantar la ventana
+    setTimeout(function() {
+        // Sincronizar el Logotipo Institucional en la pantalla de login
+        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
+            var logoImg = document.getElementById("appLogoImg");
+            if (logoImg) logoImg.src = AppDB.data.config.brandLogoBase64;
+        } else {
+            var localLogo = localStorage.getItem("system_brand_logo_main");
+            var logoImg = document.getElementById("appLogoImg");
+            if (localLogo && logoImg) logoImg.src = localLogo;
+        }
+        
+        // Sincronizar la Foto de Perfil del Analista/Gerente si la sesión ya está activa
+        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : null;
+        if (currentUserKey && AppDB.data?.users?.[currentUserKey]?.avatarData) {
+            var frame = document.getElementById("userAvatarFrame");
+            if (frame) {
+                frame.innerHTML = `<img src="${AppDB.data.users[currentUserKey].avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+            }
+        } else {
+            var localAvatar = localStorage.getItem("gerente_avatar_personal");
+            var frame = document.getElementById("userAvatarFrame");
+            if (localAvatar && frame) {
+                frame.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+            }
+        }
+    }, 800); // Retardo controlado de red (800ms) para esperar la descarga del árbol cifrado de Firebase
+};
+
 
 // Cargar la inicialización por defecto del sistema al levantar la ventana
 window.onload = function() {
