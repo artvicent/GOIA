@@ -162,6 +162,106 @@
     <script src="app-admin-logs.js?v=2.02"></script>
 
     <script>
+    /* =========================================================================
+   INJECCIÓN INMEDIATA ANTI-CACHÉ: CONTROL DE ASIGNACIONES (GOIA v2.02)
+   ========================================================================= */
+App.openAssignmentModal = function() {
+    console.log("🚀 Forzando apertura del modal de asignaciones con control Zoho Mail...");
+    
+    // 1. Levantar la capa flotante del esqueleto SPA
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // 2. Extraer en tiempo real las gestiones del catálogo centralizado cifrado
+    let optsManagements = "";
+    if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.managements) {
+        AppDB.data.managements.forEach(function(m) {
+            if (m && m.name) {
+                optsManagements += `<option value="${m.id}">${m.name}</option>`;
+            }
+        });
+    }
+    if (optsManagements === "") {
+        optsManagements = `<option value="1">Auditoría de Cuentas</option><option value="2">Gestión Operacional de Integridad</option>`;
+    }
+
+    // 3. CERROJO JERÁRQUICO: Determinar operarios destinatarios permitidos
+    let optsUsers = "";
+    const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+    
+    // Validar el nivel jerárquico real (lvl) sembrado en el motor
+    const userRole = App.currentUser ? App.currentUser.role : "Analista";
+    const roleMeta = (typeof AppDB !== 'undefined' && AppDB.data?.roles?.[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
+    const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+    
+    // REGLA DEL MANUAL: Admin, Gerentes (lvl 4) y Coordinadores (lvl 2+) pueden asignar a otros
+    const canAssignToOthers = (activeUser === "admin" || userLevel >= 2);
+
+    if (canAssignToOthers) {
+        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.users) {
+            Object.keys(AppDB.data.users).forEach(function(username) {
+                var u = AppDB.data.users[username];
+                optsUsers += `<option value="${username}">@${username} (${u.role || 'Operador'})</option>`;
+            });
+        }
+        // Asegurar que el administrador siempre figure en la lista de asignación cruzada
+        if (!optsUsers.includes(`value="${activeUser}"`)) {
+            optsUsers = `<option value="${activeUser}">@${activeUser} (Mi Perfil)</option>` + optsUsers;
+        }
+    } else {
+        // Analistas y Especialistas (lvl 1): Estrictamente restringidos a auto-asignarse metas
+        optsUsers += `<option value="${activeUser}">@${activeUser} (Mi Propio Perfil)</option>`;
+    }
+
+    // 4. INYECCIÓN TOTAL DE LA INTERFAZ CON CAMPO ZOHO MAIL OBLIGATORIO
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>Asignar Nueva Actividad / Ítem</h3>
+            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        <form id="fAssign" onsubmit="App.executeCreateAssignment(event)" class="admin-config-card">
+            <div class="form-group">
+                <label>Nombre de la Actividad / Tarea</label>
+                <input type="text" id="asigName" required class="form-control" placeholder="Ej: Control de Lotes Diarios">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Colaborador Destinatario (Asignado A)</label>
+                <select id="asigUserTarget" class="form-control full-width" required>${optsUsers}</select>
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Catálogo de Gestión Asociado</label>
+                <select id="asigMgmt" class="form-control full-width">${optsManagements}</select>
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Enlace de Correo Obligatorio (URL Zoho Mail / Soporte)</label>
+                <input type="url" id="asigMailLink" class="form-control" placeholder="https://zoho.com..." required>
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Meta Numérica / Carga de Trabajo</label>
+                <input type="number" id="asigMeta" required class="form-control" min="1" placeholder="Ej: 100">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Origen / Referencia de Auditoría</label>
+                <input type="text" id="asigRef" required class="form-control" placeholder="Ej: REF-2026-A">
+            </div>
+            
+            <div class="form-group mt-2">
+                <label>Tiempo Límite Máximo de ANS (Minutos)</label>
+                <input type="number" id="asigDuration" required class="form-control" min="5" placeholder="Ej: 60">
+            </div>
+            
+            <div class="modal-action-row-footer">
+                <button type="submit" class="btn-primary-submit">Cargar Asignación</button>
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
+            </div>
+        </form>
+    `;
+};
+
     // 1. Sincronizador en caliente de marcas institucionales y persistencia de interfaz
     setInterval(function() {
         if (typeof AppDB !== 'undefined' && AppDB.data?.config) {
