@@ -1645,3 +1645,107 @@ body:has(#viewDashboard.hidden) footer {
     margin-top: 8px;
     font-size: 12px;
 }
+
+/* =========================================================================
+   MÓDULO DE ADAPTABILIDAD Y RESPONSIVIDAD GLOBAL (GOIA v2.02)
+   ========================================================================= */
+
+/* 1. FLEXIBILIDAD EN BOTONES Y ENLACES DE ACCIÓN */
+.action-buttons-group {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los botones bajen si no hay espacio horizontal */
+    gap: 8px;
+    align-items: center;
+}
+
+.action-buttons-group button,
+.action-buttons-group a {
+    flex: 1 1 auto; /* Los botones crecen de forma proporcional pero mantienen su tamaño base */
+    min-width: 120px; /* Evita que las palabras se corten */
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Ajuste elástico para los botones en cuadrícula dentro de los modales */
+.modal-grid-buttons,
+.report-buttons-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 8px !important;
+    width: 100%;
+}
+
+.modal-grid-buttons button,
+.report-buttons-grid-layout button {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* 2. ADAPTACIÓN DE LAS CAPAS DEL REPOSITORIO (MEDIA QUERIES) */
+
+/* Pantallas Medianas (Laptops pequeñas / Tablets en horizontal - Menor a 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-top-bar {
+        flex-direction: column; /* Cambia a formato vertical si los botones chocan con el perfil */
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .action-buttons-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .dashboard-split-layout {
+        display: flex;
+        flex-direction: column; /* El monitor de alertas baja para dar prioridad a la tabla */
+        gap: 20px;
+    }
+    
+    .split-side-panel {
+        width: 100% !important;
+    }
+}
+
+/* Pantallas Pequeñas (Tablets en vertical / Dispositivos Móviles - Menor a 768px) */
+@media (max-width: 768px) {
+    #topBanner {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .user-profile-left-block {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    /* Modales flotantes responsivos */
+    .modal-content {
+        width: 95% !important;
+        margin: 10px auto;
+        padding: 16px !important;
+    }
+
+    .input-inline-row {
+        flex-direction: column; /* Inputs y botones de aplicar se apilan verticalmente */
+        gap: 8px !important;
+    }
+
+    .input-inline-row input,
+    .input-inline-row button {
+        width: 100% !important;
+    }
+    
+    /* Adaptabilidad estricta en tablas operacionales */
+    .table-container {
+        overflow-x: auto; /* Habilita scroll horizontal interno exclusivo para la tabla */
+        width: 100%;
+    }
+    
+    .executive-table th, 
+    .executive-table td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+    }
+}
