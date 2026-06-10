@@ -33,6 +33,12 @@ App.openAdminMenu = function() {
                 <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
             </div>
             
+            <!-- SECCIÓN INTEGRADA: CARGA DE LOGOTIPO DE LA GERENCIA DESDE LA PC -->
+            <label class="mt-2" style="display: block; font-weight: bold; margin-bottom: 4px;">Logotipo Institucional (Pantalla de Login)</label>
+            <div class="input-inline-row">
+                <input type="file" id="inputUploadBrandLogo" accept="image/*" class="form-control" style="width: 100%; padding: 4px;" onchange="App.handleUploadBrandLogoCloud(this)">
+            </div>
+            
             <label class="mt-2">Expiración de Contraseñas del Personal</label>
             <select id="selectPasswordExpiry" class="form-control full-width" onchange="App.handleUpdateExpiryPolicyInline()">
                 <option value="30" ${currentExpiry == 30 ? 'selected' : ''}>Vencimiento cada 30 Días</option>
@@ -65,6 +71,16 @@ App.openAdminMenu = function() {
                 🔎 VER HISTORIAL DE AUDITORÍA (LOGS)
             </button>
         </div>`;
+};
+
+// Función auxiliar para guardar la política de vencimiento de claves sin romper el flujo
+App.handleUpdateExpiryPolicyInline = function() {
+    var select = document.getElementById("selectPasswordExpiry");
+    if (!select || typeof AppDB === 'undefined' || !AppDB.data) return;
+    
+    AppDB.data.config.passwordExpiryDays = parseInt(select.value) || 90;
+    AppDB.addLog(App.currentUser?.username || "admin", "POLITICA_SEGURIDAD", "Expiración de claves cambiada a " + select.value + " días");
+    AppDB.save();
 };
 
 // Función auxiliar para guardar la política de vencimiento de claves sin romper el flujo

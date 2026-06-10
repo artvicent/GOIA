@@ -1359,3 +1359,52 @@ body:has(#viewDashboard.hidden) footer {
     background: #dc2626 !important;
     border-color: #dc2626 !important;
 }
+/* BLOQUE DE IDENTIFICACIÓN DE USUARIO (IZQUIERDA DEL FORMULARIO) */
+.user-profile-left-block {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Espaciado entre el círculo del logo y las letras */
+}
+
+.avatar-frame {
+    width: 48px;
+    height: 48px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.avatar-frame:hover {
+    transform: scale(1.05);
+    border-color: #2563eb;
+}
+
+.profile-text-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left; /* Las letras nacen pegadas al logo y avanzan a la derecha */
+}
+
+.profile-text-labels h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.profile-text-labels p {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

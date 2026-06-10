@@ -54,9 +54,12 @@
         <section id="viewDashboard" class="view-card max-w-7xl hidden">
             <div class="dashboard-top-bar">
                 
-                <!-- BLOQUE DE IDENTIFICACIÓN: LOGO A LA IZQUIERDA, TEXTO A LA DERECHA -->
                 <div class="user-profile-left-block">
-                    <div id="userAvatarFrame" onclick="App.openAvatarSelectionModal()" class="avatar-frame">
+                    <!-- Input oculto para la foto del colaborador -->
+                    <input type="file" id="inputUploadUserAvatar" accept="image/*" class="hidden-file-input" onchange="App.handleUploadUserAvatarCloud(this)">
+                    
+                    <!-- Al hacer clic, se dispara el selector de archivos de la PC -->
+                    <div id="userAvatarFrame" onclick="document.getElementById('inputUploadUserAvatar').click()" class="avatar-frame">
                         👤
                     </div>
                     <div class="profile-text-labels">
