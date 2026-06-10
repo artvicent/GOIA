@@ -1,120 +1,108 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
- * PARTE 3 DE 3: MATRIZ DE PERMISOS JERÁRQUICOS Y RECUPERACIÓN DE ACCESOS
+ * PLATAFORMA DE CONTROL DE GESTIONES EJECUTIVAS - GOIA v2.02
+ * MÓDULO: HISTORIAL DE AUDITORÍA INTERNA CLOUD (app-admin-logs.js)
  */
 
-// CERROJO DE PERMISOS: Validación de jerarquías basada en clases CSS semánticas
-App.applySecurityCerberusPermissions = function() {
-    if (!this.currentUser) return;
-
-    const btnAdmin = document.getElementById("btnAdminPanel");
-    const btnNewAsig = document.getElementById("btnNewAssignment");
-
-    // Consultar el nivel operacional (lvl) sembrado en db.js
-    const userRole = this.currentUser.role;
-    const roleMeta = AppDB.data.roles[userRole];
-    const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
-    const permissions = (roleMeta && roleMeta.perms) ? roleMeta.perms : [];
-    const isMaster = (this.currentUser.username === "admin");
-
-    // REGLA DE ORO PCI: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
-    if (btnAdmin) {
-        if (isMaster || userLevel >= 3) {
-            btnAdmin.classList.remove("hidden");
-        } else {
-            btnAdmin.classList.add("hidden");
-        }
-    }
-
-    // CONTROL DE ASIGNACIÓN: El comportamiento visual se delega 100% a la clase .hidden
-    if (btnNewAsig) {
-        if (isMaster || userLevel >= 3 || permissions.includes("crear")) {
-            btnNewAsig.classList.remove("hidden");
-        } else {
-            btnNewAsig.classList.add("hidden");
-        }
-    }
-};
-
-// Abrir formulario corporativo de blanqueo o recuperación de accesos bloqueados
-App.showRecoveryFormGlobal = function() {
+App.openAuditLogsMenu = function() {
+    // 1. Mostrar la capa flotante del modal
     document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // 2. Inyectar la estructura base de la interfaz de auditoría
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
-            <h3>Restablecer Credenciales de Acceso</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+            <h3>📋 HISTORIAL DE AUDITORÍA INTERNA (LOGS)</h3>
+            <button onclick="App.openAdminMenu()" class="btn-secondary" style="font-size:12px; padding:4px 10px;">&larr; Volver</button>
         </div>
         
-        <form id="fRecovery" onsubmit="App.executeRecoveryWorkflow(event)" class="admin-config-card">
-            <div class="form-group">
-                <label>Usuario Corporativo Afectado</label>
-                <input type="text" id="recUser" required class="form-control" placeholder="Ej: jperez">
+        <div class="admin-config-form-layout" style="gap:1rem; margin-bottom: 1rem;">
+            <div class="admin-config-card" style="padding:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#475569;">ESTADO DE TRANSPORTE DIGITAL:</span>
+                <span style="font-size:10px; font-weight:700; color:#16a34a; background:#dcfce7; padding:2px 6px; border-radius:4px;">100% INMUNE A BORRADOS LOCALES</span>
             </div>
-            
-            <div class="form-group mt-2">
-                <label>Pregunta de Seguridad Obligatoria</label>
-                <input type="text" class="form-control" value="¿Cuál es el nombre de su primera mascota?" disabled>
-            </div>
-            
-            <div class="form-group mt-2">
-                <label>Respuesta Secreta de Validación</label>
-                <input type="text" id="recAnswer" required class="form-control" placeholder="Escriba su respuesta">
-            </div>
-            
-            <div class="form-group mt-2">
-                <label>Nueva Contraseña Solicitada</label>
-                <input type="password" id="recNewPass" required class="form-control" placeholder="••••••••">
-            </div>
-            
-            <div class="modal-action-row-footer">
-                <button type="submit" class="btn-primary-submit">Blanquear Acceso</button>
-                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
-            </div>
-        </form>
+        </div>
+
+        <div class="table-container custom-scrollbar" style="max-height:350px; overflow-y:auto; border: 1px solid #e2e8f0;">
+            <table class="executive-table" style="width:100%;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="font-size:10px; padding:8px 4px; text-align:left; color:#475569;">MARCA TEMPORAL (UTC)</th>
+                        <th style="font-size:10px; padding:8px 4px; text-align:left; color:#475569;">USUARIO</th>
+                        <th style="font-size:10px; padding:8px 4px; text-align:left; color:#475569;">ACCIÓN</th>
+                        <th style="font-size:10px; padding:8px 4px; text-align:left; color:#475569;">DESCRIPCIÓN OPERACIONAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tableAuditLogsBody">
+                    <tr><td colspan="4" style="text-align:center; padding:1rem; color:#64748b; font-size:12px;">Extrayendo trazas de la nube...</td></tr>
+                </tbody>
+            </table>
+        </div>
     `;
+
+    // 3. Ejecutar el renderizado de los datos vivos de auditoría
+    App.handleRenderAuditLogsTable();
 };
 
-// Procesar el flujo de recuperación y desbloqueo cloud en caliente
-App.executeRecoveryWorkflow = function(e) {
-    e.preventDefault();
-    
-    const u = document.getElementById("recUser").value.toLowerCase().trim();
-    const ans = document.getElementById("recAnswer").value.toLowerCase().trim();
-    const newPass = document.getElementById("recNewPass").value;
+App.handleRenderAuditLogsTable = function() {
+    var tbody = document.getElementById("tableAuditLogsBody");
+    if (!tbody) return;
 
-    const user = AppDB.data.users[u];
-    if (!user) return alert("Operación rechazada: El usuario ingresado no existe en la nómina cloud.");
+    var html = "";
 
-    // Validar concordancia de respuesta con el Hash sembrado en la base de datos
-    if (user.securityQuestions && user.securityQuestions.a === AppDB.hash(ans)) {
-        
-        // Ejecutar validación de robustez de contraseña nativa
-        if (typeof App.validatePasswordStrength === "function") {
-            const check = App.validatePasswordStrength(newPass);
-            if (!check.valid) return alert(check.msg);
+    // Verificar si existen logs sembrados en la memoria viva de AppDB
+    if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.logs) {
+        var logsData = AppDB.data.logs;
+
+        // Si es un objeto en vez de un array (común en Firebase), lo convertimos
+        var logsArray = [];
+        if (Array.isArray(logsData)) {
+            logsArray = logsData;
+        } else if (typeof logsData === 'object') {
+            Object.keys(logsData).forEach(function(key) {
+                logsArray.push(logsData[key]);
+            });
         }
 
-        const hashedNewPass = AppDB.hash(newPass);
-        
-        // Actualizar datos, reiniciar intentos fallidos y desbloquear cuenta
-        user.password = hashedNewPass;
-        user.failedAttempts = 0;
-        user.status = "active";
-        user.passwordChangedDate = new Date().toISOString();
-        if (!user.passwordHistory) user.passwordHistory = [];
-        user.passwordHistory.push(hashedNewPass);
+        // Si no hay registros guardados en la nube
+        if (logsArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8; font-size:11px;">No existen trazas de auditoría registradas en este ciclo cloud.</td></tr>`;
+            return;
+        }
 
-        AppDB.save();
-        AppDB.addLog(u, "RECUPERACION_EXITOSA", "El usuario restableció su clave y desbloqueó la cuenta.");
-        
-        document.getElementById("modalOverlay").classList.add("hidden");
-        alert("¡AUTENTICACIÓN INTEGRAL CONCLUIDA! Su contraseña ha sido modificada y su cuenta se encuentra activa.");
+        // Ordenar los logs para mostrar los más recientes arriba (Cronología Inversa)
+        logsArray.sort(function(a, b) {
+            return new Date(b.timestamp || 0) - new Date(a.timestamp || 0);
+        });
+
+        // Iterar y construir las filas semánticas de la tabla
+        logsArray.forEach(function(log) {
+            if (!log) return;
+            
+            // Formatear la fecha ISO a algo legible
+            var dateFormatted = "Sin Registro";
+            if (log.timestamp) {
+                var d = new Date(log.timestamp);
+                dateFormatted = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+            }
+
+            // Aplicar un color sutil al tipo de acción para mejorar la visualización técnica
+            var actionColor = "#1e293b";
+            if (log.action && log.action.includes("ERROR")) actionColor = "#dc2626";
+            if (log.action && log.action.includes("CREAR")) actionColor = "#2563eb";
+            if (log.action && log.action.includes("ELIMINAR")) actionColor = "#b91c1c";
+            if (log.action && log.action.includes("RECUPERACION")) actionColor = "#16a34a";
+
+            html += `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="font-size:11px; padding:6px 4px; color:#64748b; white-space:nowrap;">${dateFormatted}</td>
+                    <td style="font-size:11px; padding:6px 4px; font-weight:700; color:#334155;">@${log.user || 'sistema'}</td>
+                    <td style="font-size:10px; padding:6px 4px;"><span style="font-weight:700; color:${actionColor}; background:#f8fafc; padding:2px 4px; border:1px solid #e2e8f0; border-radius:3px;">${log.action || 'LOG'}</span></td>
+                    <td style="font-size:11px; padding:6px 4px; color:#475569; max-width:250px; overflow:hidden; text-overflow:ellipsis;" title="${log.detail || ''}">${log.detail || 'Sin detalles'}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
     } else {
-        alert("Validación fallida: La respuesta secreta ingresada es incorrecta.");
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:1rem; color:#ef4444; font-size:11px;">⚠️ Error de enlace: El motor AppDB.data.logs no está disponible.</td></tr>`;
     }
-};
-
-// Cargar la inicialización por defecto del sistema al levantar la ventana
-window.onload = function() {
-    App.init();
 };
