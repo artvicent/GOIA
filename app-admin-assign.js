@@ -196,70 +196,84 @@ App.openAssignmentModal = function() {
 App.executeCreateAssignment = function(e) {
     e.preventDefault();
     
-    // Captura limpia de campos de red v2.02
-    const name = document.getElementById("asigName").value.trim();
-    const userTarget = document.getElementById("asigUserTarget").value;
-    const mgmtId = parseInt(document.getElementById("asigMgmt").value);
-    const mailLink = document.getElementById("asigMailLink").value.trim();
-    const meta = parseInt(document.getElementById("asigMeta").value);
-    const reference = document.getElementById("asigRef").value.trim();
-    const durationMin = parseInt(document.getElementById("asigDuration").value);
-    
-    const targetMgmt = (AppDB.data.managements) ? AppDB.data.managements.find(m => m.id === mgmtId) : null;
-    const mgmtName = targetMgmt ? targetMgmt.name : "Gestión General";
-    
-    const now = new Date();
-    const deadline = new Date(now.getTime() + durationMin * 60000);
-    
-    // CONTROL DE SEGURIDAD BACKEND: Evitar inyecciones manuales desde consola F12
-    const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-    const userRole = App.currentUser ? App.currentUser.role : "Analista";
-    const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
-    const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+    try {
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            alert("Error crítico: El motor de base de datos AppDB no responde.");
+            return;
+        }
 
-    if (userLevel < 2 && userTarget !== activeUser) {
-        alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
-        return false;
-    }
+        // Capturar los elementos correspondientes del formulario inyectado
+        const userTarget = document.getElementById("asigUserTarget").value;
+        const mgmtNameSelected = document.getElementById("asigMgmtName").value;
+        const mailLink = document.getElementById("asigMailLink").value.trim();
+        const meta = parseInt(document.getElementById("asigMeta").value) || 0;
+        const reference = document.getElementById("asigRef").value.trim();
+        const durationMin = parseInt(document.getElementById("asigDuration").value) || 30;
+        
+        const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        const userRole = App.currentUser ? App.currentUser.role : "Analista";
+        const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
+        const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
 
-    if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
-        AppDB.data.assignments = [];
-    }
+        // Control estricto de Gobernanza Jerárquica PCI
+        if (userLevel < 2 && userTarget !== activeUser) {
+            alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
+            return false;
+        }
 
-    // Inyectar el registro al vector ordenado con el enlace documental
-    AppDB.data.assignments.push({
-        id: (AppDB.data.assignments.length + 1),
-        name: name,
-        title: name,
-        assignedTo: userTarget, 
-        managementId: mgmtId,
-        managementName: mgmtName,
-        mailUrl: mailLink, // Guardado persistente de la URL de Zoho Mail
-        meta: meta,
-        target: meta,
-        processed: 0,
-        reference: reference,
-        status: "pending",
-        createdAt: now.toISOString(),
-        deadline: deadline.toISOString(),
-        timeStart: now.toISOString(),
-        timeEnd: deadline.toISOString(),
-        duration: durationMin,
-        createdBy: activeUser
-    });
+        // Inicializar arreglos base si se encuentran limpios en Firebase
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
 
-    // Cifrar árbol JSON completo (XOR) y transmitir a Firebase Cloud
-    AppDB.save();
-    AppDB.addLog(activeUser, "CREAR_ASIGNACION", `Tarea: ${name} asignada a @${userTarget} con Zoho Mail.`);
-    
-    document.getElementById("modalOverlay").classList.add("hidden");
-    alert(`¡Éxito! Tarea cargada en la red de la gerencia para @${userTarget.toUpperCase()}.`);
-    
-    // Forzar renderizado dinámico en caliente del Dashboard
-    if (typeof App.renderDashboardData === 'function') {
-        App.renderDashboardData();
-    } else {
-        window.location.reload();
+        // INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
+        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+        AppDB.data.config.ticketCounter = assignedTicketNum;
+
+        const now = new Date();
+        const deadline = new Date(now.getTime() + durationMin * 60000);
+        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + mgmtNameSelected;
+
+        // Inyectar el registro indexado con doble mapeo al array vivo
+        AppDB.data.assignments.push({
+            id: assignedTicketNum,
+            name: ticketTitleFormatted, // Se guarda estructurado automáticamente
+            title: "Ticket #" + assignedTicketNum,
+            assignedTo: userTarget, 
+            managementName: mgmtNameSelected,
+            source: mgmtNameSelected,
+            mailUrl: mailLink, 
+            meta: meta,
+            target: meta,
+            processed: 0,
+            reference: reference,
+            status: "pending",
+            createdAt: now.toISOString(),
+            deadline: deadline.toISOString(),
+            timeStart: now.toISOString(),
+            timeEnd: deadline.toISOString(),
+            duration: durationMin,
+            createdBy: activeUser
+        });
+
+        // Cifrar con el algoritmo XOR y transmitir a Firebase
+        AppDB.save();
+        AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
+        
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
+        
+        // Forzar actualización del Dashboard en caliente
+        if (typeof App.renderDashboardData === 'function') {
+            App.renderDashboardData();
+        } else {
+            window.location.reload();
+        }
+
+    } catch (error) {
+        console.error("Error crítico de transmisión cloud de asignaciones: ", error);
+        alert("Fallo en el transporte digital: " + error.message);
     }
 };
 

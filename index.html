@@ -116,7 +116,7 @@
                             </select>
                         </div>
 
-                        <!-- BOTÓN REPARADO CON POBLACIÓN AUTOMÁTICA DE LISTAS CLOUD -->
+                        <!-- BOTÓN CON SELECCIÓN DE CATÁLOGO Y CORRELATIVO AUTOMÁTICO DE TICKETS -->
 <button id="btnNewAssignment" onclick="(function(){
     document.getElementById('modalOverlay').classList.remove('hidden');
     
@@ -124,12 +124,12 @@
     if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.managements) {
         AppDB.data.managements.forEach(function(m) {
             if (m && m.name) {
-                optsManagements += '<option value=&quot;' + m.id + '&quot;>' + m.name + '</option>';
+                optsManagements += '<option value=&quot;' + m.name + '&quot;>' + m.name + '</option>';
             }
         });
     }
     if (optsManagements === '') {
-        optsManagements = '<option value=&quot;1&quot;>Auditoría de Cuentas</option><option value=&quot;2&quot;>Gestión Operacional de Integridad</option>';
+        optsManagements = '<option value=&quot;Auditoría de Cuentas&quot;>Auditoría de Cuentas</option><option value=&quot;Gestión Operacional de Integridad&quot;>Gestión Operacional de Integridad</option>';
     }
 
     let optsUsers = '';
@@ -149,23 +149,25 @@
         optsUsers += '<option value=&quot;' + activeUser + '&quot;>@' + activeUser + ' (Mi Propio Perfil)</option>';
     }
 
+    // Calcular visualmente el próximo número de ticket basándose en el contador de la nube
+    const nextTicketNum = (typeof AppDB !== 'undefined' && AppDB.data?.config?.ticketCounter) ? (parseInt(AppDB.data.config.ticketCounter) + 1) : 1;
+
     document.getElementById('modalContent').innerHTML = `
         <div class='modal-inner-header'>
-            <h3>Asignar Nueva Actividad / Ítem</h3>
+            <h3>Generar Asignación de Ticket</h3>
             <button onclick=&quot;document.getElementById('modalOverlay').classList.add('hidden')&quot;>&times;</button>
         </div>
         <form id='fAssign' onsubmit='App.executeCreateAssignment(event)' class='admin-config-card'>
-            <div class='form-group'>
-                <label>Nombre de la Actividad / Tarea</label>
-                <input type='text' id='asigName' required class='form-control' placeholder='Ej: Control de Lotes Diarios'>
+            <div class='form-group ticket-info-badge' style='margin-bottom: 12px; padding: 6px; background: #f8fafc; border-left: 4px solid #2563eb;'>
+                <label style='font-weight: bold; color: #1e3a8a;'>Próximo Correlativo Cloud: <span style='color: #2563eb;'>#\${nextTicketNum}</span></label>
             </div>
-            <div class='form-group mt-2'>
+            <div class='form-group'>
                 <label>Colaborador Destinatario (Asignado A)</label>
                 <select id='asigUserTarget' class='form-control full-width' required>` + optsUsers + `</select>
             </div>
             <div class='form-group mt-2'>
-                <label>Catálogo de Gestión Asociado</label>
-                <select id='asigMgmt' class='form-control full-width'>` + optsManagements + `</select>
+                <label>Gestión a Realizar (Catálogo)</label>
+                <select id='asigMgmtName' class='form-control full-width' required>` + optsManagements + `</select>
             </div>
             <div class='form-group mt-2'>
                 <label>Enlace de Correo Obligatorio (URL Zoho Mail)</label>
@@ -173,18 +175,18 @@
             </div>
             <div class='form-group mt-2'>
                 <label>Meta Numérica / Carga de Trabajo</label>
-                <input type='number' id='asigMeta' required class='form-control' min='1' placeholder='Ej: 100'>
+                <input type='number' id='asigMeta' required class='form-control' min='1' placeholder='Ej: 150'>
             </div>
             <div class='form-group mt-2'>
                 <label>Origen / Referencia de Auditoría</label>
                 <input type='text' id='asigRef' required class='form-control' placeholder='Ej: REF-2026-A'>
             </div>
             <div class='form-group mt-2'>
-                <label>Tiempo Límite Máximo de ANS (Minutos)</label>
-                <input type='number' id='asigDuration' required class='form-control' min='5' placeholder='Ej: 60'>
+                <label>Tiempo Estimado (Minutos)</label>
+                <input type='number' id='asigDuration' required class='form-control' min='5' placeholder='Ej: 30'>
             </div>
             <div class='modal-action-row-footer'>
-                <button type='submit' class='btn-primary-submit'>Cargar Asignación</button>
+                <button type='submit' class='btn-primary-submit'>Emitir Ticket</button>
                 <button type='button' onclick=&quot;document.getElementById('modalOverlay').classList.add('hidden')&quot; class='btn-secondary-cancel'>Cancelar</button>
             </div>
         </form>`;
