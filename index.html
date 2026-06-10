@@ -488,6 +488,85 @@
             document.getElementById("modalOverlay").classList.add("hidden");
             alert("Avatar de sesión actualizado: " + emoji);
         };
+
+        /* ================= PROTOCOLO CRÍTICO: REINICIO DE BASE DE DATOS ================= */
+        App.handleFactoryResetCloud = function() {
+        // 1. Validar que el operador sea el administrador maestro de fábrica
+        if (!App.currentUser || App.currentUser.username !== "admin") {
+            alert("🚨 Operación denegada: Privilegios insuficientes. Solo la cuenta 'admin' maestra puede ejecutar esta acción.");
+            return;
+        }
+
+        // 2. Solicitar primera confirmación de seguridad corporativa
+        if (!confirm("⚠️ ¡ADVERTENCIA CRÍTICA! Está a punto de purgar y vaciar por completo el servidor en la nube de Firebase. ¿Desea continuar?")) {
+            return;
+        }
+
+        // 3. Solicitar segunda confirmación mediante la palabra clave (Token)
+        var token = prompt("Para confirmar la purga absoluta del servidor, digite la palabra token 'REINICIAR' en mayúsculas:");
+
+        if (token !== "REINICIAR") {
+            alert("❌ Token incorrecto. Mantenimiento crítico cancelado por seguridad.");
+            return;
+        }
+
+        try {
+            if (typeof AppDB === 'undefined') {
+                alert("Error: El motor de base de datos AppDB no está disponible.");
+                return;
+            }
+
+            // 4. ESTRUCTURA DE FÁBRICA LIMPIA Y SANEADA
+            // Vaciamos todos los nodos operativos pero REINYECTAMOS las credenciales maestras cifradas
+            AppDB.data = {
+                config: {
+                    title: "Gerencia General de Adquirencia",
+                    ticketCounter: 0,
+                    lastReset: new Date().toISOString()
+                },
+                roles: {
+                    "Gerente": { lvl: 4, perms: ["crear", "modificar", "eliminar", "ejecutar"], crear: true, modificar: true, eliminar: true, ejecutar: true },
+                    "Administrador": { lvl: 3, perms: ["crear", "modificar", "eliminar", "ejecutar"], crear: true, modificar: true, eliminar: true, ejecutar: true },
+                    "Coordinador": { lvl: 2, perms: ["modificar", "ejecutar"], crear: false, modificar: true, eliminar: false, ejecutar: true },
+                    "Analista": { lvl: 1, perms: ["ejecutar"], crear: false, modificar: false, eliminar: false, ejecutar: true }
+                },
+                users: {
+                    "admin": {
+                        username: "admin",
+                        names: "Administrador",
+                        lastnames: "De Fábrica",
+                        password: AppDB.hash("Admin2026*"), // Contraseña inicial del manual
+                        role: "Administrador",
+                        status: "active",
+                        failedAttempts: 0,
+                        gerencia: "Gerencia General de Adquirencia"
+                    }
+                },
+                managements: [
+                    { id: 1, name: "Auditoría de Cuentas" },
+                    { id: 2, name: "Gestión Operacional de Integridad" }
+                ],
+                assignments: {},
+                logs: [] // El historial de logs inicia limpio
+            };
+
+            // 5. Registrar la traza inicial en el nuevo historial
+            AppDB.addLog("admin", "REINICIO_FABRICA", "La base de datos cloud fue purgada y restablecida a sus valores originales de fábrica.");
+
+            // 6. TRANSMISIÓN DIGITAL CIFRADA EN CALIENTE
+            // Guarda localmente y sube la estructura limpia con algoritmo XOR a Firebase
+            AppDB.save();
+
+            alert("🎯 ¡ÉXITO ABSOLUTO! La nube se ha purgado en un milisegundo y el sistema se ha reiniciado limpio.");
+            
+            // 7. Forzar recarga de la plataforma para aplicar cambios visuales
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Error crítico durante el formateo cloud:", error);
+            alert("❌ Falla en el transporte digital: " + error.message);
+        }
+    };
     }, 1500);
     </script>
 </body>
