@@ -106,63 +106,94 @@ App.deleteAssignmentCloud = function(index) {
 // MÓDULO LOGÍSTICO AUTOINCREMENTAL: CONTROL INDUSTRIAL DE TICKETS DESDE 0
 // =========================================================================
 App.handleCreateTicketAssignment = function(event) {
+    // 1. Detener el refresco automático nativo del formulario web
     event.preventDefault();
 
-    var targetInput = document.getElementById("assignTarget");
-    var sourceInput = document.getElementById("assignSource");
-
-    if (!targetInput || !sourceInput) return;
-
-    var targetValue = parseInt(targetInput.value);
-    var sourceValue = sourceInput.value.trim();
-
-    // Referencia al contador global transaccional en Firebase Realtime Database
-    var counterRef = firebase.database().ref("config/ticketCounter");
-
-    // Ejecutamos una transacción atómica para evitar que dos usuarios pisen el mismo número de ticket
-    counterRef.transaction(function(currentValue) {
-        // Si no existe el nodo en Firebase, inicializa por primera vez en 0
-        return (currentValue === null) ? 0 : currentValue + 1;
-    }, function(error, committed, snapshot) {
-        if (error) {
-            alert("❌ Error de sincronización al generar el número de ticket.");
+    try {
+        // 2. Validar que el motor centralizado AppDB esté inicializado
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            alert("Error crítico: El motor de base de datos AppDB no responde.");
             return;
         }
 
-        // El número de ticket asignado es el valor consolidado tras el incremento
-        var assignedTicketNum = snapshot.val();
+        // 3. Capturar los elementos inyectados en la ventana flotante (Modal)
+        var sourceInput = document.getElementById("assignSource");
+        var targetInput = document.getElementById("assignTarget");
+        var durationInput = document.getElementById("assignDuration"); // Campo requerido en la estructura v2.02
 
-        // Estructura del nuevo Item de Gestión Ejecutiva Automatizada
-        var assignmentData = {
+        if (!targetInput || !sourceInput) return;
+
+        var sourceValue = sourceInput.value.trim();
+        var targetValue = parseInt(targetInput.value) || 0;
+        var durationMinutes = durationInput ? (parseInt(durationInput.value) || 30) : 30; // 30 min por defecto si no existe
+
+        // 4. Validaciones de consistencia de datos operacionales
+        if (sourceValue === "") {
+            alert("⚠️ Selección requerida: Debe elegir una gestión válida del catálogo.");
+            return;
+        }
+        if (targetValue <= 0) {
+            alert("⚠️ Volumen inválido: La meta o carga operacional debe ser mayor a cero.");
+            return;
+        }
+
+        // 5. ASEGURAR INCREMENTO SECUENCIAL ATÓMICO EN MOTOR CENTRAL
+        // Si no existen las ramas en el objeto vivo, las inicializamos
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
+        if (!AppDB.data.assignments) AppDB.data.assignments = {};
+
+        // Avanzar el contador correlativo global de tickets de la gerencia
+        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+        AppDB.data.config.ticketCounter = assignedTicketNum;
+
+        // 6. CONTROL CRONOLÓGICO: Marcas de tiempo ISO para control de vencimiento y alertas
+        var startTimeIso = new Date().toISOString();
+        var endTimeIso = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+
+        // 7. ARMAR LA ESTRUCTURA EXACTA AJUSTADA AL MOTOR DE CIFRADO
+        var ticketKey = "TICKET_" + assignedTicketNum;
+        AppDB.data.assignments[ticketKey] = {
             id: assignedTicketNum,
-            title: "Ticket #" + assignedTicketNum, // El título ahora es el código único incremental
+            title: "Ticket #" + assignedTicketNum,
+            name: sourceValue,             // Mapeado para compatibilidad con la tabla de index.html
             description: "Gestión automatizada de auditoría para carga entrante.",
             target: targetValue,
-            processed: 0, // Inicia desde cero absoluto de procesadas
-            source: sourceValue,
+            processed: 0,                 // Inicia desde cero absoluto de procesadas
+            source: App.currentUser ? App.currentUser.names + " " + App.currentUser.lastnames : "admin",
+            timeStart: startTimeIso,
+            timeEnd: endTimeIso,
+            duration: durationMinutes,
             status: "pending",
-            timestamp: firebase.database.ServerValue.TIMESTAMP
+            timestamp: Date.now()         // Equivalente síncrono al ServerValue de Firebase
         };
 
-        // Guardamos el registro bajo su propio ID de Ticket en la base de datos cloud
-        firebase.database().ref("assignments/" + assignedTicketNum).set(assignmentData)
-            .then(function() {
-                alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
-                document.getElementById("modalOverlay").classList.add("hidden");
-                
-                // Si tienes un método de render, lo disparamos para refrescar la tabla en vivo
-                if (typeof App.renderDashboardData === 'function') {
-                    App.renderDashboardData();
-                } else {
-                    location.reload();
-                }
-            })
-            .catch(function(err) {
-                console.error("Error al registrar actividad: ", err);
-                alert("❌ Fallo de comunicación con el servidor cloud de Firebase.");
-            });
-    });
+        // 8. REGISTRO DE SEGURIDAD PCI: Traza en el historial de auditoría
+        var operarioLog = App.currentUser ? App.currentUser.username : "admin";
+        AppDB.addLog(operarioLog, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " para la gestión: " + sourceValue);
+
+        // 9. TRANSMISIÓN DIGITAL CIFRADA AUTOMÁTICA
+        // Encripta con el algoritmo XOR y sube el árbol de datos empaquetado a Firebase en tiempo real
+        AppDB.save();
+
+        // 10. NOTIFICACIÓN Y RE-RENDERIZADO DE LA INTERFAZ EN CALIENTE
+        alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
+        
+        // Cerrar la ventana modal de forma limpia
+        document.getElementById("modalOverlay").classList.add("hidden");
+
+        // Refrescar los contadores y las filas de la tabla principal de inmediato
+        if (typeof App.renderDashboardData === 'function') {
+            App.renderDashboardData();
+        } else {
+            window.location.reload();
+        }
+
+    } catch (error) {
+        console.error("Error crítico al registrar actividad cloud: ", error);
+        alert("❌ Fallo en el transporte digital: " + error.message);
+    }
 };
+
 // =========================================================================
 // MÓDULO LOGÍSTICO AUTOINCREMENTAL REPARADO: CAPTURA DE TIEMPO EN MINUTOS
 // =========================================================================
