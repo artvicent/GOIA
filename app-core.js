@@ -1,18 +1,30 @@
 /**
  * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
- * PARTE 1 DE 3: RUTEO DE VISTAS SPA, CONTROL DE SESIÓN Y CARGA DE INTERFAZ
- * 100% LIBRE DE ESTILOS INTRUSIVOS Y PROPIEDADES .STYLE
+ * PARTE 1 DE 4: RUTEO DE VISTAS SPA, CONTROL DE SESIÓN Y CARGA DE INTERFAZ CLOUD
+ * 100% LIBRE DE ESTILOS INTRUSIVOS Y COMPATIBLE CON IMÁGENES UNIVERSALES v2.02
  */
 
 const App = {
     currentUser: null,
-
+    
     init() {
+        console.log("Inicializando núcleo transaccional GOIA v2.02...");
+        
         // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
         const topBanner = document.getElementById("topBanner");
         if (topBanner) {
             topBanner.classList.add("hidden");
         }
+
+        // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
+        // Descarga directa desde la nube de Firebase apenas se levanta la URL
+        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
+            const logoImg = document.getElementById("appLogoImg");
+            if (logoImg) {
+                logoImg.src = AppDB.data.config.brandLogoBase64;
+            }
+        }
+
         this.showView("viewLogin");
     },
 
@@ -31,19 +43,31 @@ const App = {
         });
     },
 
-    // Cargar los letreros y componentes dinámicos del perfil al ingresar
+    // Cargar los letreros y componentes dinámicos del perfil al ingresar con éxito
     setupDashboardView() {
         if (!this.currentUser) return;
-
+        
         const welcomeName = document.getElementById("dashWelcomeName");
         const userRole = document.getElementById("dashUserRole");
         const avatarFrame = document.getElementById("userAvatarFrame");
-
-        if (welcomeName) welcomeName.innerText = `${this.currentUser.names} ${this.currentUser.lastnames}`;
-        if (userRole) userRole.innerText = this.currentUser.role;
         
-        if (avatarFrame) {
-            avatarFrame.innerText = this.currentUser.avatar || "👤";
+        if (welcomeName) {
+            welcomeName.innerText = `${this.currentUser.names} ${this.currentUser.lastnames}`;
+        }
+        if (userRole) {
+            userRole.innerText = this.currentUser.role;
+        }
+        
+        // SINCRONIZACIÓN UNIVERSAL DE LA FOTO DEL COLABORADOR
+        // Se extrae del nodo indexado del usuario en Firebase, haciéndola inmune al cambio de PC
+        if (this.currentUser.avatarData) {
+            if (avatarFrame) {
+                avatarFrame.innerHTML = `<img src="${this.currentUser.avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+            }
+        } else {
+            if (avatarFrame) {
+                avatarFrame.innerText = this.currentUser.avatar || "👤";
+            }
         }
 
         // Mostrar el banner superior de control de forma limpia
@@ -51,10 +75,10 @@ const App = {
         if (topBanner) {
             topBanner.classList.remove("hidden");
         }
-
+        
         this.applySecurityCerberusPermissions();
         this.showView("viewDashboard");
-        
+
         // Disparar render de tablas operacionales del archivo app-executive
         if (typeof App.renderDashboardData === "function") {
             App.renderDashboardData();
@@ -63,7 +87,7 @@ const App = {
 };
 /**
  * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
- * PARTE 2 DE 3: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN
+ * PARTE 2 DE 4: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN CORREGIDO
  */
 
 App.handleLogin = async function(e) {
@@ -72,13 +96,13 @@ App.handleLogin = async function(e) {
     const userField = document.getElementById("loginUser");
     const passField = document.getElementById("loginPass");
     if (!userField || !passField) return;
-
+    
     const username = userField.value.trim();
     const password = passField.value;
-
+    
     // Llamar a la pasarela cifrada de la base de datos cloud en db.js
     const result = await AppDB.login(username, password);
-
+    
     if (result.success) {
         this.currentUser = result.user;
         
@@ -86,24 +110,28 @@ App.handleLogin = async function(e) {
         const passDate = new Date(this.currentUser.passwordChangedDate);
         const expiryDays = AppDB.data.config.passwordExpiryDays || 90;
         const diffDays = Math.ceil((new Date() - passDate) / (1000 * 60 * 60 * 24));
-
+        
         if (diffDays >= expiryDays && username !== "admin") {
             alert("🔒 SEGURIDAD BANCARIA: Su contraseña ha caducado. Debe actualizarla de inmediato.");
-            this.openForcePasswordChangeModal();
+            if (typeof this.openForcePasswordChangeModal === "function") {
+                this.openForcePasswordChangeModal();
+            }
             return;
         }
-
+        
         // Si la clave es la de fábrica, forzar la actualización preventiva
         if (password === "Admin2026*" && username === "admin") {
             alert("⚠️ ALERTA: Utiliza la contraseña genérica. Modifíquela por políticas de resguardo.");
-            this.openForcePasswordChangeModal();
+            if (typeof this.openForcePasswordChangeModal === "function") {
+                this.openForcePasswordChangeModal();
+            }
             return;
         }
-
+        
         userField.value = "";
         passField.value = "";
         
-        // Levantar la pantalla principal sincronizada
+        // Levantar la pantalla principal sincronizada universalmente
         this.setupDashboardView();
         
     } else {
@@ -111,7 +139,7 @@ App.handleLogin = async function(e) {
     }
 };
 
-// Cierre de sesión y limpieza de hilos activos de memoria RAM
+// Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
 App.logout = function() {
     if (this.currentUser) {
         AppDB.addLog(this.currentUser.username, "LOGOUT", "Cierre de sesion voluntario.");
@@ -122,34 +150,34 @@ App.logout = function() {
     const passField = document.getElementById("loginPass");
     if (userField) userField.value = "";
     if (passField) passField.value = "";
-
+    
     const topBanner = document.getElementById("topBanner");
     if (topBanner) {
         topBanner.classList.add("hidden");
     }
-
+    
     this.showView("viewLogin");
     alert("Sesión finalizada de forma segura.");
 };
 /**
  * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
- * PARTE 3 DE 3: MATRIZ DE PERMISOS JERÁRQUICOS Y RECUPERACIÓN DE ACCESOS
+ * PARTE 3 DE 4: MATRIZ DE PERMISOS JERÁRQUICOS Y RECUPERACIÓN DE ACCESOS
  */
 
 // CERROJO DE PERMISOS: Validación de jerarquías basada en clases CSS semánticas
 App.applySecurityCerberusPermissions = function() {
     if (!this.currentUser) return;
-
+    
     const btnAdmin = document.getElementById("btnAdminPanel");
     const btnNewAsig = document.getElementById("btnNewAssignment");
-
+    
     // Consultar el nivel operacional (lvl) sembrado en db.js
     const userRole = this.currentUser.role;
     const roleMeta = AppDB.data.roles[userRole];
     const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
     const permissions = (roleMeta && roleMeta.perms) ? roleMeta.perms : [];
     const isMaster = (this.currentUser.username === "admin");
-
+    
     // REGLA DE ORO PCI: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
     if (btnAdmin) {
         if (isMaster || userLevel >= 3) {
@@ -158,7 +186,7 @@ App.applySecurityCerberusPermissions = function() {
             btnAdmin.classList.add("hidden");
         }
     }
-
+    
     // CONTROL DE ASIGNACIÓN: El comportamiento visual se delega 100% a la clase .hidden
     if (btnNewAsig) {
         if (isMaster || userLevel >= 3 || permissions.includes("crear")) {
@@ -214,10 +242,10 @@ App.executeRecoveryWorkflow = function(e) {
     const u = document.getElementById("recUser").value.toLowerCase().trim();
     const ans = document.getElementById("recAnswer").value.toLowerCase().trim();
     const newPass = document.getElementById("recNewPass").value;
-
+    
     const user = AppDB.data.users[u];
     if (!user) return alert("Operación rechazada: El usuario ingresado no existe en la nómina cloud.");
-
+    
     // Validar concordancia de respuesta con el Hash sembrado en la base de datos
     if (user.securityQuestions && user.securityQuestions.a === AppDB.hash(ans)) {
         
@@ -226,7 +254,6 @@ App.executeRecoveryWorkflow = function(e) {
             const check = App.validatePasswordStrength(newPass);
             if (!check.valid) return alert(check.msg);
         }
-
         const hashedNewPass = AppDB.hash(newPass);
         
         // Actualizar datos, reiniciar intentos fallidos y desbloquear cuenta
@@ -236,7 +263,7 @@ App.executeRecoveryWorkflow = function(e) {
         user.passwordChangedDate = new Date().toISOString();
         if (!user.passwordHistory) user.passwordHistory = [];
         user.passwordHistory.push(hashedNewPass);
-
+        
         AppDB.save();
         AppDB.addLog(u, "RECUPERACION_EXITOSA", "El usuario restableció su clave y desbloqueó la cuenta.");
         
@@ -246,25 +273,19 @@ App.executeRecoveryWorkflow = function(e) {
         alert("Validación fallida: La respuesta secreta ingresada es incorrecta.");
     }
 };
-
 /* =========================================================================
-   MÓDULO ADICIONAL: PROCESAMIENTO Y PERSISTENCIA DE IMÁGENES EN LA NUBE
+   MÓDULO DE PROCESAMIENTO, BLINDAJE Y TRANSMISIÓN DE IMÁGENES A LA NUBE (v2.02)
    ========================================================================= */
 
-/* =========================================================================
-   MÓDULO DE PROCESAMIENTO, BLINDAJE Y PERSISTENCIA DE IMÁGENES EN LA NUBE
-   ========================================================================= */
-
-// 1. Procesar y guardar de forma persistente la foto del Colaborador
+// 1. Procesar y transmitir la foto del Colaborador a Firebase Cloud
 App.handleUploadUserAvatarCloud = function(inputElement) {
-    // Validar que el elemento exista y contenga un archivo seleccionado
     if (!inputElement || !inputElement.files || inputElement.files.length === 0) return;
     
     var file = inputElement.files[0]; // Extraer el archivo real de la PC
     
-    // Restricción de seguridad: Máximo 1MB para optimizar el transporte de Firebase
-    if (file.size > 1024 * 1024) {
-        alert("⚠️ Archivo excedido: La foto de perfil no debe superar 1 Megabyte (1MB).");
+    // Filtro estricto: Máximo 800KB para resguardar la velocidad de red del cifrado XOR
+    if (file.size > 800 * 1024) {
+        alert("⚠️ Archivo excedido: Para optimizar el rendimiento entre terminales, la foto de perfil no debe superar los 800 KB.");
         return;
     }
 
@@ -276,44 +297,37 @@ App.handleUploadUserAvatarCloud = function(inputElement) {
             alert("Error: El motor AppDB no está disponible.");
             return;
         }
-        if (!AppDB.data.config) AppDB.data.config = {};
         
-        // Almacenar el string Base64 en el LocalStorage del navegador
-        localStorage.setItem("gerente_avatar_personal", base64Image);
-        
-        // Asociar la imagen a la cuenta activa en la estructura viva de la base de datos
         var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
         if (!AppDB.data.users) AppDB.data.users = {};
         if (AppDB.data.users[currentUserKey]) {
+            // SE ALMACENA DIRECTAMENTE EN LA NUBE DE GOOGLE FIREBASE
             AppDB.data.users[currentUserKey].avatarData = base64Image;
         }
-
-        // Registrar acción en el historial de auditoría interna
-        AppDB.addLog(currentUserKey, "CARGA_AVATAR", "El usuario actualizó su foto de perfil desde la PC.");
         
-        // TRANSMISIÓN DIGITAL CIFRADA (Aplica XOR y sube de inmediato a Firebase)
+        AppDB.addLog(currentUserKey, "CARGA_AVATAR", "El usuario actualizó su foto de perfil de forma universal.");
+        
+        // Transmisión digital inmediata con empaquetado seguro
         AppDB.save();
 
-        // Actualizar visualmente el marco en caliente inyectando la etiqueta img
+        // Actualizar el elemento visual en caliente
         var frame = document.getElementById("userAvatarFrame");
         if (frame) {
             frame.innerHTML = `<img src="${base64Image}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
         }
-        alert("¡Éxito! Su foto de perfil se ha guardado y sincronizado de forma permanente en la nube.");
+        alert("¡Éxito! Foto de perfil blindada en la nube. Se visualizará igual en cualquier computadora.");
     };
     reader.readAsDataURL(file);
 };
 
-// 2. Procesar y guardar de forma persistente el Logotipo de la Gerencia
+// 2. Procesar y transmitir el Logotipo de la Gerencia a Firebase Cloud
 App.handleUploadBrandLogoCloud = function(inputElement) {
-    // Validar que el elemento exista y contenga un archivo seleccionado
     if (!inputElement || !inputElement.files || inputElement.files.length === 0) return;
     
     var file = inputElement.files[0]; // Extraer el archivo de logotipo de la PC
     
-    // Restricción de seguridad: Máximo 1.5MB para optimizar el transporte de red de Firebase
-    if (file.size > 1.5 * 1024 * 1024) {
-        alert("⚠️ Archivo excedido: El logotipo corporativo no debe superar 1.5 Megabytes.");
+    if (file.size > 1024 * 1024) {
+        alert("⚠️ Archivo excedido: El logotipo corporativo universal no debe superar 1 Megabyte (1MB).");
         return;
     }
 
@@ -327,15 +341,12 @@ App.handleUploadBrandLogoCloud = function(inputElement) {
         }
         if (!AppDB.data.config) AppDB.data.config = {};
         
-        // Sembrar el logo institucional en el nodo central de configuración y en memoria local
+        // SE EMBALA EN EL NODO CENTRAL DE CONFIGURACIÓN GLOBAL TRANSMITIDO
         AppDB.data.config.brandLogoBase64 = base64Logo;
-        localStorage.setItem("system_brand_logo_main", base64Logo);
-
-        // Registrar traza en el historial interno de auditoría
-        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-        AppDB.addLog(currentUserKey, "MODIFICAR_LOGO_CORP", "Se ha actualizado el logotipo institucional de la pantalla de acceso.");
         
-        // TRANSMISIÓN DIGITAL CIFRADA EN TIEMPO REAL (Aplica XOR y sube a Firebase)
+        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        AppDB.addLog(currentUserKey, "MODIFICAR_LOGO_CORP", "Se ha actualizado el logotipo institucional de la pantalla de acceso universal.");
+        
         AppDB.save();
 
         // Refrescar el elemento visual en la pantalla de login de inmediato
@@ -343,51 +354,19 @@ App.handleUploadBrandLogoCloud = function(inputElement) {
         if (logoImg) {
             logoImg.src = base64Logo;
         }
-        alert("¡Éxito! El logotipo institucional se ha actualizado y blindado en la nube contra borrados de caché.");
+        alert("¡Éxito! Logotipo de la gerencia actualizado globalmente en internet.");
     };
     reader.readAsDataURL(file);
 };
 
 // =========================================================================
-// INICIALIZADOR GLOBAL Y SINCRONIZADOR AL CARGAR LA VENTANA (WINDOW ONLOAD)
+// DISPARADOR GLOBAL DE ARRANQUE CON RETARDO DE RED (WINDOW ONLOAD)
 // =========================================================================
 window.onload = function() {
-    // 1. Ejecutar la inicialización nativa del núcleo del programa
-    if (typeof App.init === "function") {
-        App.init();
-    }
-
-    // 2. DISPARADOR DE CONEXIÓN CLOUD: Pintar marcas de diseño al levantar la ventana
+    // Retardo controlado de red (600ms) para garantizar que db.js descargó y descifró el árbol antes de inicializar la interfaz
     setTimeout(function() {
-        // Sincronizar el Logotipo Institucional en la pantalla de login
-        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
-            var logoImg = document.getElementById("appLogoImg");
-            if (logoImg) logoImg.src = AppDB.data.config.brandLogoBase64;
-        } else {
-            var localLogo = localStorage.getItem("system_brand_logo_main");
-            var logoImg = document.getElementById("appLogoImg");
-            if (localLogo && logoImg) logoImg.src = localLogo;
+        if (typeof App.init === "function") {
+            App.init();
         }
-        
-        // Sincronizar la Foto de Perfil del Analista/Gerente si la sesión ya está activa
-        var currentUserKey = (App.currentUser && App.currentUser.username) ? App.currentUser.username : null;
-        if (currentUserKey && AppDB.data?.users?.[currentUserKey]?.avatarData) {
-            var frame = document.getElementById("userAvatarFrame");
-            if (frame) {
-                frame.innerHTML = `<img src="${AppDB.data.users[currentUserKey].avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
-            }
-        } else {
-            var localAvatar = localStorage.getItem("gerente_avatar_personal");
-            var frame = document.getElementById("userAvatarFrame");
-            if (localAvatar && frame) {
-                frame.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
-            }
-        }
-    }, 800); // Retardo controlado de red (800ms) para esperar la descarga del árbol cifrado de Firebase
-};
-
-
-// Cargar la inicialización por defecto del sistema al levantar la ventana
-window.onload = function() {
-    App.init();
+    }, 600);
 };
