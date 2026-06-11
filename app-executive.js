@@ -535,3 +535,40 @@ App.handleCloseNotepadSafely = function() {
     // Guardado de consolidación final
     AppDB.save();
 };
+/* =========================================================================
+   MÓDULO: MODAL INFORMATIVO ACERCA DE (GOIA v2.02)
+   ========================================================================= */
+App.openAboutModal = function() {
+    // 1. Desplegar la capa flotante del esqueleto SPA
+    document.getElementById("modalOverlay").classList.remove("hidden");
+    
+    // 2. Inyectar la ficha técnica oficial del manual de sistema
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>ℹ️ Ficha Técnica del Sistema</h3>
+            <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-card" style="padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; font-size: 16px; color: #0f172a; font-weight: 800;">GOIA v2.02</h4>
+                <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.5px;">Edición Cloud Seguro</p>
+            </div>
+            
+            <div style="font-size: 12px; color: #334155; line-height: 1.5; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <p style="margin: 4px 0;"><b>Producto:</b> Gestión Operacional de Integridad de Adquirencia</p>
+                <p style="margin: 4px 0;"><b>Gerencia:</b> Gerencia General de Adquirencia</p>
+                <p style="margin: 4px 0;"><b>Entorno de Red:</b> Producción Web (Protocolo Seguro HTTPS)</p>
+                <p style="margin: 4px 0;"><b>Última Actualización:</b> Junio 2026</p>
+            </div>
+            
+            <div style="margin-top: 12px; padding: 10px; background: #f8fafc; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 11px; color: #475569; text-align: justify;">
+                Esta plataforma web automatiza, controla y audita en tiempo real las metas de producción, cargas operacionales, asignaciones y catálogos de gestiones corporativas de forma centralizada con Firebase Realtime Database de Google, garantizando un entorno sandbox inmune a borrados locales de historial o cookies.
+            </div>
+            
+            <div class="modal-action-row-footer" style="margin-top: 15px;">
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold;">Entendido / Cerrar</button>
+            </div>
+        </div>
+    `;
+};
