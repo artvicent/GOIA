@@ -91,10 +91,17 @@
             </div>
 
             <!-- CONTADORES DE ESTADO GENERAL EN TIEMPO REAL -->
+                        <!-- CONTADORES DE ESTADO EN TIEMPO REAL REESTRUCTURADOS (v2.02) -->
             <div class="grid-counters">
+                <!-- CONTADOR GLOBAL: Rol Supervisor ve el total del equipo / Rol Analista ve su total general -->
                 <div class="counter-card bg-total">
-                    <p>Total Realizadas</p>
+                    <p id="labelTotalRealizadas">Gestiones Procesadas</p>
                     <p id="countTotal" class="counter-num">0</p>
+                </div>
+                <!-- NUEVO CONTADOR INDIVIDUAL: Visible para Coordinadores, Gerentes y Administradores -->
+                <div id="cardIndividualProduction" class="counter-card bg-individual hidden">
+                    <p>Mis Gestiones Propias</p>
+                    <p id="countIndividual" class="counter-num">0</p>
                 </div>
                 <div class="counter-card bg-warning">
                     <p>Por Vencer (&lt; 30 min)</p>
@@ -109,6 +116,7 @@
                     <p id="countPerformance" class="counter-num">0%</p>
                 </div>
             </div>
+
 
             <div class="dashboard-split-layout">
                 <!-- TABLA DE GESTIONES PRINCIPAL -->

@@ -15,23 +15,32 @@ App.renderDashboardData = function() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
     
-    let totalAssignments = 0;
+    // Captura estricta de identidades y jerarquías desde app-core.js
+    const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+    const userRole = App.currentUser ? App.currentUser.role : "Analista";
+    const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
+    const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+    const isSupervisor = (activeUsername === "admin" || userLevel >= 2); // Admin, Gerente, Coordinador
+
+    let globalProcessedSum = 0;     // Suma de todas las gestiones numéricas del equipo o individuales
+    let individualProcessedSum = 0; // Suma exclusiva de las gestiones procesadas por el usuario activo
     let totalWarning = 0;
     let totalDanger = 0;
-    let processedTotalCount = 0;
     let metaTotalCount = 0;
+    let processedTotalCount = 0;
     let monitorHtml = "";
     const now = new Date();
 
-    // Convertir a array si Firebase lo descarga indexado para evitar cuelgues visuales
     var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-    // Filtrar y evaluar las actividades vigentes del ciclo operacional
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
-        // Filtrado por ciclo/mes
+        // FILTRADO DE GOBERNANZA: El analista de nivel 1 solo ve sus propios registros en la tabla
+        if (!isSupervisor && item.assignedTo !== activeUsername) return;
+
+        // Filtrado de calendario mensual
         if (currentMonthFilter !== "all" && currentMonthFilter !== "current") {
             const itemDate = new Date(item.createdAt || item.timestamp);
             if ((itemDate.getMonth() + 1).toString() !== currentMonthFilter) return;
@@ -41,9 +50,23 @@ App.renderDashboardData = function() {
         let statusClass = "pending";
         let cardAlertClass = "bg-total";
 
-        // Mapeo unificado de variables numéricas para el cálculo neto de indicadores
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = parseInt(item.processed || 0);
+        const taskOwner = item.assignedTo || item.createdBy || "";
+
+        // CONTROL DE SUMATORIAS NUMÉRICAS SEGÚN ROL (CAMBIO SOLICITADO)
+        if (isSupervisor) {
+            // Supervisores ven la suma absoluta de todo el equipo en la primera caja
+            globalProcessedSum += itemProcessed;
+            
+            // Y acumulan de forma aislada solo lo que ellos mismos procesaron
+            if (taskOwner === activeUsername) {
+                individualProcessedSum += itemProcessed;
+            }
+        } else {
+            // El analista ve únicamente la suma de sus gestiones individuales
+            globalProcessedSum += itemProcessed;
+        }
 
         if (item.status === "completed" || itemProcessed >= itemMeta && itemMeta > 0) {
             timeRemainingStr = " Culminada";
@@ -64,7 +87,7 @@ App.renderDashboardData = function() {
                 cardAlertClass = "bg-danger";
                 totalDanger++;
             } else if (diffMin <= 30) {
-                timeRemainingStr = ` ${diffMin} min restante(s)`;
+                timeRemainingStr = ` ${diffMin} min`;
                 statusClass = "warning";
                 cardAlertClass = "bg-warning";
                 totalWarning++;
@@ -77,17 +100,18 @@ App.renderDashboardData = function() {
         }
 
         if (currentStatusFilter !== "all" && currentStatusFilter !== statusClass) return;
-        totalAssignments++;
 
-        // Renderizado dinámico del botón de Zoho Mail si el ticket posee link asociado
         var mailButtonHtml = item.mailUrl ? `
             <a href="${item.mailUrl}" target="_blank" class="btn-secondary" style="padding:4px 8px; margin-right:4px; text-decoration:none; font-size:11px; font-weight:bold; background:#f0fdf4; border:1px solid #16a34a; color:#16a34a; border-radius:4px;">✉️ Zoho Mail</a>
         ` : "";
 
+        // Mostrar quién es el dueño de la tarea en la fila solo si el usuario es supervisor
+        const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${taskOwner}</small>` : "";
+
         let tr = document.createElement("tr");
         tr.className = `status-row-${statusClass}`;
         tr.innerHTML = `
-            <td><b>${item.name || item.title || 'Ticket Express'}</b><br><small class="text-muted-blue">${item.managementName || item.source || "Caso General"}</small></td>
+            <td><b>${item.name || item.title || 'Ticket'}</b>${ownerLabel}</td>
             <td class="text-center font-bold">${itemMeta}</td>
             <td class="text-center">${itemProcessed}</td>
             <td class="text-center"><span class="badge-reference">${item.reference || "S/R"}</span></td>
@@ -103,12 +127,28 @@ App.renderDashboardData = function() {
             monitorHtml += `
             <div class="counter-card ${cardAlertClass} monitor-alert-item">
                 <p class="alert-item-title"> ALERTA OPERACIONAL</p>
-                <p class="alert-item-body">La actividad <b>${item.name || item.title}</b> asignada a la referencia <b>${item.reference || "S/R"}</b> se encuentra en estado crítico.</p>
+                <p class="alert-item-body">La actividad <b>${item.name || item.title}</b> de <b>@${taskOwner}</b> está crítica.</p>
             </div>`;
         }
     });
 
-    document.getElementById("countTotal").innerText = totalAssignments;
+    // INYECCIÓN VISUAL DE LOS VALORES COMPILADOS EN LAS CAJAS
+    document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString();
+    
+    const labelTotal = document.getElementById("labelTotalRealizadas");
+    const cardIndiv = document.getElementById("cardIndividualProduction");
+    
+    if (isSupervisor) {
+        if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
+        if (cardIndiv) {
+            cardIndiv.classList.remove("hidden"); // Mostrar caja de producción propia
+            document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString();
+        }
+    } else {
+        if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
+        if (cardIndiv) cardIndiv.classList.add("hidden"); // Esconder para analistas nivel 1
+    }
+
     document.getElementById("countWarning").innerText = totalWarning;
     document.getElementById("countDanger").innerText = totalDanger;
     
@@ -119,13 +159,10 @@ App.renderDashboardData = function() {
     document.getElementById("countPerformance").innerText = `${ied}%`;
     
     if (monitorContainer) {
-        if (monitorHtml) {
-            monitorContainer.innerHTML = monitorHtml;
-        } else {
-            monitorContainer.innerHTML = `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
-        }
+        monitorContainer.innerHTML = monitorHtml || `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
     }
 };
+
 /**
 * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
 * PARTE 2 DE 3: PROGRESO DE ACTIVIDADES, ACTUALIZACIÓN DE LOGS Y REPORTES CONSOLIDADOS

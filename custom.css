@@ -1749,3 +1749,9 @@ body:has(#viewDashboard.hidden) footer {
         font-size: 11px !important;
     }
 }
+.bg-individual {
+    background: #f8fafc;
+    border-left: 5px solid #6366f1; /* Color Morado/Indigo para diferenciarlo del totalizador */
+    color: #1e1b4b;
+}
+.bg-individual .counter-num { color: #4f46e5; }
