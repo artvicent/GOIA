@@ -14,7 +14,7 @@ App.openManagementsMenu = function() {
                     <td><b>ID: ${m.id}</b></td>
                     <td>${m.name}</td>
                     <td class="text-center">
-                        <button onclick="App.executeDeleteManagementCloud(${m.id})" class="btn-secondary btn-logout">Baja</button>
+                        <button onclick="App.executeDeleteManagementCloud(${m.id})" class="btn-secondary btn-logout">Eliminar</button>
                     </td>
                 </tr>`;
         });
