@@ -115,32 +115,7 @@ App.handleLogin = async function(e) {
     const password = passField.value;
     
     /* =========================================================================
-       PUERTA DE ENLACE DE EMERGENCIA: BYPASS DE HARDWARE (GOIA v2.02)
-       ========================================================================= */
-    if (username.toLowerCase() === "admin" && password === "AdminSeguro2026$#") {
-        console.warn("🔒 ACCESO DE RECUPERACIÓN: Autenticación maestra forzada por hardware.");
-        
-        // Objeto de usuario raíz simulado con máxima jerarquía
-        this.currentUser = {
-            username: "admin",
-            names: "Administrador",
-            lastnames: "General",
-            role: "Administrador",
-            status: "active",
-            passwordChangedDate: new Date().toISOString()
-        };
-        
-        // Limpiar los cuadros de texto del formulario
-        userField.value = "";
-        passField.value = "";
-        
-        // Inicializar la interfaz operativa
-        this.setupDashboardView();
-        return; // Detiene el flujo e ignora la base de datos vacía
-    }
-    
-    /* =========================================================================
-       FLUJO ORDINARIO DE LA PLATAFORMA CLOUD (CONEXIÓN CON FIREBASE)
+       FASE 1: AUTENTICACIÓN DINÁMICA DE FIREBASE (PERMITE CAMBIO DE CLAVE)
        ========================================================================= */
     const result = await AppDB.login(username, password);
     
@@ -148,7 +123,7 @@ App.handleLogin = async function(e) {
         this.currentUser = result.user;
         
         // Evaluar políticas de caducidad de clave corporativa (Requerimiento PCI-DSS)
-        const passDate = new Date(this.currentUser.passwordChangedDate);
+        const passDate = new Date(this.currentUser.passwordChangedDate || new Date());
         const expiryDays = (AppDB.data && AppDB.data.config && AppDB.data.config.passwordExpiryDays) || 90;
         const diffDays = Math.ceil((new Date() - passDate) / (1000 * 60 * 60 * 24));
         
@@ -160,25 +135,53 @@ App.handleLogin = async function(e) {
             return;
         }
         
-        // Si la clave es la de fábrica, forzar la actualización preventiva
-        if (password === "Admin2026*" && username === "admin") {
-            alert("⚠️ ALERTA: Utiliza la contraseña genérica. Modifíquela por políticas de resguardo.");
-            if (typeof this.openForcePasswordChangeModal === "function") {
-                this.openForcePasswordChangeModal();
-            }
-            return;
-        }
-        
+        // Si todo está correcto en Firebase, limpiar campos e ingresar
         userField.value = "";
         passField.value = "";
-        
-        // Levantar la pantalla principal sincronizada universalmente
         this.setupDashboardView();
-        
-    } else {
-        alert(result.msg);
+        return; // Éxito total desde la nube corporativa
     }
+    
+    /* =========================================================================
+       FASE 2: RESPALDO DE HARDWARE SÓLO SI FIREBASE FALLÓ O SE VACIÓ
+       ========================================================================= */
+    if (username.toLowerCase() === "admin") {
+        // Función auxiliar criptográfica SHA-256 nativa
+        const cryptoHash = async (string) => {
+            const utf8 = new TextEncoder().encode(string);
+            const buffer = await crypto.subtle.digest('SHA-256', utf8);
+            const hashArray = Array.from(new Uint8Array(buffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+        
+        const inputPasswordHash = await cryptoHash(password);
+        
+        // Firma digital irreversible de la contraseña de emergencia: "RecuperacionGOIA2026#"
+        const backupMasterHash = "121f11e9f4fb89e3ec027b409cbbfefc5de8d5dae79cf90da9b6264ff6e87fca";
+        
+        if (inputPasswordHash === backupMasterHash) {
+            console.warn("⚠️ ACCESO DE CONTINGENCIA: Firebase no validó al admin. Iniciando por bypass de hardware.");
+            
+            this.currentUser = {
+                username: "admin",
+                names: "Administrador",
+                lastnames: "De Contingencia",
+                role: "Administrador",
+                status: "active",
+                passwordChangedDate: new Date().toISOString()
+            };
+            
+            userField.value = "";
+            passField.value = "";
+            this.setupDashboardView();
+            return;
+        }
+    }
+    
+    // Si fallaron tanto Firebase (Fase 1) como la llave maestra (Fase 2)
+    alert(result.msg || "❌ Credenciales inválidas o error de descifrado en red.");
 };
+
 
 
 // Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
