@@ -615,3 +615,116 @@ App.handleSaveDirectCredentials = function(event, username) {
     }
 };
 
+/* =========================================================================
+   BLOQUE CRÍTICO DE INTERCEPCIÓN: FORMULARIO UNIFICADO DE CREDENCIALES (v2.02)
+   ========================================================================= */
+
+// Forzar la reescritura de ambos nombres de función para evitar el bypass de la caché
+App.editUserForm = function(userId, username, currentRole, currentGerencia) {
+    App.renderUnifiedSecurityForm(username || userId);
+};
+
+App.openEditUserModal = function(username) {
+    App.renderUnifiedSecurityForm(username);
+};
+
+// Motor único de renderizado libre de estilos intrusivos
+App.renderUnifiedSecurityForm = function(username) {
+    if (!username) return;
+    const uKey = String(username).toLowerCase().trim().replace("@", "");
+    
+    // Asegurar que el objeto de usuario exista en la caché local
+    if (!AppDB.data.users[uKey]) {
+        AppDB.data.users[uKey] = { username: uKey, status: "active" };
+    }
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>🔑 Credenciales y Seguridad: @${uKey.toUpperCase()}</h3>
+            <button onclick="App.listUsersAdmin()">&larr; Volver</button>
+        </div>
+        
+        <form id="formCombinedSecurity" onsubmit="App.executeUnifiedCloudUpdate(event, '${uKey}')" class="admin-config-form-layout" style="padding:10px;">
+            
+            <div class="form-group">
+                <label style="display:block; font-weight:bold; margin-bottom:4px;">Rol Operativo en la Gerencia</label>
+                <select id="cmbUnifiedRole" class="form-control full-width" style="width:100%; padding:8px;">
+                    <option value="admin">Administrador de Sistema</option>
+                    <option value="supervisor">Supervisor de Carga</option>
+                    <option value="executive">Ejecutivo / Auditor</option>
+                </select>
+            </div>
+
+            <div class="maintenance-critical-card" style="margin-top:12px; padding:8px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:4px;">
+                <p style="margin:0; font-size:11px; color:#16a34a; font-weight:bold;">🔒 CONFIGURACIÓN DE CONTRASEÑA NUEVA:</p>
+                <p style="margin:2px 0 0 0; font-size:10px; color:#15803d;">Mínimo 8 letras, incluir Mayúscula, Minúscula, Número y caracteres especiales.</p>
+            </div>
+
+            <div class="form-group" style="margin-top:8px;">
+                <label style="display:block; font-weight:bold; margin-bottom:4px;">Nueva Contraseña Personal</label>
+                <input type="password" id="txtUnifiedPass" required class="form-control" placeholder="Escriba la clave secreta corporativa" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+            </div>
+
+            <div class="form-group" style="margin-top:8px;">
+                <label style="display:block; font-weight:bold; margin-bottom:4px;">Pregunta de Seguridad Obligatoria</label>
+                <select id="cmbUnifiedQuestion" class="form-control full-width" style="width:100%; padding:8px;">
+                    <option value="mascota">¿Cuál es el nombre de su primera mascota?</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top:8px;">
+                <label style="display:block; font-weight:bold; margin-bottom:4px;">Respuesta de Validación (Blanqueo)</label>
+                <input type="text" id="txtUnifiedAnswer" required class="form-control" placeholder="Respuesta para el restablecimiento" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+            </div>
+
+            <div class="modal-action-row-footer" style="margin-top:15px; display:flex; gap:10px;">
+                <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel" style="flex:1; padding:8px;">Cancelar</button>
+                <button type="submit" class="btn-primary-submit" style="flex:1; padding:8px; background:#2563eb; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Aplicar Cambios</button>
+            </div>
+        </form>
+    `;
+};
+
+// Procesador criptográfico unificado conectado a Firebase Realtime Database
+App.executeUnifiedCloudUpdate = function(event, uKey) {
+    event.preventDefault();
+    
+    const pass = document.getElementById("txtUnifiedPass").value;
+    const ans = document.getElementById("txtUnifiedAnswer").value.toLowerCase().trim();
+    const role = document.getElementById("cmbUnifiedRole").value;
+
+    // 1. Validar robustez mediante la política oficial del archivo (Página 5)
+    const check = App.validatePasswordStrength(pass);
+    if (!check.valid) return alert(check.msg);
+
+    // 2. Hashear usando el algoritmo criptográfico de tu motor original (Página 8)
+    const hashedPass = AppDB.hash(pass);
+    const hashedAnswer = AppDB.hash(ans);
+
+    // 3. Modificar la estructura en la memoria del cliente
+    AppDB.data.users[uKey].password = hashedPass;
+    AppDB.data.users[uKey].role = role;
+    AppDB.data.users[uKey].securityQuestions = { q: "mascota", a: hashedAnswer };
+    AppDB.data.users[uKey].passwordChangedDate = new Date().toISOString();
+    AppDB.data.users[uKey].status = "active";
+    AppDB.data.users[uKey].failedAttempts = 0;
+
+    // 4. Inyección síncrona directa sobre la referencia del nodo en Firebase Cloud
+    firebase.database().ref("users/" + uKey).update({
+        password: hashedPass,
+        role: role,
+        securityQuestions: { q: "mascota", a: hashedAnswer },
+        passwordChangedDate: new Date().toISOString(),
+        status: "active",
+        failedAttempts: 0
+    })
+    .then(function() {
+        alert("✅ ÉXITO DE CONFIGURACIÓN:\n\nNueva contraseña y pregunta de seguridad inyectadas con éxito en Firebase.");
+        AppDB.save(); // Sincronizar persistencia local
+        App.listUsersAdmin(); // Volver al listado
+    })
+    .catch(function(error) {
+        console.error("Fallo de red en Firebase:", error);
+        alert("❌ Error: El servidor de red rechazó la actualización criptográfica.");
+    });
+};
