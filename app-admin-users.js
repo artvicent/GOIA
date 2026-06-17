@@ -418,63 +418,130 @@ App.toggleBlockUser = function(userId, username, currentStatus) {
 };
 
 // 3. FUNCIÓN PARA LEVANTAR EL FORMULARIO DE EDICIÓN DE ROLES Y PERMISOS
+// 3. FUNCIÓN PARA LEVANTAR EL FORMULARIO DE EDICIÓN UNIFICADO (ROLES Y CREDENCIALES)
 App.editUserForm = function(userId, username, currentRole, currentGerencia) {
-    // Dibujamos la interfaz limpia para la modificación de los privilegios del empleado
+    // Buscar los datos extendidos en el árbol de la aplicación
+    const uData = AppDB.data.users[username.toLowerCase().trim()] || {};
+    
+    // Dibujamos la interfaz unificada libre de estilos intrusivos
     document.getElementById("modalContent").innerHTML = `
-        <div class="modal-inner-header">
-            <h3>🔑 Editar Permisos y Roles: ${username.toUpperCase()}</h3>
-            <button onclick="App.openAdminMenu()">&larr; Volver</button>
-        </div>
-        
-        <form id="formEditUserRole" onsubmit="App.handleSaveUserRoles(event, '${userId}')" class="admin-config-form-layout">
-            <div class="form-group">
-                <label>Rol de Operador en el Sistema</label>
-                <select id="editUserRoleSelect" class="form-control full-width">
-                    <option value="executive" ${currentRole === 'executive' ? 'selected' : ''}>Ejecutivo / Auditor</option>
-                    <option value="supervisor" ${currentRole === 'supervisor' ? 'selected' : ''}>Supervisor de Carga</option>
-                    <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Administrador de Sistema</option>
-                </select>
-            </div>
+ <div class="modal-inner-header">
+ <h3>🔑 Credenciales y Permisos: ${username.toUpperCase()}</h3>
+ <button onclick="App.listUsersAdmin()">&larr; Volver</button>
+ </div>
+ 
+ <form id="formEditUserRole" onsubmit="App.handleSaveUserCombined(event, '${userId}', '${username}')" class="admin-config-form-layout">
+ 
+ <div class="form-group">
+ <label>Rol de Operador en el Sistema</label>
+ <select id="editUserRoleSelect" class="form-control full-width">
+ <option value="executive" ${currentRole === 'executive' || currentRole === 'Analista' ? 'selected' : ''}>Ejecutivo / Auditor</option>
+ <option value="supervisor" ${currentRole === 'supervisor' || currentRole === 'Coordinador' ? 'selected' : ''}>Supervisor de Carga</option>
+ <option value="admin" ${currentRole === 'admin' || currentRole === 'Administrador' ? 'selected' : ''}>Administrador de Sistema</option>
+ </select>
+ </div>
+ 
+ <div class="form-group" style="margin-top: 8px;">
+ <label>Asignación de Gerencia Fija</label>
+ <input type="text" id="editUserGerenciaInput" class="form-control" value="${currentGerencia || ''}" placeholder="Ej: Gerencia de Adquirencia">
+ </div>
 
-            <div class="form-group">
-                <label>Asignación de Gerencia Fija</label>
-                <input type="text" id="editUserGerenciaInput" class="form-control" value="${currentGerencia || ''}" placeholder="Ej: Gerencia de Adquirencia">
-            </div>
+ <div class="maintenance-critical-card bg-ied-banner-info" style="margin-top: 12px; padding: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
+ <p style="margin: 0; font-size: 11px; color: #16a34a; font-weight: bold;">🔒 ACTUALIZAR SEGURIDAD (Opcional):</p>
+ <p style="margin: 2px 0 0 0; font-size: 10px; color: #15803d;">Complete estos campos solo si desea cambiar la contraseña del usuario.</p>
+ </div>
 
-            <div class="modal-action-row-footer">
-                <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
-                <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
-            </div>
-        </form>`;
+ <div class="form-group" style="margin-top: 8px;">
+ <label>Nueva Contraseña Personalizada</label>
+ <input type="password" id="editUserNewPass" class="form-control" placeholder="Dejar en blanco para no modificar">
+ </div>
+
+ <div class="form-group" style="margin-top: 8px;">
+ <label>Pregunta de Seguridad Obligatoria</label>
+ <select id="editUserQuestionSelect" class="form-control full-width">
+ <option value="mascota">¿Cuál es el nombre de su primera mascota?</option>
+ </select>
+ </div>
+
+ <div class="form-group" style="margin-top: 8px;">
+ <label>Respuesta Secreta de Validación</label>
+ <input type="text" id="editUserAnswerInput" class="form-control" placeholder="Respuesta para blanqueo externo">
+ </div>
+ 
+ <div class="modal-action-row-footer" style="margin-top: 15px;">
+ <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel">Cancelar</button>
+ <button type="submit" class="btn-primary-submit">Guardar Cambios</button>
+ </div>
+ </form>`;
 };
 
-// 4. PROCESADOR SÍNCRONO DE ACTUALIZACIÓN DE PRIVILEGIOS EN FIREBASE
-App.handleSaveUserRoles = function(event, userId) {
-    event.preventDefault();
+// 4. PROCESADOR SÍNCRONO DE PRIVILEGIOS Y CLAVES EN FIREBASE CLOUD
+App.handleSaveUserCombined = function(event, userId, username) {
+ event.preventDefault();
+ 
+ var roleSelect = document.getElementById("editUserRoleSelect");
+ var gerenciaInput = document.getElementById("editUserGerenciaInput");
+ var newPassField = document.getElementById("editUserNewPass");
+ var answerInput = document.getElementById("editUserAnswerInput");
+ 
+ if (!roleSelect || !gerenciaInput) return;
+ 
+ var newRole = roleSelect.value;
+ var newGerencia = gerenciaInput.value.trim();
+ const uKey = username.toLowerCase().trim();
 
-    var roleSelect = document.getElementById("editUserRoleSelect");
-    var gerenciaInput = document.getElementById("editUserGerenciaInput");
+ // 1. Mapear y actualizar propiedades de jerarquía en la caché
+ AppDB.data.users[uKey].role = newRole;
+ AppDB.data.users[uKey].gerencia = newGerencia;
 
-    if (!roleSelect || !gerenciaInput) return;
+ // 2. Validar si el administrador rellenó las casillas de clave nueva
+ const passValue = newPassField ? newPassField.value : "";
+ const ansValue = answerInput ? answerInput.value.trim().toLowerCase() : "";
 
-    var newRole = roleSelect.value;
-    var newGerencia = gerenciaInput.value.trim();
+ if (passValue.length > 0) {
+     // Validar robustez oficial del sistema (Página 5)
+     const check = App.validatePasswordStrength(passValue);
+     if (!check.valid) return alert(check.msg);
+     
+     if (ansValue.length === 0) {
+         return alert("Por favor, introduzca una respuesta secreta para activar la nueva contraseña.");
+     }
 
-    // Actualizamos el nodo completo en Firebase Cloud
-    var userUpdate = {
-        role: newRole,
-        gerencia: newGerencia
-    };
+     // Hashear y encriptar usando las directivas nativas del motor (Página 8)
+     const hashedPass = AppDB.hash(passValue);
+     const hashedAnswer = AppDB.hash(ansValue);
 
-    firebase.database().ref("users/" + userId).update(userUpdate)
-        .then(function() {
-            alert("✅ ¡Éxito! Privilegios y asignaciones modificadas en la base de datos.");
-            App.listUsersAdmin(); // Regresa de inmediato a la nómina del personal actualizada
-        })
-        .catch(function() {
-            alert("❌ Fallo del servidor al intentar actualizar los roles de seguridad.");
-        });
+     AppDB.data.users[uKey].password = hashedPass;
+     AppDB.data.users[uKey].securityQuestions = { q: "mascota", a: hashedAnswer };
+     AppDB.data.users[uKey].passwordChangedDate = new Date().toISOString();
+     AppDB.data.users[uKey].status = "active";
+     AppDB.data.users[uKey].failedAttempts = 0;
+
+     AppDB.addLog(App.currentUser?.username || "admin", "SECURITY_UPDATE", "Cambio de credenciales para: " + username);
+ }
+
+ // 3. Guardar el payload final de vuelta en la nube cifrada de Firebase
+ var userUpdate = {
+ role: newRole,
+ gerencia: newGerencia,
+ password: AppDB.data.users[uKey].password,
+ securityQuestions: AppDB.data.users[uKey].securityQuestions || { q: "mascota", a: "" },
+ passwordChangedDate: AppDB.data.users[uKey].passwordChangedDate || new Date().toISOString(),
+ status: "active",
+ failedAttempts: 0
+ };
+
+ firebase.database().ref("users/" + userId).update(userUpdate)
+ .then(function() {
+ alert("✅ ¡ÉXITO GLOBAL!\n\nPermisos y credenciales actualizados de forma segura en Firebase.");
+ AppDB.save(); // Forzar sincronización del LocalStorage
+ App.listUsersAdmin(); // Regresar a la nómina
+ })
+ .catch(function() {
+ alert("❌ Fallo del servidor al intentar actualizar los roles de seguridad.");
+ });
 };
+
 /* =========================================================================
    MÓDULO INYECTADO: ACTUALIZADOR SEGURO DE CONTRASEÑAS (GOIA v2.02)
    ========================================================================= */
