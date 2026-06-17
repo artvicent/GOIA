@@ -30,7 +30,7 @@ App.renderDashboardData = function() {
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 4;
     const isSupervisor = (activeUsername === "admin" || activeUsername === "ccavalero" || userLevel >= 2);
 
-    let globalProcessedSum = 0;     
+    let globalProcessedSum = 0; 
     let individualProcessedSum = 0; 
     let totalWarning = 0;
     let totalDanger = 0;
@@ -61,16 +61,19 @@ App.renderDashboardData = function() {
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = parseInt(item.processed || item.realizadas || 0);
         
-        // Limpieza de espacios y normalización de la cadena del propietario
-        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase();
-        const cleanActiveUser = String(activeUsername).trim().toLowerCase();
+        // CORRECCIÓN LÓGICA DE DETECCIÓN: Removemos el símbolo @ y limpiamos espacios vacíos
+        let taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase();
+        taskOwner = taskOwner.replace("@", ""); // Elimina el arroba si viene desde Firebase
+        
+        let cleanActiveUser = String(activeUsername).trim().toLowerCase();
+        cleanActiveUser = cleanActiveUser.replace("@", "");
 
         // ACUMULADORES MATEMÁTICOS DE VOLUMEN NETO DE GESTIONES
         globalProcessedSum += itemProcessed;
         
-        // Comparación estricta normalizada en minúsculas para evitar rechazos de red
+        // Comparación corregida e inmune a discrepancias de texto
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
-            individualProcessedSum += itemProcessed;
+            individualProcessedSum += itemProcessed; // Sumará el número neto (ej: 3, 85, 10172)
         }
 
         if (item.status === "completed" || itemProcessed >= itemMeta && itemMeta > 0) {
@@ -166,7 +169,6 @@ App.renderDashboardData = function() {
         monitorContainer.innerHTML = monitorHtml || `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
     }
 };
-
 /**
 * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
 * PARTE 2 DE 3: PROGRESO DE ACTIVIDADES, ACTUALIZACIÓN DE LOGS Y REPORTES CONSOLIDADOS
