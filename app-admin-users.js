@@ -66,12 +66,21 @@ App.openAdminMenu = function() {
             <button onclick="App.openCreateUserForm()" class="btn-primary" style="padding: 10px; font-weight: bold;">➕ Crear Usuario</button>
             <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold" style="padding: 10px; font-weight: bold;">👥 Nómina Personal</button>
         </div>
+        
+        <!-- ENLACE SEGURO INDEPENDIENTE: EVITA EL ALERTA DE BLOQUEO DE LA TABLA -->
+        <div class="modal-single-row" style="margin-top: 8px;">
+            <button onclick="App.openDirectCredentialsModal('admin')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #eab308; color: black; border: none; border-radius: 4px; cursor: pointer;">
+                ⚙️ ASIGNAR NUEVA CLAVE PERSONALIZADA ADMIN
+            </button>
+        </div>
+        
         <div class="modal-single-row" style="margin-top: 8px;">
             <button onclick="App.openAuditLogsMenu()" class="btn-primary bg-crimson" style="width: 100%; padding: 10px; font-weight: bold; background: #991b1b; color: white; border: none; border-radius: 4px;">
                 🔎 VER HISTORIAL DE AUDITORÍA (LOGS)
             </button>
         </div>`;
 };
+
 
 // Función auxiliar para guardar la política de vencimiento de claves sin romper el flujo
 App.handleUpdateExpiryPolicyInline = function() {
@@ -359,7 +368,7 @@ App.handleSelectEmojiAvatarInline = function(emojiSelected) {
 
 // 1. FUNCIÓN PARA ELIMINAR UN USUARIO DE FORMA DEFINITIVA DE FIREBASE
 App.deleteUserCloud = function(userId, username) {
-    if (userId === "admin" || username === "arturo.noto") {
+    if (userId === "admin" || username === "Nombre.Apellido") {
         alert("🚨 CONTROL DE SEGURIDAD: No es posible eliminar al Administrador Principal del sistema.");
         return;
     }
@@ -387,7 +396,7 @@ App.deleteUserCloud = function(userId, username) {
 
 // 2. FUNCIÓN PARA ALTERNAR EL ESTADO DE ACCESO (BLOQUEAR / DESBLOQUEAR)
 App.toggleBlockUser = function(userId, username, currentStatus) {
-    if (userId === "admin" || username === "arturo.noto") {
+    if (userId === "admin" || username === "Nombre.Apellido") {
         alert("🚨 CONTROL DE SEGURIDAD: El Administrador Principal no puede ser bloqueado.");
         return;
     }
