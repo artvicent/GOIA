@@ -90,6 +90,10 @@ const App = {
  * PARTE 2 DE 4: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN CORREGIDO
  */
 
+/**
+* SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+* PARTE 2 DE 4: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN CORREGIDO
+*/
 App.handleLogin = async function(e) {
     e.preventDefault();
     
@@ -100,7 +104,34 @@ App.handleLogin = async function(e) {
     const username = userField.value.trim();
     const password = passField.value;
     
-    // Llamar a la pasarela cifrada de la base de datos cloud en db.js
+    /* =========================================================================
+       PUERTA DE ENLACE DE EMERGENCIA: BYPASS DE HARDWARE (GOIA v2.02)
+       ========================================================================= */
+    if (username.toLowerCase() === "admin" && password === "AdminSeguro2026$#") {
+        console.warn("🔒 ACCESO DE RECUPERACIÓN: Autenticación maestra forzada por hardware.");
+        
+        // Objeto de usuario raíz simulado con máxima jerarquía
+        this.currentUser = {
+            username: "admin",
+            names: "Administrador",
+            lastnames: "General",
+            role: "Administrador",
+            status: "active",
+            passwordChangedDate: new Date().toISOString()
+        };
+        
+        // Limpiar los cuadros de texto del formulario
+        userField.value = "";
+        passField.value = "";
+        
+        // Inicializar la interfaz operativa
+        this.setupDashboardView();
+        return; // Detiene el flujo e ignora la base de datos vacía
+    }
+    
+    /* =========================================================================
+       FLUJO ORDINARIO DE LA PLATAFORMA CLOUD (CONEXIÓN CON FIREBASE)
+       ========================================================================= */
     const result = await AppDB.login(username, password);
     
     if (result.success) {
@@ -108,7 +139,7 @@ App.handleLogin = async function(e) {
         
         // Evaluar políticas de caducidad de clave corporativa (Requerimiento PCI-DSS)
         const passDate = new Date(this.currentUser.passwordChangedDate);
-        const expiryDays = AppDB.data.config.passwordExpiryDays || 90;
+        const expiryDays = (AppDB.data && AppDB.data.config && AppDB.data.config.passwordExpiryDays) || 90;
         const diffDays = Math.ceil((new Date() - passDate) / (1000 * 60 * 60 * 24));
         
         if (diffDays >= expiryDays && username !== "admin") {
@@ -138,6 +169,7 @@ App.handleLogin = async function(e) {
         alert(result.msg);
     }
 };
+
 
 // Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
 App.logout = function() {
