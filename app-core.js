@@ -210,16 +210,47 @@ App.logout = function() {
 App.applySecurityCerberusPermissions = function() {
     if (!this.currentUser) return;
     
+    /* =========================================================================
+       BYPASS DE SEGURIDAD OPERATIVA: DESTRABAR USUARIO ADMIN EN CALIENTE
+       ========================================================================= */
+    const isMaster = (this.currentUser.username === "admin");
+    
+    // Si entraste usando la clave de hardware de emergencia, forzamos la liberación del objeto en memoria
+    if (isMaster) {
+        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.users) {
+            // Si el objeto admin existe en el JSON de Firebase pero dice bloqueado, lo reescribimos
+            if (AppDB.data.users["admin"]) {
+                AppDB.data.users["admin"].status = "active";
+                AppDB.data.users["admin"].failedAttempts = 0;
+            } else {
+                // Si el nodo desapareció por completo al limpiar la BD, lo volvemos a fundar en frío
+                AppDB.data.users["admin"] = {
+                    username: "admin",
+                    names: "Administrador",
+                    lastnames: "De Fábrica",
+                    role: "Administrador",
+                    status: "active",
+                    failedAttempts: 0,
+                    passwordChangedDate: new Date().toISOString()
+                };
+            }
+            
+            // Si tu motor db.js tiene activa la función para guardar, la disparamos
+            if (typeof AppDB.save === "function") {
+                AppDB.save(); 
+                console.log("🔒 NÚCLEO GOIA: Estado del Administrador liberado y guardado en Firebase.");
+            }
+        }
+    }
+ 
     const btnAdmin = document.getElementById("btnAdminPanel");
     const btnNewAsig = document.getElementById("btnNewAssignment");
     
-    // Consultar el nivel operacional (lvl) sembrado en db.js
     const userRole = this.currentUser.role;
-    const roleMeta = AppDB.data.roles[userRole];
+    const roleMeta = (AppDB.data && AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 3 };
     const userLevel = (roleMeta && typeof roleMeta.lvl !== 'undefined') ? roleMeta.lvl : 1;
     const permissions = (roleMeta && roleMeta.perms) ? roleMeta.perms : [];
-    const isMaster = (this.currentUser.username === "admin");
-    
+ 
     // REGLA DE ORO PCI: Solo Administradores (lvl 3) o Gerentes (lvl 4) ven Ajustes y Usuarios
     if (btnAdmin) {
         if (isMaster || userLevel >= 3) {
@@ -228,7 +259,7 @@ App.applySecurityCerberusPermissions = function() {
             btnAdmin.classList.add("hidden");
         }
     }
-    
+ 
     // CONTROL DE ASIGNACIÓN: El comportamiento visual se delega 100% a la clase .hidden
     if (btnNewAsig) {
         if (isMaster || userLevel >= 3 || permissions.includes("crear")) {
@@ -238,6 +269,7 @@ App.applySecurityCerberusPermissions = function() {
         }
     }
 };
+
 
 // Abrir formulario corporativo de blanqueo o recuperación de accesos bloqueados
 App.showRecoveryFormGlobal = function() {
