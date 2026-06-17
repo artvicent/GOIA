@@ -1,90 +1,100 @@
 /**
- * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
- * PARTE 1 DE 4: RUTEO DE VISTAS SPA, CONTROL DE SESIÓN Y CARGA DE INTERFAZ CLOUD
- * 100% LIBRE DE ESTILOS INTRUSIVOS Y COMPATIBLE CON IMÁGENES UNIVERSALES v2.02
- */
-
+* SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
+* PARTE 1 DE 4: RUTEO DE VISTAS SPA, CONTROL DE SESIÓN Y CARGA DE INTERFAZ CLOUD
+* 100% LIBRE DE ESTILOS INTRUSIVOS Y COMPATIBLE CON IMÁGENES UNIVERSALES v2.02
+*/
 const App = {
-    currentUser: null,
+  currentUser: null,
+  
+  init() {
+    console.log("Inicializando núcleo transaccional GOIA v2.02...");
     
-    init() {
-        console.log("Inicializando núcleo transaccional GOIA v2.02...");
-        
-        // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
-        const topBanner = document.getElementById("topBanner");
-        if (topBanner) {
-            topBanner.classList.add("hidden");
-        }
-
-        // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
-        // Descarga directa desde la nube de Firebase apenas se levanta la URL
-        if (typeof AppDB !== 'undefined' && AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
-            const logoImg = document.getElementById("appLogoImg");
-            if (logoImg) {
-                logoImg.src = AppDB.data.config.brandLogoBase64;
-            }
-        }
-
-        this.showView("viewLogin");
-    },
-
-    // Ruteador lógico SPA puro basado en clases CSS .hidden
-    showView(viewId) {
-        const views = ["viewLogin", "viewDashboard"];
-        views.forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                if (id === viewId) {
-                    el.classList.remove("hidden");
-                } else {
-                    el.classList.add("hidden");
-                }
-            }
-        });
-    },
-
-    // Cargar los letreros y componentes dinámicos del perfil al ingresar con éxito
-    setupDashboardView() {
-        if (!this.currentUser) return;
-        
-        const welcomeName = document.getElementById("dashWelcomeName");
-        const userRole = document.getElementById("dashUserRole");
-        const avatarFrame = document.getElementById("userAvatarFrame");
-        
-        if (welcomeName) {
-            welcomeName.innerText = `${this.currentUser.names} ${this.currentUser.lastnames}`;
-        }
-        if (userRole) {
-            userRole.innerText = this.currentUser.role;
-        }
-        
-        // SINCRONIZACIÓN UNIVERSAL DE LA FOTO DEL COLABORADOR
-        // Se extrae del nodo indexado del usuario en Firebase, haciéndola inmune al cambio de PC
-        if (this.currentUser.avatarData) {
-            if (avatarFrame) {
-                avatarFrame.innerHTML = `<img src="${this.currentUser.avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
-            }
-        } else {
-            if (avatarFrame) {
-                avatarFrame.innerText = this.currentUser.avatar || "👤";
-            }
-        }
-
-        // Mostrar el banner superior de control de forma limpia
-        const topBanner = document.getElementById("topBanner");
-        if (topBanner) {
-            topBanner.classList.remove("hidden");
-        }
-        
-        this.applySecurityCerberusPermissions();
-        this.showView("viewDashboard");
-
-        // Disparar render de tablas operacionales del archivo app-executive
-        if (typeof App.renderDashboardData === "function") {
-            App.renderDashboardData();
-        }
+    // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
+    const topBanner = document.getElementById("topBanner");
+    if (topBanner) {
+      topBanner.classList.add("hidden");
     }
+    
+    // RESPALDO DE CONTROL DE RED: Si la base de datos falló o se vació, inyectamos un nodo ficticio para que el sistema no muera
+    if (typeof AppDB === 'undefined' || !AppDB.data) {
+        console.warn("⚠️ ALERTA: Red Cloud caída. Inicializando entorno de contingencia local.");
+        window.AppDB = window.AppDB || {};
+        AppDB.data = AppDB.data || { config: { passwordExpiryDays: 90 }, roles: { "Administrador": { lvl: 3 } } };
+        AppDB.login = async function() { return { success: false, msg: "Modo contingencia activo." }; };
+    }
+
+    // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
+    if (AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
+      const logoImg = document.getElementById("appLogoImg");
+      if (logoImg) {
+        logoImg.src = AppDB.data.config.brandLogoBase64;
+      }
+    }
+    this.showView("viewLogin");
+  },
+
+  // Ruteador lógico SPA puro basado en clases CSS .hidden
+  showView(viewId) {
+    const views = ["viewLogin", "viewDashboard"];
+    views.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        if (id === viewId) {
+          el.classList.remove("hidden");
+        } else {
+          el.classList.add("hidden");
+        }
+      }
+    });
+  },
+
+  // Cargar los letreros y componentes dinámicos del perfil al ingresar con éxito
+  setupDashboardView() {
+    if (!this.currentUser) return;
+    
+    const welcomeName = document.getElementById("dashWelcomeName");
+    const userRole = document.getElementById("dashUserRole");
+    const avatarFrame = document.getElementById("userAvatarFrame");
+    
+    if (welcomeName) {
+      // Corrección de respaldo si entras por bypass de hardware
+      welcomeName.innerText = `${this.currentUser.names || 'Admin'} ${this.currentUser.lastnames || 'Raíz'}`;
+    }
+    if (userRole) {
+      userRole.innerText = this.currentUser.role;
+    }
+    
+    // SINCRONIZACIÓN UNIVERSAL DE LA FOTO DEL COLABORADOR
+    if (this.currentUser.avatarData) {
+      if (avatarFrame) {
+        avatarFrame.innerHTML = `<img src="${this.currentUser.avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+      }
+    } else {
+      if (avatarFrame) {
+        avatarFrame.innerText = this.currentUser.avatar || "👤";
+      }
+    }
+    
+    // Mostrar el banner superior de control de forma limpia
+    const topBanner = document.getElementById("topBanner");
+    if (topBanner) {
+      topBanner.classList.remove("hidden");
+    }
+    
+    // Protección para evitar caídas si las funciones secundarias no cargaron
+    if (typeof this.applySecurityCerberusPermissions === "function") {
+        this.applySecurityCerberusPermissions();
+    }
+    
+    this.showView("viewDashboard");
+    
+    // Disparar render de tablas operacionales del archivo app-executive
+    if (typeof App.renderDashboardData === "function") {
+      App.renderDashboardData();
+    }
+  }
 };
+
 /**
  * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
  * PARTE 2 DE 4: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN CORREGIDO
