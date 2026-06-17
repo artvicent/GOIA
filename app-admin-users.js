@@ -191,42 +191,51 @@ App.executeCreateUser = function(e) {
 };
 
 // Mostrar la nómina completa del personal sin inyecciones visuales directas
+// Mostrar la nómina completa del personal sin inyecciones visuales directas
 App.listUsersAdmin = function() {
-    let html = `
-    <div class="modal-inner-header">
-        <h3>Nómina del Personal</h3>
-        <button onclick="App.openAdminMenu()">&times;</button>
-    </div>
-    <div class="table-container custom-scrollbar">
-        <table class="executive-table">
-            <thead>
-                <tr>
-                    <th>Usuario</th>
-                    <th>Nombre</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>`;
-            
-    if (AppDB.data && AppDB.data.users) {
-        for (const u of Object.values(AppDB.data.users)) {
-            html += `<tr>
-                <td><b>${u.username}</b></td>
-                <td>${u.names} ${u.lastnames}</td>
-                <td>${u.role}</td>
-                <td><span class="badge-reference font-bold">${u.status === 'active' ? '🟢 Activo' : '🔴 Bloqueado'}</span></td>
-            </tr>`;
-        }
-    }
-    
-    html += `</tbody></table></div>
-    <div class="modal-action-row-footer">
-        <button onclick="App.openAdminMenu()" class="btn-secondary-cancel">Regresar</button>
-    </div>`;
-    
-    document.getElementById("modalContent").innerHTML = html;
+ let html = `
+ <div class="modal-inner-header">
+ <h3>Nómina del Personal</h3>
+ <button onclick="App.openAdminMenu()">&times;</button>
+ </div>
+ <div class="table-container custom-scrollbar">
+ <table class="executive-table">
+ <thead>
+ <tr>
+ <th>Usuario</th>
+ <th>Nombre</th>
+ <th>Rol</th>
+ <th>Estado</th>
+ <th>Acciones</th>
+ </tr>
+ </thead>
+ <tbody>`;
+ 
+ if (AppDB.data && AppDB.data.users) {
+ for (const u of Object.values(AppDB.data.users)) {
+ html += `<tr>
+ <td><b>${u.username}</b></td>
+ <td>${u.names} ${u.lastnames}</td>
+ <td>${u.role}</td>
+ <td><span class="badge-reference font-bold">${u.status === 'active' ? '🟢 Activo' : '🔴 Bloqueado'}</span></td>
+ <td>
+     <!-- Botón Lápiz: Editar Roles -->
+     <button onclick="App.editUserForm('${u.username}', '${u.username}', '${u.role}', '${u.gerencia || ''}')" style="background:none; border:none; cursor:pointer; font-size:14px; margin-right:5px;" title="Editar Rol">✏️</button>
+     <!-- Botón Candado: NUEVO MODAL DE CREDENCIALES COMPLETO -->
+     <button onclick="App.openDirectCredentialsModal('${u.username}')" style="background:none; border:none; cursor:pointer; font-size:14px;" title="Cambiar Contraseña">🔒</button>
+ </td>
+ </tr>`;
+ }
+ }
+ 
+ html += `</tbody></table></div>
+ <div class="modal-action-row-footer">
+ <button onclick="App.openAdminMenu()" class="btn-secondary-cancel">Regresar</button>
+ </div>`;
+ 
+ document.getElementById("modalContent").innerHTML = html;
 };
+
 // =========================================================================
 // MÓDULO LOGÍSTICO PREMIUM: CAPTURA, COMPRESIÓN Y SUBIDA DE LOGO DESDE PC A FIREBASE
 // =========================================================================
@@ -466,3 +475,76 @@ App.handleSaveUserRoles = function(event, userId) {
             alert("❌ Fallo del servidor al intentar actualizar los roles de seguridad.");
         });
 };
+/* =========================================================================
+   MÓDULO INYECTADO: ACTUALIZADOR SEGURO DE CONTRASEÑAS (GOIA v2.02)
+   ========================================================================= */
+App.openDirectCredentialsModal = function(username) {
+    if (!AppDB.data || !AppDB.data.users || !AppDB.data.users[username]) return;
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>🔐 Actualizar Credenciales: @${username.toUpperCase()}</h3>
+            <button onclick="App.listUsersAdmin()">&larr; Volver</button>
+        </div>
+        
+        <form id="formDirectPasswordChange" onsubmit="App.handleSaveDirectCredentials(event, '${username}')" class="admin-config-form-layout" style="padding:10px;">
+            <div class="form-group">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">Nueva Contraseña Personalizada</label>
+                <input type="password" id="inputNewPersonalPass" required class="form-control" placeholder="Mínimo 8 caracteres corporativos" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+            </div>
+            
+            <div class="form-group" style="margin-top:10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">Pregunta de Seguridad Obligatoria</label>
+                <select id="selectNewPersonalQuestion" class="form-control full-width" style="width:100%; padding:8px;">
+                    <option value="mascota">¿Cuál es el nombre de su primera mascota?</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top:10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">Respuesta Secreta de Validación</label>
+                <input type="text" id="inputNewPersonalAnswer" required class="form-control" placeholder="Escriba la respuesta de blanqueo" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">
+            </div>
+            
+            <div class="modal-action-row-footer" style="margin-top:15px; display:flex; gap:10px;">
+                <button type="button" onclick="App.listUsersAdmin()" class="btn-secondary-cancel" style="flex:1; padding:8px;">Cancelar</button>
+                <button type="submit" class="btn-primary-submit" style="flex:1; padding:8px; background:#2563eb; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Guardar Clave</button>
+            </div>
+        </form>
+    `;
+};
+
+// Procesador de cifrado síncrono e inyección en el árbol encriptado cloud
+App.handleSaveDirectCredentials = function(event, username) {
+    event.preventDefault();
+    
+    const pass = document.getElementById("inputNewPersonalPass").value;
+    const ans = document.getElementById("inputNewPersonalAnswer").value.toLowerCase().trim();
+    
+    // Validar robustez de contraseña mediante la política oficial del archivo (Página 5)
+    const check = App.validatePasswordStrength(pass);
+    if (!check.valid) return alert(check.msg);
+
+    // Hashear los datos usando el algoritmo cifrado nativo del motor de tu app (Página 8)
+    const hashedPass = AppDB.hash(pass);
+    const hashedAnswer = AppDB.hash(ans);
+
+    if (AppDB.data && AppDB.data.users && AppDB.data.users[username]) {
+        AppDB.data.users[username].password = hashedPass;
+        AppDB.data.users[username].securityQuestions = { q: "mascota", a: hashedAnswer };
+        AppDB.data.users[username].passwordChangedDate = new Date().toISOString();
+        AppDB.data.users[username].status = "active";
+        AppDB.data.users[username].failedAttempts = 0;
+        
+        // Registrar acción en las trazas de auditoría (Página 4)
+        AppDB.addLog(App.currentUser?.username || "admin", "CAMBIO_CLAVE", "Modificadas las credenciales del usuario: " + username);
+        
+        // Guardar y sincronizar automáticamente en Firebase (Modo encriptado cipherPayload)
+        AppDB.save();
+        
+        alert("✅ ¡ÉXITO! Contraseña guardada y encriptada correctamente en Firebase.");
+        App.listUsersAdmin(); // Regresa de inmediato a la nómina
+    } else {
+        alert("❌ Error: Usuario inexistente en el registro.");
+    }
+};
+
