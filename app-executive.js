@@ -1,8 +1,3 @@
-/**
- * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
- * PARTE 1 DE 4: PROCESAMIENTO DE TIEMPOS, CONTROL DE ALERTAS Y RENDER DE METAS CLOUD
- * VERSIÓN INTEGRAL ADAPTADA CON ENLACES DOCUMENTALES - GOIA v2.02
- */
 
 App.renderDashboardData = function() {
     if (!AppDB.data || !AppDB.data.assignments) return;
@@ -22,8 +17,8 @@ App.renderDashboardData = function() {
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
     const isSupervisor = (activeUsername === "admin" || userLevel >= 2); // Admin, Gerente, Coordinador
 
-    let globalProcessedSum = 0;     // Suma de todas las gestiones numéricas del equipo o individuales
-    let individualProcessedSum = 0; // Suma exclusiva de las gestiones procesadas por el usuario activo
+    let globalProcessedSum = 0;     // Suma absoluta de todas las gestiones numéricas de todo el equipo
+    let individualProcessedSum = 0; // Suma estricta de las unidades/gestiones hechas por el usuario en sesión
     let totalWarning = 0;
     let totalDanger = 0;
     let metaTotalCount = 0;
@@ -37,7 +32,7 @@ App.renderDashboardData = function() {
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
-        // FILTRADO DE GOBERNANZA: El analista de nivel 1 solo ve sus propios registros en la tabla
+        // FILTRADO DE GOBERNANZA: El analista base solo ve sus propios registros
         if (!isSupervisor && item.assignedTo !== activeUsername) return;
 
         // Filtrado de calendario mensual
@@ -54,18 +49,13 @@ App.renderDashboardData = function() {
         const itemProcessed = parseInt(item.processed || 0);
         const taskOwner = item.assignedTo || item.createdBy || "";
 
-        // CONTROL DE SUMATORIAS NUMÉRICAS SEGÚN ROL (CAMBIO SOLICITADO)
-        if (isSupervisor) {
-            // Supervisores ven la suma absoluta de todo el equipo en la primera caja
-            globalProcessedSum += itemProcessed;
-            
-            // Y acumulan de forma aislada solo lo que ellos mismos procesaron
-            if (taskOwner === activeUsername) {
-                individualProcessedSum += itemProcessed;
-            }
-        } else {
-            // El analista ve únicamente la suma de sus gestiones individuales
-            globalProcessedSum += itemProcessed;
+        // MATEMÁTICA DE CONTEO DETALLADO (CAMBIO SOLICITADO)
+        // 1. El total general del equipo siempre acumula el valor neto de la gestión de la fila
+        globalProcessedSum += itemProcessed;
+        
+        // 2. Si la fila pertenece al supervisor logueado, sumamos el valor interno numérico a su bolsa personal
+        if (taskOwner === activeUsername) {
+            individualProcessedSum += itemProcessed;
         }
 
         if (item.status === "completed" || itemProcessed >= itemMeta && itemMeta > 0) {
@@ -105,7 +95,6 @@ App.renderDashboardData = function() {
             <a href="${item.mailUrl}" target="_blank" class="btn-secondary" style="padding:4px 8px; margin-right:4px; text-decoration:none; font-size:11px; font-weight:bold; background:#f0fdf4; border:1px solid #16a34a; color:#16a34a; border-radius:4px;">✉️ Zoho Mail</a>
         ` : "";
 
-        // Mostrar quién es el dueño de la tarea en la fila solo si el usuario es supervisor
         const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${taskOwner}</small>` : "";
 
         let tr = document.createElement("tr");
@@ -132,7 +121,7 @@ App.renderDashboardData = function() {
         }
     });
 
-    // INYECCIÓN VISUAL DE LOS VALORES COMPILADOS EN LAS CAJAS
+    // ASIGNACIÓN GRÁFICA A LAS TARJETAS FLOTANTES
     document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString();
     
     const labelTotal = document.getElementById("labelTotalRealizadas");
@@ -141,12 +130,12 @@ App.renderDashboardData = function() {
     if (isSupervisor) {
         if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
         if (cardIndiv) {
-            cardIndiv.classList.remove("hidden"); // Mostrar caja de producción propia
+            cardIndiv.classList.remove("hidden");
             document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString();
         }
     } else {
         if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
-        if (cardIndiv) cardIndiv.classList.add("hidden"); // Esconder para analistas nivel 1
+        if (cardIndiv) cardIndiv.classList.add("hidden");
     }
 
     document.getElementById("countWarning").innerText = totalWarning;
