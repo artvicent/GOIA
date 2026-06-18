@@ -298,7 +298,7 @@ App.openReportsMenu = function() {
                 
             </div>
             
-            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #0f52a9; padding-top: 10px;color: #0f52a9">
+            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #0f52a9; padding-top: 10px;color: #0f52a9;">
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
             </div>
         </div>
