@@ -321,23 +321,95 @@ App.openReportsMenu = function() {
 /* =========================================================================
    MÓDULO DE REPORTES AUDITABLES EN ALTA DENSIDAD (v2.02) - PARTE 2 DE 2
    ========================================================================= */
-App.executeExportDataToPDF = function(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, selfActivityCount, selfTotalMeta, selfTotalProcessed, userFullName, userRole, activeUsername) {
+/* =========================================================================
+   REESCRITURA DE EXPORTACIÓN (v2.02) - PARTE 1 DE 2 (CÁLCULOS NETOS)
+   ========================================================================= */
+App.executeExportDataToPDF = function(tipoReporte) {
+    if (!AppDB.data || !AppDB.data.assignments) {
+        return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
+    }
+
+    console.warn(`⚙️ GOIA INTERCEPTOR: Desactivando captura de pantalla. Generando PDF analítico estructural de tipo: ${tipoReporte}`);
+
+    // 1. Identificación y Limpieza de la Sesión Activa
+    const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+    const userRole = App.currentUser ? App.currentUser.role : "Gerente";
+    const userFullName = `${App.currentUser?.names || 'Arturo'} ${App.currentUser?.lastnames || 'Valero'}`;
+
+    // 2. Inicialización de Acumuladores Matemáticos para Totalización Obligatoria
+    let teamTotalMeta = 0;
+    let teamTotalProcessed = 0;
+    let teamActivityCount = 0;
+
+    let selfTotalMeta = 0;
+    let selfTotalProcessed = 0;
+    let selfActivityCount = 0;
+
+    const assignmentsData = AppDB.data.assignments;
+    const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
+    let tableRowsHtml = "";
+
+    // 3. Procesamiento y Clasificación de Datos por Actividad Realizada y Meta
+    assignmentsArray.forEach(function(item) {
+        if (!item) return;
+
+        const itemMeta = parseInt(item.meta || item.target || 0);
+        const itemProcessed = parseInt(item.processed || item.realizadas || 0);
+        
+        // Limpieza de hilos de identidad corporativa
+        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
+        const cleanActiveUser = String(activeUsername).trim().toLowerCase().replace("@", "");
+
+        // A) Acumulación del Equipo
+        teamTotalMeta += itemMeta;
+        teamTotalProcessed += itemProcessed;
+        teamActivityCount++;
+
+        // B) Acumulación Individual del Supervisor en Sesión
+        const isOwnTask = (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin"));
+        if (isOwnTask) {
+            selfTotalMeta += itemMeta;
+            selfTotalProcessed += itemProcessed;
+            selfActivityCount++;
+        }
+
+        let statusText = "Pendiente";
+        if (item.status === "completed" || itemProcessed >= itemMeta) statusText = "Culminada";
+
+        // Cuerpo analítico del desglose
+        tableRowsHtml += `
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 7px; font-size: 11px; text-align: left;"><b>${item.name || item.title || 'Ticket'}</b><br><small style="color:#64748b;">👤 @${item.assignedTo || 'S/A'}</small></td>
+                <td style="padding: 7px; font-size: 11px; text-align: center; font-weight: bold;">${itemMeta.toLocaleString("es-VE")}</td>
+                <td style="padding: 7px; font-size: 11px; text-align: center;">${itemProcessed.toLocaleString("es-VE")}</td>
+                <td style="padding: 7px; font-size: 11px; text-align: center;"><span style="font-weight:600; color:${statusText === 'Culminada' ? '#16a34a' : '#b91c1c'}">${statusText}</span></td>
+            </tr>`;
+    });
+
+    // Envío síncrono del flujo hacia la maqueta limpia de impresión
+    App.renderPdfPrintSandboxLayout(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, selfActivityCount, selfTotalMeta, selfTotalProcessed, userFullName, userRole, activeUsername, tipoReporte);
+};
+/* =========================================================================
+   REESCRITURA DE EXPORTACIÓN (v2.02) - PARTE 2 DE 2 (MAQUETACIÓN HTML FISCAL)
+   ========================================================================= */
+App.renderPdfPrintSandboxLayout = function(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, selfActivityCount, selfTotalMeta, selfTotalProcessed, userFullName, userRole, activeUsername, tipoReporte) {
     const teamIED = teamTotalMeta > 0 ? Math.round((teamTotalProcessed / teamTotalMeta) * 100) : 0;
     const selfIED = selfTotalMeta > 0 ? Math.round((selfTotalProcessed / selfTotalMeta) * 100) : 0;
 
+    // Crear un entorno popup sandbox aislado libre de estilos intrusivos de la app
     const reportWindow = window.open("", "_blank");
-    if (!reportWindow) return alert("❌ Error: Permita las ventanas emergentes para descargar el PDF.");
+    if (!reportWindow) return alert("❌ Error: Pop-ups bloqueados. Active los permisos en su navegador para emitir el PDF.");
 
     reportWindow.document.write(`
         <!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <title>Reporte Consolidado de Integridad de Adquirencia</title>
+            <title>Reporte Consolidado ${tipoReporte} - GOIA</title>
             <style>
                 body { font-family: Arial, sans-serif; color: #0f172a; margin: 25px; line-height: 1.4; }
                 .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 5px 8px; border-left: 4px solid #1e3a8a; margin-top: 15px; margin-bottom: 8px; text-transform: uppercase; }
+                .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 5px 8px; border-left: 4px solid #1e3a8a; margin-top: 15px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
                 .summary-grid { display: table; width: 100%; table-layout: fixed; margin-bottom: 12px; border-collapse: collapse; }
                 .summary-box { display: table-cell; border: 1px solid #cbd5e1; padding: 8px; text-align: center; background: #fff; }
                 .summary-num { font-size: 16px; font-weight: bold; color: #1e40af; margin-top: 2px; }
@@ -351,8 +423,8 @@ App.executeExportDataToPDF = function(tableRowsHtml, teamActivityCount, teamTota
         </head>
         <body>
             <div class="no-print" style="background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 11px; font-weight: bold; color: #334155;">📋 Vista Previa del Reporte de Auditoría</span>
-                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px;">🖨️ Confirmar e Imprimir / Guardar PDF</button>
+                <span style="font-size: 11px; font-weight: bold; color: #334155;">📋 Balance Operacional de Adquirencia (${tipoReporte})</span>
+                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px;">🖨️ Guardar PDF / Imprimir Reporte</button>
             </div>
 
             <table class="header-table">
@@ -362,34 +434,36 @@ App.executeExportDataToPDF = function(tableRowsHtml, teamActivityCount, teamTota
                         <p style="margin: 2px 0 0 0; font-size: 11px; color: #475569;">Gestión Operacional de Integridad de Adquirencia</p>
                     </td>
                     <td style="text-align: right; vertical-align: middle; font-size: 11px; color: #475569;">
-                        <b>Auditor:</b> ${userFullName}<br>
-                        <b>Fecha:</b> ${new Date().toLocaleDateString("es-VE")}<br>
-                        <b>Hora:</b> ${new Date().toLocaleTimeString("es-VE")}
+                        <b>Auditor en Sesión:</b> ${userFullName} (${userRole})<br>
+                        <b>Fecha de Emisión:</b> ${new Date().toLocaleDateString("es-VE")}<br>
+                        <b>Corte Fiscal:</b> Balance Consolidado ${tipoReporte}
                     </td>
                 </tr>
             </table>
 
             <div class="section-title">1. Volumen Operacional del Equipo de Trabajo</div>
             <div class="summary-grid">
-                <div class="summary-box"><div style="font-size: 9px; color: #475569;">ACTIVIDADES DEL EQUIPO</div><div class="summary-num">${teamActivityCount}</div></div>
-                <div class="summary-box"><div style="font-size: 9px; color: #475569;">META / CARGA EQUIPO</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")}</div></div>
-                <div class="summary-box"><div style="font-size: 9px; color: #475569;">GESTIONES REALIZADAS EQUIPO</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")}</div></div>
-                <div class="summary-box"><div style="font-size: 9px; color: #475569;">IED GLOBAL EQUIPO</div><div class="summary-num">${teamIED}%</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">TOTAL ACTIVIDADES EQUIPO</div><div class="summary-num">${teamActivityCount}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">TOTAL META / CARGA EQUIPO</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">TOTAL GESTIONES REALIZADAS</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">EFICIENCIA EQUIPO (IED)</div><div class="summary-num">${teamIED}%</div></div>
             </div>
 
             <div class="section-title">2. Rendimiento Individual de la Supervisión (@${activeUsername})</div>
             <div class="summary-grid">
                 <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MIS ACTIVIDADES PROPIAS</div><div class="summary-num">${selfActivityCount}</div></div>
-                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MI META / CARGA ASIGNADA</div><div class="summary-num">${selfTotalMeta.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MI META / CARGA INDIVIDUAL</div><div class="summary-num">${selfTotalMeta.toLocaleString("es-VE")}</div></div>
                 <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MIS GESTIONES PROCESADAS</div><div class="summary-num">${selfTotalProcessed.toLocaleString("es-VE")}</div></div>
-                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">IED INDIVIDUAL PROPIO</div><div class="summary-num">${selfIED}%</div></div>
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">EFICIENCIA INDIVIDUAL</div><div class="summary-num">${selfIED}%</div></div>
             </div>
 
             <div class="section-title">3. Matriz de Cierre y Totalización General</div>
             <div class="summary-grid">
-                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL ACTIVIDADES GENERALES</div><div class="summary-num">${teamActivityCount} Actividades</div></div>
-                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL METAS GENERALES</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")} Cargas</div></div>
-                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL NETAS PROCESADAS</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")} Gestiones</div></div>
+                <div class="summary-grid">
+                    <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTALIZACIÓN POR ACTIVIDADES</div><div class="summary-num">${teamActivityCount} Actividades</div></div>
+                    <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTALIZACIÓN METAS GENERALES</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")} Cargas</div></div>
+                    <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTALIZACIÓN NETAS PROCESADAS</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")} Gestiones</div></div>
+                </div>
             </div>
 
             <div class="section-title">4. Desglose Analítico por Actividad / Ítem</div>
@@ -403,18 +477,16 @@ App.executeExportDataToPDF = function(tableRowsHtml, teamActivityCount, teamTota
                     </tr>
                 </thead>
                 <tbody>
-                    ${tableRowsHtml || '<tr><td colspan="4" style="color: #64748b; padding: 10px;">No existen transacciones registradas.</td></tr>'}
+                    ${tableRowsHtml || '<tr><td colspan="4" style="color: #64748b; padding: 10px;">No existen transacciones registradas en este mes fiscal.</td></tr>'}
                 </tbody>
             </table>
         </body>
         </html>
     `);
     reportWindow.document.close();
-    
-    // Registrar la traza en la auditoría cloud nativa (Página 12)
-    var operarioLog = App.currentUser ? App.currentUser.username : "admin";
+
     if (typeof AppDB.addLog === "function") {
-        AppDB.addLog(operarioLog, "EXPORTAR_PDF", "Generó balance consolidado de tres capas en PDF portable.");
+        AppDB.addLog(activeUsername, "EXPORTAR_PDF", `Exportó balance consolidado analítico de tipo: ${tipoReporte}`);
     }
 };
 
