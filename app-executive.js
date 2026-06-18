@@ -272,7 +272,7 @@ App.openReportsMenu = function() {
             <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
         </div>
         
-        <div class="admin-config-card" style="padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1;">
+        <div class="admin-config-card" style="padding: 15px; background: #c6e5f5; border-radius: 6px; border: 1px solid #cbd5e1;">
             <div style="margin-bottom: 15px; text-align: center;">
                 <h4 style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: bold;">Reportes de Actividades Realizadas</h4>
                 <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el rango temporal requerido para consolidar la totalización por actividades y metas.</p>
@@ -298,7 +298,7 @@ App.openReportsMenu = function() {
                 
             </div>
             
-            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #0f52a9; padding-top: 10px;">
+            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #0f52a9; padding-top: 10px;color: #0f52a9">
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
             </div>
         </div>
