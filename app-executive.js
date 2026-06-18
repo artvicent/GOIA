@@ -253,51 +253,171 @@ App.markAssignmentAsCompleted = function(index) {
     alert("Actividad guardada en estado culminado.");
     App.renderDashboardData();
 };
-App.openReportsMenu = function() {
-    document.getElementById("modalOverlay").classList.remove("hidden");
-    
-    let totalMeta = 0;
-    let totalProcessed = 0;
-    
-    var assignmentsData = AppDB.data.assignments;
-    var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
+/* =========================================================================
+   MÓDULO DE REPORTES AUDITABLES EN ALTA DENSIDAD (v2.02) - PARTE 1 DE 2
+   ========================================================================= */
+App.openReportsMenu = function() {
+    if (!AppDB.data || !AppDB.data.assignments) {
+        return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
+    }
+
+    // 1. Detección unificada de la Sesión Ejecutiva Activa
+    const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+    const userRole = App.currentUser ? App.currentUser.role : "Gerente";
+    const userFullName = `${App.currentUser?.names || 'Arturo'} ${App.currentUser?.lastnames || 'Valero'}`;
+
+    // 2. Inicialización de Acumuladores por Carga Operacional
+    let teamTotalMeta = 0;
+    let teamTotalProcessed = 0;
+    let teamActivityCount = 0;
+
+    let selfTotalMeta = 0;
+    let selfTotalProcessed = 0;
+    let selfActivityCount = 0;
+
+    const assignmentsData = AppDB.data.assignments;
+    const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
+    let tableRowsHtml = "";
+
+    // 3. Procesamiento y Clasificación de Datos en Red
     assignmentsArray.forEach(function(item) {
         if (!item) return;
-        totalMeta += parseInt(item.meta || item.target || 0);
-        totalProcessed += parseInt(item.processed || 0);
+
+        const itemMeta = parseInt(item.meta || item.target || 0);
+        const itemProcessed = parseInt(item.processed || item.realizadas || 0);
+        
+        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
+        const cleanActiveUser = String(activeUsername).trim().toLowerCase().replace("@", "");
+
+        // Acumulador Nivel 1: Carga Masiva del Equipo de Trabajo
+        teamTotalMeta += itemMeta;
+        teamTotalProcessed += itemProcessed;
+        teamActivityCount++;
+
+        // Acumulador Nivel 2: Producción Individual del Supervisor en Sesión
+        const isOwnTask = (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin"));
+        if (isOwnTask) {
+            selfTotalMeta += itemMeta;
+            selfTotalProcessed += itemProcessed;
+            selfActivityCount++;
+        }
+
+        let statusText = "Pendiente";
+        if (item.status === "completed" || itemProcessed >= itemMeta) statusText = "Culminada";
+
+        tableRowsHtml += `
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 7px; font-size: 11px; text-align: left;"><b>${item.name || item.title || 'Ticket'}</b><br><small style="color:#64748b;">👤 @${item.assignedTo || 'S/A'}</small></td>
+                <td style="padding: 7px; font-size: 11px; text-align: center; font-weight: bold;">${itemMeta.toLocaleString("es-VE")}</td>
+                <td style="padding: 7px; font-size: 11px; text-align: center;">${itemProcessed.toLocaleString("es-VE")}</td>
+                <td style="padding: 7px; font-size: 11px; text-align: center;"><span style="font-weight:600; color:${statusText === 'Culminada' ? '#16a34a' : '#b91c1c'}">${statusText}</span></td>
+            </tr>`;
     });
-    
-    let eficienciaGeneral = totalMeta > 0 ? Math.round((totalProcessed / totalMeta) * 100) : 0;
-    
-    document.getElementById("modalContent").innerHTML = `
-        <div class="modal-inner-header">
-            <h3> Reporte Operacional General</h3>
-            <button onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
-        </div>
-        <div class="admin-config-card report-card-gap">
-            <p class="report-meta-text"><b>Ciclo Evaluado:</b> Año en Curso 2026</p>
-            <p class="report-data-text"><b>Volumen de Metas Cargadas:</b> ${totalMeta} items.</p>
-            <p class="report-data-text"><b>Volumen de Gestiones Procesadas:</b> ${totalProcessed} items.</p>
-            <p class="report-efficiency-text"><b>Índice Neto de Eficiencia (IED):</b> ${eficienciaGeneral}%</p>
-            <div class="modal-divider-line"></div>
-            <label class="report-export-label-title"> MÓDULO DE EXPORTACIÓN EXCEL / PDF</label>
-            <div class="report-buttons-grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-                <button onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary-export bg-sky-export" style="padding: 10px; font-weight: bold; cursor: pointer;">GENERAR REPORTE SEMANAL (.PDF)</button>
-                <button onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary-export bg-navy-export" style="padding: 10px; font-weight: bold; cursor: pointer;">GENERAR REPORTE MENSUAL (.PDF)</button>
+
+    // Delegación analítica de la compilación hacia el renderizador del layout
+    App.executeExportDataToPDF(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, selfActivityCount, selfTotalMeta, selfTotalProcessed, userFullName, userRole, activeUsername);
+};
+/* =========================================================================
+   MÓDULO DE REPORTES AUDITABLES EN ALTA DENSIDAD (v2.02) - PARTE 2 DE 2
+   ========================================================================= */
+App.executeExportDataToPDF = function(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, selfActivityCount, selfTotalMeta, selfTotalProcessed, userFullName, userRole, activeUsername) {
+    const teamIED = teamTotalMeta > 0 ? Math.round((teamTotalProcessed / teamTotalMeta) * 100) : 0;
+    const selfIED = selfTotalMeta > 0 ? Math.round((selfTotalProcessed / selfTotalMeta) * 100) : 0;
+
+    const reportWindow = window.open("", "_blank");
+    if (!reportWindow) return alert("❌ Error: Permita las ventanas emergentes para descargar el PDF.");
+
+    reportWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Reporte Consolidado de Integridad de Adquirencia</title>
+            <style>
+                body { font-family: Arial, sans-serif; color: #0f172a; margin: 25px; line-height: 1.4; }
+                .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .section-title { font-size: 12px; font-weight: bold; background: #f1f5f9; padding: 5px 8px; border-left: 4px solid #1e3a8a; margin-top: 15px; margin-bottom: 8px; text-transform: uppercase; }
+                .summary-grid { display: table; width: 100%; table-layout: fixed; margin-bottom: 12px; border-collapse: collapse; }
+                .summary-box { display: table-cell; border: 1px solid #cbd5e1; padding: 8px; text-align: center; background: #fff; }
+                .summary-num { font-size: 16px; font-weight: bold; color: #1e40af; margin-top: 2px; }
+                .summary-box.purple .summary-num { color: #4f46e5; }
+                .summary-box.green .summary-num { color: #16a34a; }
+                .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                .data-table th { background: #1e3a8a; color: white; padding: 6px; font-size: 11px; text-transform: uppercase; }
+                .data-table td { padding: 6px; font-size: 11px; text-align: center; border-bottom: 1px solid #cbd5e1; }
+                @media print { .no-print { display: none !important; } body { margin: 10px; } }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: bold; color: #334155;">📋 Vista Previa del Reporte de Auditoría</span>
+                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px;">🖨️ Confirmar e Imprimir / Guardar PDF</button>
             </div>
-            <div class="modal-divider-line"></div>
-            <p class="report-footer-disclaimer">Este balance consolida todas las actividades de Pin Pagos, desinstalaciones y requerimientos de Help Desk procesados de forma global por el equipo.</p>
-        </div>
-    `;
+
+            <table class="header-table">
+                <tr>
+                    <td style="text-align: left; vertical-align: middle;">
+                        <h2 style="margin: 0; font-size: 18px; color: #1e3a8a; font-weight: bold;">GOIA v2.02</h2>
+                        <p style="margin: 2px 0 0 0; font-size: 11px; color: #475569;">Gestión Operacional de Integridad de Adquirencia</p>
+                    </td>
+                    <td style="text-align: right; vertical-align: middle; font-size: 11px; color: #475569;">
+                        <b>Auditor:</b> ${userFullName}<br>
+                        <b>Fecha:</b> ${new Date().toLocaleDateString("es-VE")}<br>
+                        <b>Hora:</b> ${new Date().toLocaleTimeString("es-VE")}
+                    </td>
+                </tr>
+            </table>
+
+            <div class="section-title">1. Volumen Operacional del Equipo de Trabajo</div>
+            <div class="summary-grid">
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">ACTIVIDADES DEL EQUIPO</div><div class="summary-num">${teamActivityCount}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">META / CARGA EQUIPO</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">GESTIONES REALIZADAS EQUIPO</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box"><div style="font-size: 9px; color: #475569;">IED GLOBAL EQUIPO</div><div class="summary-num">${teamIED}%</div></div>
+            </div>
+
+            <div class="section-title">2. Rendimiento Individual de la Supervisión (@${activeUsername})</div>
+            <div class="summary-grid">
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MIS ACTIVIDADES PROPIAS</div><div class="summary-num">${selfActivityCount}</div></div>
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MI META / CARGA ASIGNADA</div><div class="summary-num">${selfTotalMeta.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">MIS GESTIONES PROCESADAS</div><div class="summary-num">${selfTotalProcessed.toLocaleString("es-VE")}</div></div>
+                <div class="summary-box purple"><div style="font-size: 9px; color: #475569;">IED INDIVIDUAL PROPIO</div><div class="summary-num">${selfIED}%</div></div>
+            </div>
+
+            <div class="section-title">3. Matriz de Cierre y Totalización General</div>
+            <div class="summary-grid">
+                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL ACTIVIDADES GENERALES</div><div class="summary-num">${teamActivityCount} Actividades</div></div>
+                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL METAS GENERALES</div><div class="summary-num">${teamTotalMeta.toLocaleString("es-VE")} Cargas</div></div>
+                <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d;">TOTAL NETAS PROCESADAS</div><div class="summary-num">${teamTotalProcessed.toLocaleString("es-VE")} Gestiones</div></div>
+            </div>
+
+            <div class="section-title">4. Desglose Analítico por Actividad / Ítem</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; width: 45%;">Actividad / Ítem / Operador</th>
+                        <th style="width: 20%;">Meta / Carga</th>
+                        <th style="width: 20%;">Procesadas</th>
+                        <th style="width: 15%;">Estado Operativo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRowsHtml || '<tr><td colspan="4" style="color: #64748b; padding: 10px;">No existen transacciones registradas.</td></tr>'}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+    reportWindow.document.close();
+    
+    // Registrar la traza en la auditoría cloud nativa (Página 12)
+    var operarioLog = App.currentUser ? App.currentUser.username : "admin";
+    if (typeof AppDB.addLog === "function") {
+        AppDB.addLog(operarioLog, "EXPORTAR_PDF", "Generó balance consolidado de tres capas en PDF portable.");
+    }
 };
 
-App.executeExportDataToPDF = function(tipoReporte) {
-    var operarioLog = App.currentUser ? App.currentUser.username : "admin";
-    alert(` Procesando algoritmo de compilación...\nGenerando reporte consolidado ${tipoReporte} en formato PDF portable de la Gerencia.`);
-    window.print();
-    AppDB.addLog(operarioLog, "EXPORTAR_PDF", `Exportó balance consolidado de tipo: ${tipoReporte}`);
-};
 /**
 * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
 * PARTE 3 DE 3: ELIMINACIÓN CLOUD, PODIO DE MÉRITO Y MENÚ DE AVATARES PERSONALIZADOS
