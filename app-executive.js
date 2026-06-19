@@ -21,30 +21,39 @@ App.renderDashboardData = function() {
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
     const isSupervisor = (activeUsername === "admin" || userLevel >= 2);
 
-    /* =========================================================================
-       INYECCIÓN DINÁMICA DEL TERCER FILTRO DE COLABORADORES EN LA BARRA
+        /* =========================================================================
+       INYECCIÓN DINÁMICA DEL TERCER FILTRO ALINEADO EN LA MISMA FILA (v2.02)
        ========================================================================= */
     let userSelect = document.getElementById("filterAssignmentUser");
     
-    // Si el filtro no existe físicamente en la pantalla, lo creamos e inyectamos al lado del de "Todas las Cargas"
+    // Si el filtro no existe físicamente en la pantalla, lo creamos y alineamos en línea
     if (!userSelect && isSupervisor) {
         const statusSelect = document.getElementById("filterAssignmentStatus");
         if (statusSelect && statusSelect.parentNode) {
             userSelect = document.createElement("select");
             userSelect.id = "filterAssignmentUser";
-            userSelect.className = "form-control";
-            userSelect.style.padding = "6px";
-            userSelect.style.borderRadius = "4px";
-            userSelect.style.marginLeft = "8px"; // Separación elegante horizontal
+            // Quitamos la clase form-control que causaba el tamaño gigante del 100%
+            userSelect.className = ""; 
+            
+            // ATRIBUTOS DE DISEÑO DE ALTA PRECISIÓN (Mismo tamaño exacto de tus botones)
+            userSelect.style.padding = "6px 12px";
+            userSelect.style.borderRadius = "6px";
+            userSelect.style.marginLeft = "8px"; 
             userSelect.style.border = "1px solid #cbd5e1";
-            userSelect.style.color = "#334155";
+            userSelect.style.color = "#1e293b";
             userSelect.style.fontSize = "13px";
             userSelect.style.fontWeight = "600";
+            userSelect.style.background = "#ffffff";
+            userSelect.style.height = "34px"; // Altura idéntica de la barra nativa
+            userSelect.style.cursor = "pointer";
+            userSelect.style.display = "inline-block";
+            userSelect.style.width = "auto"; // Evita que se estire al 100%
+            userSelect.style.maxWidth = "200px"; // Ancho compacto controlado
             
-            // Opción por defecto
+            // Opción base
             userSelect.innerHTML = `<option value="all">Todos los Colaboradores</option>`;
             
-            // Poblar el filtro con el listado de usuarios de tu base de datos Firebase
+            // Poblar el filtro leyendo la nómina
             if (AppDB.data.users) {
                 Object.values(AppDB.data.users).forEach(function(u) {
                     const cleanName = u.username.replace("@", "").toLowerCase();
@@ -52,10 +61,10 @@ App.renderDashboardData = function() {
                 });
             }
             
-            // Conectar el evento de cambio para que refresque la tabla al seleccionar un usuario
+            // Conectar evento de cruce
             userSelect.onchange = function() { App.renderDashboardData(); };
             
-            // Insertar el nuevo filtro inmediatamente después del selector de estados
+            // Insertar de inmediato a la derecha de "Todas las Cargas"
             statusSelect.parentNode.insertBefore(userSelect, statusSelect.nextSibling);
         }
     }
