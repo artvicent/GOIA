@@ -345,26 +345,27 @@ App.openAssignmentModal = function() {
                 <input type="text" id="asigRef" required class="form-control" placeholder="Ej: REF-2026-A">
             </div>
             
+             <!-- REESTRUCTURACIÓN CRONOLÓGICA DE PLAZOS COMPLEJOS (GOIA v2.02) -->
             <div class="form-group mt-2">
-                <label style="display:block; font-weight:bold; margin-bottom:4px; font-size:11px; color:#1e3a8a;">PLAZO OPERATIVO COMPLEJO DE ENTREGA</label>
-                <div style="display:flex; gap:6px;">
-                <div style="flex:1;">
-                <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">DÍAS</span>
-                <input type="number" id="taskDeadlineDays" min="0" value="0" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+            <label>PLAZO OPERATIVO COMPLEJO DE ENTREGA</label>
+            <div class="input-inline-row">
+                <div class="flex-1">
+                    <span>DÍAS</span>
+                    <input type="number" id="taskDeadlineDays" min="0" value="0" class="form-control">
                 </div>
-                <div style="flex:1;">
-                <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">HORAS</span>
-                <input type="number" id="taskDeadlineHours" min="0" max="23" value="0" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+                <div class="flex-1">
+                    <span>HORAS</span>
+                    <input type="number" id="taskDeadlineHours" min="0" max="23" value="0" class="form-control">
                 </div>
-                <div style="flex:1;">
-                <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">MINUTOS</span>
-                <input type="number" id="taskDeadlineMinutes" min="0" max="59" value="30" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+                <div class="flex-1">
+                    <span>MINUTOS</span>
+                    <input type="number" id="taskDeadlineMinutes" min="0" max="59" value="30" class="form-control">
                 </div>
-                </div>
-                <!-- Mantenemos un input oculto con el ID viejo para que los scripts nativos de tu app no se rompan ni lancen errores de nulo -->
-                <input type="hidden" id="asigDuration" value="30">
             </div>
-            
+            <!-- Campo oculto de respaldo obligatorio para mantener la compatibilidad nativa -->
+            <input type="hidden" id="asigDuration" value="30">
+            </div>
+
             <div class="modal-action-row-footer">
                 <button type="submit" class="btn-primary-submit">Cargar Asignación</button>
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
