@@ -96,39 +96,33 @@ App.openAssignmentModal = function() {
         </form>
     `;
 };
-/**
- * ADMINISTRACIÓN PARTE B: ASIGNACIÓN DE CARGAS Y METAS (app-admin-assign.js)
- * GOBERNANZA DE RED Y CANAL DOCUMENTAL ZOHO MAIL - GOIA v2.02
- */
-
+/* =========================================================================
+   MÓDULO: CAPTURA DE PLAZOS COMPLEJOS (v2.02) - PARTE 1 DE 2
+   ========================================================================= */
 if (typeof App === 'undefined') window.App = {};
 
 App.openAssignmentModal = function() {
     // 1. Desplegar la capa del modal SPA
     document.getElementById("modalOverlay").classList.remove("hidden");
-    
+ 
     // 2. Cargar selector del catálogo operativo
     let optsManagements = "";
     if (AppDB.data && AppDB.data.managements) {
         AppDB.data.managements.forEach(function(m) {
             if (m && m.name) {
-                optsManagements += `<option value="${m.id}">${m.name}</option>`;
+                optsManagements += `<option value="${m.name}">${m.name}</option>`;
             }
         });
     }
-
+    
     // 3. CERROJO DE SEGURIDAD DE RED: Determinar destinatarios permitidos
     let optsUsers = "";
     const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-    
-    // Validar el nivel jerárquico (lvl) inyectado en db.js
     const userRole = App.currentUser ? App.currentUser.role : "Analista";
     const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
-    
-    // REGLA: Admin (maestro), Gerentes (lvl 4) y Coordinadores (lvl 2 o superior) asignan a otros
+ 
     const canAssignToOthers = (activeUser === "admin" || userLevel >= 2);
-
     if (canAssignToOthers) {
         if (AppDB.data && AppDB.data.users) {
             Object.keys(AppDB.data.users).forEach(function(username) {
@@ -140,11 +134,10 @@ App.openAssignmentModal = function() {
             optsUsers = `<option value="${activeUser}">@${activeUser} (Mi Perfil)</option>` + optsUsers;
         }
     } else {
-        // Analistas y Especialistas (lvl 1): Solo pueden seleccionarse a ellos mismos
         optsUsers += `<option value="${activeUser}">@${activeUser} (Mi Propio Perfil)</option>`;
     }
 
-    // 4. Inyectar el nuevo esqueleto libre de atributos de estilo en línea
+    // 4. INYECCIÓN DE LA INTERFAZ CON EL NUEVO FORMULARIO TRIPLE EN FILA HORIZONTAL
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
             <h3>Asignar Nueva Actividad / Ítem</h3>
@@ -155,47 +148,64 @@ App.openAssignmentModal = function() {
                 <label>Nombre de la Actividad / Tarea</label>
                 <input type="text" id="asigName" required class="form-control" placeholder="Ej: Control de Lotes Diarios">
             </div>
-            
+ 
             <div class="form-group mt-2">
                 <label>Colaborador Destinatario (Asignado A)</label>
                 <select id="asigUserTarget" class="form-control full-width" required>${optsUsers}</select>
             </div>
-            
+ 
             <div class="form-group mt-2">
                 <label>Catálogo de Gestión Asociado</label>
-                <select id="asigMgmt" class="form-control full-width">${optsManagements}</select>
+                <select id="asigMgmt" class="form-control full-width" required>${optsManagements}</select>
             </div>
-            
+ 
             <div class="form-group mt-2">
                 <label>Enlace de Correo Obligatorio (URL Zoho Mail / Soporte)</label>
                 <input type="url" id="asigMailLink" class="form-control" placeholder="https://zoho.com..." required>
             </div>
-            
+ 
             <div class="form-group mt-2">
                 <label>Meta Numérica / Carga de Trabajo</label>
                 <input type="number" id="asigMeta" required class="form-control" min="1" placeholder="Ej: 100">
             </div>
-            
+ 
             <div class="form-group mt-2">
                 <label>Origen / Referencia de Auditoría</label>
                 <input type="text" id="asigRef" required class="form-control" placeholder="Ej: REF-2026-A">
             </div>
-            
+ 
+            <!-- NUEVA FILA COMPACTA TRIPLE DE TIEMPOS COMPLEJOS EN LÍNEA HORIZONTAL -->
             <div class="form-group mt-2">
-                <label>Tiempo Límite Máximo de ANS (Minutos)</label>
-                <input type="number" id="asigDuration" required class="form-control" min="5" placeholder="Ej: 60">
+                <label style="display:block; font-weight:bold; margin-bottom:4px; font-size:11px; color:#1e3a8a;">PLAZO OPERATIVO COMPLEJO DE ENTREGA</label>
+                <div style="display:flex; gap:6px;">
+                    <div style="flex:1;">
+                        <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">DÍAS</span>
+                        <input type="number" id="taskDays" min="0" value="0" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+                    </div>
+                    <div style="flex:1;">
+                        <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">HORAS</span>
+                        <input type="number" id="taskHours" min="0" max="23" value="0" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+                    </div>
+                    <div style="flex:1;">
+                        <span style="font-size:9px; color:#64748b; font-weight:bold; display:block; margin-bottom:2px;">MINUTOS</span>
+                        <input type="number" id="taskMinutes" min="0" max="59" value="30" class="form-control" style="width:100%; padding:6px; text-align:center; font-weight:bold;">
+                    </div>
+                </div>
             </div>
-            
-            <div class="modal-action-row-footer">
+ 
+            <div class="modal-action-row-footer" style="margin-top:15px;">
                 <button type="submit" class="btn-primary-submit">Cargar Asignación</button>
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel">Cancelar</button>
             </div>
         </form>
     `;
 };
+/* =========================================================================
+   MÓDULO: CAPTURA DE PLAZOS COMPLEJOS (v2.02) - PARTE 2 DE 2
+   ========================================================================= */
 App.executeCreateAssignment = function(e) {
     e.preventDefault();
-    
+ 
     try {
         if (typeof AppDB === 'undefined' || !AppDB.data) {
             alert("Error crítico: El motor de base de datos AppDB no responde.");
@@ -203,13 +213,23 @@ App.executeCreateAssignment = function(e) {
         }
 
         // Capturar los elementos correspondientes del formulario inyectado
+        const asigName = document.getElementById("asigName").value.trim();
         const userTarget = document.getElementById("asigUserTarget").value;
-        const mgmtNameSelected = document.getElementById("asigMgmtName").value;
+        const mgmtNameSelected = document.getElementById("asigMgmt").value;
         const mailLink = document.getElementById("asigMailLink").value.trim();
         const meta = parseInt(document.getElementById("asigMeta").value) || 0;
         const reference = document.getElementById("asigRef").value.trim();
-        const durationMin = parseInt(document.getElementById("asigDuration").value) || 30;
-        
+ 
+        // CAPTURA CRONOLÓGICA DE LAS TRES NUEVAS CASILLAS
+        const days = parseInt(document.getElementById("taskDays").value || 0);
+        const hours = parseInt(document.getElementById("taskHours").value || 0);
+        const minutes = parseInt(document.getElementById("taskMinutes").value || 0);
+
+        if (days === 0 && hours === 0 && minutes === 0) {
+            alert("⚠️ ALERTA: Debe asignar un plazo mínimo de entrega (Días, Horas o Minutos).");
+            return;
+        }
+
         const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
         const userRole = App.currentUser ? App.currentUser.role : "Analista";
         const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
@@ -230,15 +250,19 @@ App.executeCreateAssignment = function(e) {
         // INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
         var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
         AppDB.data.config.ticketCounter = assignedTicketNum;
-
+        
+        // ALGORITMO DE ADICIÓN CRONOLÓGICA EN MILISEGUNDOS
         const now = new Date();
-        const deadline = new Date(now.getTime() + durationMin * 60000);
-        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + mgmtNameSelected;
+        const durationMin = (days * 24 * 60) + (hours * 60) + minutes; // Respaldo numérico en minutos plano
+        const totalMs = (days * 24 * 60 * 60 * 1000) + (hours * 60 * 60 * 1000) + (minutes * 60 * 1000);
+        const deadline = new Date(now.getTime() + totalMs);
 
-        // Inyectar el registro indexado con doble mapeo al array vivo
+        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + asigName;
+
+        // Inyectar el registro indexado con doble mapeo al array vivo de Firebase
         AppDB.data.assignments.push({
             id: assignedTicketNum,
-            name: ticketTitleFormatted, // Se guarda estructurado automáticamente
+            name: ticketTitleFormatted, 
             title: "Ticket #" + assignedTicketNum,
             assignedTo: userTarget, 
             managementName: mgmtNameSelected,
@@ -259,26 +283,26 @@ App.executeCreateAssignment = function(e) {
 
         // Cifrar con el algoritmo XOR y transmitir a Firebase
         AppDB.save();
-        AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
-        
+        AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " con plazo de " + days + "d " + hours + "h " + minutes + "m asignado a @" + userTarget);
+ 
         document.getElementById("modalOverlay").classList.add("hidden");
         alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
-        
+ 
         // Forzar actualización del Dashboard en caliente
         if (typeof App.renderDashboardData === 'function') {
             App.renderDashboardData();
         } else {
             window.location.reload();
         }
-
     } catch (error) {
         console.error("Error crítico de transmisión cloud de asignaciones: ", error);
         alert("Fallo en el transporte digital: " + error.message);
     }
 };
 
-// Inactivar el emisor de tickets express duplicado
+// Sincronizar el emisor redundante de la base del archivo
 App.handleCreateTicketAssignment = function(event) {
     if (event) event.preventDefault();
     App.openAssignmentModal(); 
 };
+
