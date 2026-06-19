@@ -593,52 +593,65 @@ App.InactivityMonitor = {
     },
 
         // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
+        // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
     executeAutoLogout() {
         console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono de estación.");
         
         if (App.currentUser) {
-            // 1. PURGA ABSOLUTA DE MEMORIAS DEL NAVEGADOR (Cierra la brecha de Ctrl + F5 / Ctrl + Shift + R)
+            // 1. ANULACIÓN DE INSTANCIA Y PRIVILEGIOS DE SESIÓN EN FIREBASE (IndexedDB)
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                try {
+                    // Este comando destruye el token real en los servidores de Google y purga IndexedDB de raíz
+                    firebase.auth().signOut().then(function() {
+                        console.log("🛡️ MONITOR: Token nativo de Firebase revocado con éxito de IndexedDB.");
+                    }).catch(function(err) {
+                        console.error("Error al revocar token nativo:", err);
+                    });
+                } catch (e) {
+                    console.error("Error síncrono al invocar signOut:", e);
+                }
+            }
+
+            // 2. PURGA COMPLETA DE MEMORIAS VOLÁTILES Y PERSISTENTES LOCALES
             sessionStorage.removeItem("goia_active_session");
             sessionStorage.clear();
-            
-            // BORRAR EL LOCALSTORAGE (Aquí es donde db.js o Firebase guardan la persistencia encriptada)
             localStorage.removeItem("goia_active_session");
             localStorage.removeItem("local_user");
-            localStorage.clear(); // Limpieza total de llaves persistentes de red
+            localStorage.clear();
 
-            // 2. ELIMINACIÓN DE COOKIES DE SESIÓN EN EL DOMINIO
+            // 3. ELIMINACIÓN DE COOKIES DE SEGURIDAD EN EL DOMINIO
             document.cookie.split(";").forEach(function(c) { 
                 document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
             });
             
             alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
             
-            // 3. Destruir el objeto de identidad en la memoria RAM
+            // 4. Destruir el objeto de identidad en la memoria RAM
             App.currentUser = null;
             
-            // 4. Limpiar cuadros de texto de formularios previos por resguardo de datos
+            // 5. Limpiar cuadros de texto de formularios previos por resguardo de datos
             const userField = document.getElementById("loginUser");
             const passField = document.getElementById("loginPass");
             if (userField) userField.value = "";
             if (passField) passField.value = "";
 
-            // 5. Ocultar la barra superior (Banner de control)
+            // 6. Ocultar la barra superior (Banner de control)
             const topBanner = document.getElementById("topBanner");
             if (topBanner) topBanner.classList.add("hidden");
 
-            // 6. Detener relojes secundarios e intervalos de barrido
+            // 7. Detener relojes secundarios e intervalos de barrido
             if (window.AppTimerInterval) clearInterval(window.AppTimerInterval);
             if (window.AppDashboardIntervalActive) {
                 window.AppDashboardIntervalActive = false;
                 clearInterval(window.AppDashboardIntervalActive);
             }
 
-            // 7. Rumbear al operador de vuelta al cascarón del Login SPA
+            // 8. Rumbear al operador de vuelta al cascarón del Login SPA
             if (typeof App.showView === "function") {
                 App.showView("viewLogin");
             }
             
-            // Forzar un redireccionamiento limpio rompiendo hilos persistentes en la pestaña
+            // 9. Forzar un redireccionamiento limpio rompiendo hilos en la pestaña
             window.location.reload(); 
         }
     },
