@@ -1,4 +1,10 @@
 
+/* =========================================================================
+   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS (v2.02) - PARTE 1 DE 2
+   ========================================================================= */
+// Bolsa de memoria temporal persistente para almacenar las alertas descartadas
+App.closedAlertsMemory = App.closedAlertsMemory || [];
+
 App.renderDashboardData = function() {
     if (!AppDB.data || !AppDB.data.assignments) return;
     
@@ -10,27 +16,14 @@ App.renderDashboardData = function() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
     
-    // CAPTURA MEJORADA DE IDENTIDAD CORPORATIVA DIRECTA DE LA INTERFAZ
-    let activeUsername = "admin";
-    if (App.currentUser && App.currentUser.username) {
-        activeUsername = App.currentUser.username;
-    } else {
-        // Extracción de emergencia desde el encabezado visual si el objeto global está vacío
-        const headerUserElement = document.querySelector(".header-user-info h2, h2");
-        if (headerUserElement) {
-            const headerText = headerUserElement.innerText.toLowerCase();
-            if (headerText.includes("arturo") || headerText.includes("valero")) {
-                activeUsername = "ccavalero"; // Forzar el ID técnico exacto visible en pantalla
-            }
-        }
-    }
-    
-    const userRole = App.currentUser ? App.currentUser.role : "Gerente";
-    const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 4 };
-    const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 4;
-    const isSupervisor = (activeUsername === "admin" || activeUsername === "ccavalero" || userLevel >= 2);
+    // Captura estricta de identidades y jerarquías desde el núcleo
+    const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+    const userRole = App.currentUser ? App.currentUser.role : "Analista";
+    const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
+    const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+    const isSupervisor = (activeUsername === "admin" || userLevel >= 2);
 
-    let globalProcessedSum = 0; 
+    let globalProcessedSum = 0;     
     let individualProcessedSum = 0; 
     let totalWarning = 0;
     let totalDanger = 0;
@@ -45,7 +38,7 @@ App.renderDashboardData = function() {
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
-        // FILTRADO DE SEGURIDAD OPERATIVA
+        // FILTRADO DE GOBERNANZA OPERATIVA
         if (!isSupervisor && item.assignedTo !== activeUsername) return;
 
         // Filtrado de calendario mensual
@@ -57,32 +50,27 @@ App.renderDashboardData = function() {
         let timeRemainingStr = " Evaluando...";
         let statusClass = "pending";
         let cardAlertClass = "bg-total";
+        let esAlertaCritica = false;
 
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = parseInt(item.processed || item.realizadas || 0);
-        
-        // CORRECCIÓN LÓGICA DE DETECCIÓN: Removemos el símbolo @ y limpiamos espacios vacíos
-        let taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase();
-        taskOwner = taskOwner.replace("@", ""); // Elimina el arroba si viene desde Firebase
-        
-        let cleanActiveUser = String(activeUsername).trim().toLowerCase();
-        cleanActiveUser = cleanActiveUser.replace("@", "");
+        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
+        const cleanActiveUser = String(activeUsername).trim().toLowerCase().replace("@", "");
 
-        // ACUMULADORES MATEMÁTICOS DE VOLUMEN NETO DE GESTIONES
+        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES
         globalProcessedSum += itemProcessed;
-        
-        // Comparación corregida e inmune a discrepancias de texto
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
-            individualProcessedSum += itemProcessed; // Sumará el número neto (ej: 3, 85, 10172)
+            individualProcessedSum += itemProcessed;
         }
 
-        if (item.status === "completed" || itemProcessed >= itemMeta && itemMeta > 0) {
+        // CONTROL CRONOLÓGICO: DETECTOR DE ALERTA MENOR A 30 MINUTOS
+        if (item.status === "completed" || (itemProcessed >= itemMeta && itemMeta > 0)) {
             timeRemainingStr = " Culminada";
             statusClass = "completed";
             processedTotalCount += itemProcessed;
             metaTotalCount += itemMeta;
         } else {
-            const deadline = new Date(item.deadline || item.timeEnd);
+            const deadline = new Date(item.deadline || item.timeEnd || item.timestamp);
             const diffMs = deadline - now;
             const diffMin = Math.ceil(diffMs / 60000);
             
@@ -94,11 +82,13 @@ App.renderDashboardData = function() {
                 statusClass = "expired";
                 cardAlertClass = "bg-danger";
                 totalDanger++;
+                esAlertaCritica = true;
             } else if (diffMin <= 30) {
                 timeRemainingStr = ` ${diffMin} min`;
                 statusClass = "warning";
                 cardAlertClass = "bg-warning";
                 totalWarning++;
+                esAlertaCritica = true; // Activa bandera para el Monitor
             } else {
                 const hours = Math.floor(diffMin / 60);
                 const mins = diffMin % 60;
@@ -130,16 +120,32 @@ App.renderDashboardData = function() {
         `;
         tableBody.appendChild(tr);
 
-        if (statusClass === "expired" || statusClass === "warning") {
+        // EVALUACIÓN DE MEMORIA: NO PINTAR ALERTAS CERRADAS MANUALMENTE
+        const alertaUniqueKey = `alert_${index}_${item.id || 'task'}`;
+        
+        if (esAlertaCritica && !App.closedAlertsMemory.includes(alertaUniqueKey)) {
+            const labelTipoAlerta = statusClass === "expired" ? "🛑 GESTIÓN VENCIDA" : "⚠️ POR VENCER (<30 MIN)";
+            const colorLetraAlerta = statusClass === "expired" ? "#991b1b" : "#9a3412";
+            
             monitorHtml += `
-            <div class="counter-card ${cardAlertClass} monitor-alert-item">
-                <p class="alert-item-title"> ALERTA OPERACIONAL</p>
-                <p class="alert-item-body">La actividad <b>${item.name || item.title}</b> de <b>@${item.assignedTo}</b> está crítica.</p>
+            <div id="${alertaUniqueKey}" class="counter-card ${cardAlertClass}" style="position: relative; margin-bottom: 8px; border-left: 5px solid ${statusClass === 'expired' ? '#dc2626' : '#ea580c'}; padding-right: 35px;">
+                <p style="margin: 0; font-size: 11px; font-weight: 800; color: ${colorLetraAlerta}; letter-spacing: 0.5px;">${labelTipoAlerta}</p>
+                <p style="margin: 3px 0 0 0; font-size: 11px; color: #1e293b; line-height: 1.3;">
+                    La actividad <b>${item.name || item.title}</b> asignada a <b>@${item.assignedTo}</b> se encuentra en estado crítico (${timeRemainingStr}).
+                </p>
+                <button type="button" onclick="App.handleDismissAlertInline('${alertaUniqueKey}')" style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; color: #64748b;" title="Cerrar Alerta">&times;</button>
             </div>`;
         }
     });
 
-    // INYECCIÓN DE VALORES NETOS FORMATEADOS CON PUNTOS DE MILES
+    // Pasa el flujo a la segunda parte para inyectar contadores y activar el barrido automático...
+    App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
+};
+/* =========================================================================
+   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS (v2.02) - PARTE 2 DE 2
+   ========================================================================= */
+App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
+    // 1. Inyección de valores netos en los contadores corporativos
     document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
     
     const labelTotal = document.getElementById("labelTotalRealizadas");
@@ -165,10 +171,43 @@ App.renderDashboardData = function() {
     }
     document.getElementById("countPerformance").innerText = `${ied}%`;
     
+    // 2. Poblar el monitor lateral con alertas activas o mensaje de tranquilidad
+    const monitorContainer = document.getElementById("monitorContainer");
     if (monitorContainer) {
         monitorContainer.innerHTML = monitorHtml || `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
     }
+
+    // 3. RELOJ DE BARRIDO AUTOMÁTICO (Recalcula los minutos restantes cada 10 segundos)
+    if (!window.AppDashboardIntervalActive) {
+        window.AppDashboardIntervalActive = true;
+        setInterval(function() {
+            if (document.getElementById("viewDashboard") && !document.getElementById("viewDashboard").classList.contains("hidden")) {
+                App.renderDashboardData(); // Ejecución síncrona en caliente
+            }
+        }, 10000); 
+    }
 };
+
+// 4. FUNCIÓN EXIGIDA PARA CERRAR Y DESCARTAR MANUALMENTE CADA ALERTA
+App.handleDismissAlertInline = function(alertId) {
+    if (!App.closedAlertsMemory.includes(alertId)) {
+        // Almacenar el ID en la lista de exclusión para que el bucle no lo vuelva a renderizar
+        App.closedAlertsMemory.push(alertId);
+    }
+    // Remover inmediatamente el elemento visual de la pantalla
+    const contenedorAlerta = document.getElementById(alertId);
+    if (contenedorAlerta) {
+        contenedorAlerta.remove();
+    }
+    console.log(`🛡️ MONITOR: Alerta ${alertId} descartada por el supervisor.`);
+    
+    // Si la pantalla se queda vacía, reinyectar el letrero de tranquilidad corporativa
+    const monitorContainer = document.getElementById("monitorContainer");
+    if (monitorContainer && monitorContainer.children.length === 0) {
+        monitorContainer.innerHTML = `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
+    }
+};
+
 /**
 * SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
 * PARTE 2 DE 3: PROGRESO DE ACTIVIDADES, ACTUALIZACIÓN DE LOGS Y REPORTES CONSOLIDADOS
