@@ -520,7 +520,6 @@ App.openReportsMenu = function() {
         </div>
     `;
 };
-
 /* =========================================================================
    MÓDULO DE EXPORTACIÓN CRONOLÓGICA UNIVERSAL (v2.02) - PARTE 1 DE 2
    ========================================================================= */
@@ -580,7 +579,13 @@ App.executeExportDataToPDF = function(tipoReporte) {
         const itemProcessed = parseInt(item.processed || item.realizadas || 0);
         
         let owner = String(item.assignedTo || item.createdBy || "S/A").trim().toLowerCase().replace("@", "");
+        
+        // CORRECCIÓN CLAVE: Extraemos el nombre limpio de la actividad sin el prefijo del Ticket para agrupar con éxito
         let nombreActividadOriginal = String(item.name || item.title || "Ticket Sin Nombre").trim();
+        // Si el string contiene un guión, removemos el prefijo "Ticket #X - " para dejar solo el nombre puro de la tarea
+        if (nombreActividadOriginal.includes(" - ")) {
+            nombreActividadOriginal = nombreActividadOriginal.split(" - ").slice(1).join(" - ").trim();
+        }
 
         // A) Acumulación General del Equipo
         teamTotalMeta += itemMeta;
@@ -595,7 +600,7 @@ App.executeExportDataToPDF = function(tipoReporte) {
         resumenPorUsuario[owner].metaTotal += itemMeta;
         resumenPorUsuario[owner].procesadasTotal += itemProcessed;
 
-        // C) AGRUPACIÓN COLECTIVA POR TEXTO DE ACTIVIDAD GENERAL
+        // C) AGRUPACIÓN COLECTIVA REAL POR TEXTO DE ACTIVIDAD ÚNICA (REQUERIMIENTO CORREGIDO)
         if (!resumenPorActividad[nombreActividadOriginal]) {
             resumenPorActividad[nombreActividadOriginal] = {
                 nombre: nombreActividadOriginal,
@@ -611,7 +616,7 @@ App.executeExportDataToPDF = function(tipoReporte) {
 
         tableRowsHtml += `
             <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 6px; font-size: 11px; text-align: left;"><b>${nombreActividadOriginal}</b><br><small style="color:#64748b;">📅 ${itemDate.toLocaleDateString("es-VE")} | 👤 @${item.assignedTo || 'S/A'}</small></td>
+                <td style="padding: 6px; font-size: 11px; text-align: left;"><b>${item.name || item.title}</b><br><small style="color:#64748b;">📅 ${itemDate.toLocaleDateString("es-VE")} | 👤 @${item.assignedTo || 'S/A'}</small></td>
                 <td style="padding: 6px; font-size: 11px; text-align: center; font-weight: bold;">${itemMeta.toLocaleString("es-VE")}</td>
                 <td style="padding: 6px; font-size: 11px; text-align: center;">${itemProcessed.toLocaleString("es-VE")}</td>
                 <td style="padding: 6px; font-size: 11px; text-align: center;"><span style="font-weight:600; color:${statusText === 'Culminada' ? '#16a34a' : '#b91c1c'}">${statusText}</span></td>
@@ -639,13 +644,13 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
             </div>`;
     });
 
-    // 2. NUEVA COMPILACIÓN: TABLA TOTALIZADA POR NOMBRE DE ACTIVIDAD GENERAL
+    // 2. CORRECCIÓN OPERACIONAL: RECORRER EL RESUMEN DE ACTIVIDADES PARA SUMAR REPETIDAS
     let actividadesFilasHtml = "";
     Object.values(resumenPorActividad).forEach(function(act) {
         actividadesFilasHtml += `
             <tr style="border-bottom: 1px solid #cbd5e1;">
                 <td style="padding: 6px; font-size: 11px; text-align: left;">💼 <b>${act.nombre}</b></td>
-                <td style="padding: 6px; font-size: 11px; text-align: center; font-weight: bold; color: #1e3a8a;">${act.metaAcumulada.toLocaleString("es-VE")}</td>
+                <td style="padding: 6px; font-size: 11px; text-align: center; font-weight: bold; color: #1e40af;">${act.metaAcumulada.toLocaleString("es-VE")}</td>
                 <td style="padding: 6px; font-size: 11px; text-align: center; font-weight: bold; color: #16a34a;">${act.procesadaAcumulada.toLocaleString("es-VE")}</td>
             </tr>`;
     });
@@ -723,8 +728,8 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
                 </div>
             </div>
 
-            <!-- SECCIÓN 3: TOTALIZACIÓN FILTRADA ACUMULADA POR TIPO DE ACTIVIDAD (REQUERIDO) -->
-            <div class="section-title">3. Totalización Consolidada por Tipo de Actividad General</div>
+            <!-- SECCIÓN 3: TOTALIZACIÓN COLECTIVA POR TIPO DE ACTIVIDAD ÚNICA (CORREGIDA) -->
+            <div class="section-title">3. Totalización Consolidada por Tipo de Actividad General (Acumulada)</div>
             <table class="data-table activity-table" style="margin-bottom: 15px;">
                 <thead>
                     <tr>
