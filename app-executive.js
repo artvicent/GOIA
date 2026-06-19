@@ -1039,3 +1039,142 @@ App.openAboutModal = function() {
         </div>
     `;
 };
+/* =========================================================================
+   MÓDULO DE PLAZOS COMPLEJOS (v2.02) - PARTE 1 DE 2 (INTERCEPTOR VISUAL)
+   ========================================================================= */
+App.openAssignmentModal = function() {
+    // 1. Intentar capturar el modal nativo usando los IDs estándar de tu interfaz
+    const modal = document.getElementById("modalAssignment") || document.getElementById("modalNewTask") || document.querySelector(".modal");
+    if (!modal) return console.error("❌ GOIA: No se localizó el contenedor estructural del modal.");
+
+    // Desbloquear la vista removiendo la clase oculta nativa de tu app
+    modal.classList.remove("hidden");
+
+    // 2. Localizar el input de tiempo viejo (sea de tipo número o texto) para reconfigurarlo
+    const inputViejo = document.getElementById("taskDeadline") || document.getElementById("taskDuration") || modal.querySelector("input[type='number']");
+    
+    if (inputViejo && inputViejo.parentNode && !document.getElementById("taskDays")) {
+        const contenedorFila = inputViejo.parentNode;
+        
+        // Ocultar el cuadro viejo de minutos para no romper las etiquetas CSS nativas
+        inputViejo.style.display = "none";
+        
+        // Actualizar el título de la casilla de forma corporativa
+        const label = contenedorFila.querySelector("label");
+        if (label) label.innerText = "PLAZO OPERATIVO COMPLEJO DE ENTREGA";
+
+        // Inyectar el trío de casillas elásticas en una sola fila horizontal
+        const tripleFila = document.createElement("div");
+        tripleFila.style.display = "flex";
+        tripleFila.style.gap = "8px";
+        tripleFilaHtml = `
+            <div style="flex: 1;">
+                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">DÍAS</span>
+                <input type="number" id="taskDays" min="0" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+            </div>
+            <div style="flex: 1;">
+                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">HORAS</span>
+                <input type="number" id="taskHours" min="0" max="23" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+            </div>
+            <div style="flex: 1;">
+                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">MINUTOS</span>
+                <input type="number" id="taskMinutes" min="0" max="59" value="30" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+            </div>`;
+        
+        tripleFila.innerHTML = tripleFilaHtml;
+        contenedorFila.appendChild(tripleFila);
+    }
+};
+/* =========================================================================
+   MÓDULO DE PLAZOS COMPLEJOS (v2.02) - PARTE 2 DE 2 (CÁLCULO CRONOLÓGICO)
+   ========================================================================= */
+App.executeCreateAssignmentCloud = function() {
+    // Captura de los campos obligatorios del formulario nativo de tu app
+    const userField = document.getElementById("taskAssignedTo") || document.querySelector("select");
+    const mgmtField = document.getElementById("taskManagementName") || document.querySelectorAll("select")[1];
+    const metaField = document.getElementById("taskMetaCarga") || document.querySelector("input[placeholder*='Meta']");
+    const refField = document.getElementById("taskReference") || document.getElementById("taskRef");
+    const mailField = document.getElementById("taskMailUrl");
+
+    if (!userField || !mgmtField || !metaField) {
+        return alert("❌ Error: Estructura del formulario alterada. No se localizaron las casillas nativas.");
+    }
+
+    const user = userField.value;
+    const name = mgmtField.value;
+    const meta = parseInt(metaField.value || 0);
+    const ref = refField ? refField.value.trim() : "S/R";
+    const mail = mailField ? mailField.value.trim() : "";
+
+    if (!name || meta <= 0) return alert("Por favor, rellene los campos de Actividad y Meta de Carga obligatorios.");
+
+    // EXTRAER LOS COMPONENTES DE LA FILA TRIPLE INYECTADA
+    const days = parseInt(document.getElementById("taskDays")?.value || 0);
+    const hours = parseInt(document.getElementById("taskHours")?.value || 0);
+    const minutes = parseInt(document.getElementById("taskMinutes")?.value || 0);
+
+    if (days === 0 && hours === 0 && minutes === 0) {
+        return alert("⚠️ ALERTA OPERACIONAL: Asigne un plazo de entrega válido (Días, Horas o Minutos).");
+    }
+
+    // Algoritmo de adición de tiempo a futuro síncrono por milisegundos netos
+    const ahora = new Date();
+    const plazoMs = (days * 24 * 60 * 60 * 1000) + (hours * 60 * 60 * 1000) + (minutes * 60 * 1000);
+    const deadlineCalculado = new Date(ahora.getTime() + plazoMs);
+
+    if (!AppDB.data.assignments) AppDB.data.assignments = [];
+
+    // Calcular el próximo ID incremental de la base de datos cloud
+    const assignmentsArray = Array.isArray(AppDB.data.assignments) ? AppDB.data.assignments : Object.values(AppDB.data.assignments);
+    const nextId = assignmentsArray.length > 0 ? Math.max(...assignmentsArray.map(t => t ? parseInt(t.id || 0) : 0)) + 1 : 1;
+
+    const nuevoTicket = {
+        id: nextId,
+        name: name,
+        title: name,
+        assignedTo: user,
+        meta: meta,
+        target: meta,
+        processed: 0,
+        realizadas: 0,
+        reference: ref || "S/R",
+        mailUrl: mail || "",
+        status: "pending",
+        createdAt: ahora.toISOString(),
+        timestamp: ahora.getTime(),
+        deadline: deadlineCalculado.toISOString() // Formato universal ISO para el motor de ordenamiento (.sort)
+    };
+
+    // Inyectar en caliente en la memoria del cliente
+    if (Array.isArray(AppDB.data.assignments)) {
+        AppDB.data.assignments.push(nuevoTicket);
+    } else {
+        AppDB.data.assignments[nextId] = nuevoTicket;
+    }
+    
+    // Guardar cambios ejecutando el motor de cifrado nativo de tu db.js
+    AppDB.save();
+
+    // Registrar en las trazas de auditoría corporativa
+    const activeUser = App.currentUser ? App.currentUser.username : "admin";
+    if (typeof AppDB.addLog === "function") {
+        AppDB.addLog(activeUser, "CREAR_ACTIVIDAD", `Asignó tarea #${nextId} a @${user} con plazo de ${days}d ${hours}h ${minutes}m.`);
+    }
+
+    alert(`✅ Actividad #${nextId} emitida y sincronizada correctamente en la nube.`);
+    
+    // Limpiar campos del formulario nativo
+    metaField.value = "";
+    if (refField) refField.value = "";
+    if (mailField) mailField.value = "";
+    if (document.getElementById("taskDays")) document.getElementById("taskDays").value = "0";
+    if (document.getElementById("taskHours")) document.getElementById("taskHours").value = "0";
+    if (document.getElementById("taskMinutes")) document.getElementById("taskMinutes").value = "30";
+
+    // Cerrar la ventana modal ocultándola de nuevo
+    const modal = document.getElementById("modalAssignment") || document.getElementById("modalNewTask") || document.querySelector(".modal");
+    if (modal) modal.classList.add("hidden");
+    
+    // Refrescar el dashboard para que el ticket nuevo aparezca arriba
+    this.renderDashboardData();
+};
