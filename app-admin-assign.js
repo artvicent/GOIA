@@ -204,104 +204,85 @@ App.openAssignmentModal = function() {
    MÓDULO: CAPTURA DE PLAZOS COMPLEJOS (v2.02) - PARTE 2 DE 2
    ========================================================================= */
 App.executeCreateAssignment = function(e) {
- e.preventDefault();
- 
- try {
- if (typeof AppDB === 'undefined' || !AppDB.data) {
- alert("Error crítico: El motor de base de datos AppDB no responde.");
- return;
- }
+    e.preventDefault();
+    
+    try {
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            return alert("Error crítico: El motor de base de datos AppDB no responde.");
+        }
 
- // Capturar los elementos correspondientes del formulario inyectado en el index.html
- const userTarget = document.getElementById("asigUserTarget").value;
- const mgmtNameSelected = document.getElementById("asigMgmt").value; // Leer el selector del catálogo
- const mailLink = document.getElementById("asigMailLink").value.trim();
- const meta = parseInt(document.getElementById("asigMeta").value) || 0;
- const reference = document.getElementById("asigRef").value.trim();
- 
- // EXTRACCIÓN MATEMÁTICA DE LAS TRES NUEVAS CASILLAS DEL INDEX.HTML
- const days = parseInt(document.getElementById("taskDeadlineDays").value || 0);
- const hours = parseInt(document.getElementById("taskDeadlineHours").value || 0);
- const minutes = parseInt(document.getElementById("taskDeadlineMinutes").value || 0);
+        const asigName = document.getElementById("asigName").value.trim();
+        const userTarget = document.getElementById("asigUserTarget").value;
+        const mgmtNameSelected = document.getElementById("asigMgmtName").value;
+        const mailLink = document.getElementById("asigMailLink").value.trim();
+        const meta = parseInt(document.getElementById("asigMeta").value) || 0;
+        const reference = document.getElementById("asigRef").value.trim();
+        
+        // LEER LOS MINUTOS PLANOS DIRECTAMENTE DEL INPUT NATIVO RESTABLECIDO
+        const durationMin = parseInt(document.getElementById("asigDuration").value || 0);
 
- if (days === 0 && hours === 0 && minutes === 0) {
- alert("⚠️ ALERTA OPERACIONAL: Debe asignar un plazo mínimo de entrega (Días, Horas o Minutos).");
- return;
- }
+        if (durationMin <= 0) {
+            return alert("⚠️ ALERTA OPERACIONAL: El tiempo estimado en minutos debe ser mayor a cero.");
+        }
 
- const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
- const userRole = App.currentUser ? App.currentUser.role : "Analista";
- const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
- const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+        const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
 
- // Control estricto de Gobernanza Jerárquica PCI
- if (userLevel < 2 && userTarget !== activeUser) {
- alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
- return false;
- }
+        // Incrementar correlativo cloud
+        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+        AppDB.data.config.ticketCounter = assignedTicketNum;
+        
+        // ALGORITMO ORIGINAL EN BASE A MINUTOS PLANOS
+        const now = new Date();
+        const totalMs = durationMin * 60 * 1000; 
+        const deadline = new Date(now.getTime() + totalMs);
 
- // Inicializar arreglos base si se encuentran limpios en Firebase
- if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
- if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
- AppDB.data.assignments = [];
- }
+        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + asigName;
 
- // INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
- var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
- AppDB.data.config.ticketCounter = assignedTicketNum;
- 
- // ALGORITMO DE ADICIÓN CRONOLÓGICA EN MILISEGUNDOS NETOS
- const now = new Date();
- const durationMin = (days * 24 * 60) + (hours * 60) + minutes; // Minutos netos para el campo duration original
- const totalMs = (days * 24 * 60 * 60 * 1000) + (hours * 60 * 60 * 1000) + (minutes * 60 * 1000);
- const deadline = new Date(now.getTime() + totalMs);
+        AppDB.data.assignments.push({
+            id: assignedTicketNum,
+            name: ticketTitleFormatted, 
+            title: "Ticket #" + assignedTicketNum,
+            assignedTo: userTarget, 
+            managementName: mgmtNameSelected,
+            source: mgmtNameSelected,
+            mailUrl: mailLink, 
+            meta: meta,
+            target: meta,
+            processed: 0,
+            reference: reference,
+            status: "pending",
+            createdAt: now.toISOString(),
+            deadline: deadline.toISOString(),
+            timeStart: now.toISOString(),
+            timeEnd: deadline.toISOString(),
+            duration: durationMin,
+            createdBy: activeUser
+        });
 
- var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + mgmtNameSelected;
+        // Sincronizar en la nube cifrada de Firebase
+        AppDB.save();
+        
+        if (typeof AppDB.addLog === "function") {
+            AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket #${assignedTicketNum} a @${userTarget} por ${durationMin} minutos.`);
+        }
 
- // Inyectar el payload final al array dinámico
- AppDB.data.assignments.push({
- id: assignedTicketNum,
- name: ticketTitleFormatted, 
- title: "Ticket #" + assignedTicketNum,
- assignedTo: userTarget, 
- managementName: mgmtNameSelected,
- source: mgmtNameSelected,
- mailUrl: mailLink, 
- meta: meta,
- target: meta,
- processed: 0,
- reference: reference,
- status: "pending",
- createdAt: now.toISOString(),
- deadline: deadline.toISOString(),
- timeStart: now.toISOString(),
- timeEnd: deadline.toISOString(),
- duration: durationMin,
- createdBy: activeUser
- });
-
- // Cifrar con el algoritmo XOR y transmitir a Firebase de forma nativa
- AppDB.save();
- AppDB.addLog(activeUser, "EMITIR_TICKET", `Se emitió el Ticket #${assignedTicketNum} con plazo de ${days}d ${hours}h ${minutes}m asignado a @${userTarget}`);
- 
- // Sincronizar el campo de respaldo oculto antes de cerrar por si el HTML lo exige de fondo
- if (document.getElementById("asigDuration")) {
- document.getElementById("asigDuration").value = durationMin;
- }
-
- document.getElementById("modalOverlay").classList.add("hidden");
- alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
- 
- // Forzar actualización y reordenamiento de la tabla en el dashboard
- if (typeof App.renderDashboardData === 'function') {
- App.renderDashboardData();
- } else {
- window.location.reload();
- }
- } catch (error) {
- console.error("Error crítico de transmisión cloud de asignaciones: ", error);
- alert("Fallo en el transporte digital: " + error.message);
- }
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert(`✅ ¡Ticket #${assignedTicketNum} Emitido con Éxito!`);
+        
+        // Recargar la tabla organizada con las tareas pendientes arriba
+        if (typeof App.renderDashboardData === 'function') {
+            App.renderDashboardData();
+        } else {
+            window.location.reload();
+        }
+    } catch (error) {
+        alert("Fallo en la comunicación cloud: " + error.message);
+    }
 };
 
 // Sincronizar el emisor redundante de la base del archivo
