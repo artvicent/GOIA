@@ -61,8 +61,8 @@ App.renderDashboardData = function() {
     });
 
     // 4. BUCLE DE RENDERIZADO (Continúa exactamente igual con el assignmentsArray.forEach de abajo)
+        // 4. BUCLE DE RENDERIZADO REESTRUCTURADO (GOIA v2.02 Corregido)
     assignmentsArray.forEach(function(item, index) {
-
         if (!item) return;
 
         // FILTRADO DE GOBERNANZA OPERATIVA
@@ -115,7 +115,7 @@ App.renderDashboardData = function() {
                 statusClass = "warning";
                 cardAlertClass = "bg-warning";
                 totalWarning++;
-                esAlertaCritica = true; // Activa bandera para el Monitor
+                esAlertaCritica = true; 
             } else {
                 const hours = Math.floor(diffMin / 60);
                 const mins = diffMin % 60;
@@ -132,6 +132,9 @@ App.renderDashboardData = function() {
 
         const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
 
+        // Usamos una llave única basada en propiedades inmutables del ticket (ID o nombre hash)
+        const ticketSafeId = item.id || `task_${item.name ? item.name.replace(/\s+/g, '') : index}`;
+
         let tr = document.createElement("tr");
         tr.className = `status-row-${statusClass}`;
         tr.innerHTML = `
@@ -147,8 +150,8 @@ App.renderDashboardData = function() {
         `;
         tableBody.appendChild(tr);
 
-        // EVALUACIÓN DE MEMORIA: NO PINTAR ALERTAS CERRADAS MANUALMENTE
-        const alertaUniqueKey = `alert_${index}_${item.id || 'task'}`;
+        // CORRECCIÓN CLAVE: Identificador único absoluto e inmune al ordenamiento (.sort)
+        const alertaUniqueKey = `alert_${ticketSafeId}`;
         
         if (esAlertaCritica && !App.closedAlertsMemory.includes(alertaUniqueKey)) {
             const labelTipoAlerta = statusClass === "expired" ? "🛑 GESTIÓN VENCIDA" : "⚠️ POR VENCER (<30 MIN)";
@@ -164,6 +167,7 @@ App.renderDashboardData = function() {
             </div>`;
         }
     });
+
 
     // Pasa el flujo a la segunda parte para inyectar contadores y activar el barrido automático...
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
