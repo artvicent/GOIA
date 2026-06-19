@@ -35,6 +35,23 @@ App.renderDashboardData = function() {
     var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
+    // ORDENAR: Coloca de primero las "pending" o "warning" y de último las "completed"
+    assignmentsArray.sort(function(a, b) {
+        if (!a || !b) return 0;
+        
+        // Obtener el estado de cada ítem (normalizado a minúsculas)
+        const statusA = String(a.status || 'pending').toLowerCase();
+        const statusB = String(b.status || 'pending').toLowerCase();
+        
+        // Si el ítem A está culminado y el B está abierto, movemos el A hacia abajo (retorna 1)
+        if (statusA === "completed" && statusB !== "completed") return 1;
+        // Si el ítem A está abierto y el B está culminado, mantenemos el A arriba (retorna -1)
+        if (statusA !== "completed" && statusB === "completed") return -1;
+        
+        return 0; // Si ambos tienen el mismo tipo de estado, mantienen su orden de creación
+    });
+
+    // 4. BUCLE DE RENDERIZADO (Continúa con el .forEach original de tu archivo)
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
