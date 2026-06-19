@@ -117,6 +117,9 @@ App.handleLogin = async function(e) {
     /* =========================================================================
        FASE 1: AUTENTICACIÓN DINÁMICA DE FIREBASE (PERMITE CAMBIO DE CLAVE)
        ========================================================================= */
+        /* =========================================================================
+       FASE 1: AUTENTICACIÓN DINÁMICA DE FIREBASE (PERMITE CAMBIO DE CLAVE)
+       ========================================================================= */
     const result = await AppDB.login(username, password);
     
     if (result.success) {
@@ -138,10 +141,46 @@ App.handleLogin = async function(e) {
         // Si todo está correcto en Firebase, limpiar campos e ingresar
         userField.value = "";
         passField.value = "";
-        this.setupDashboardView();
+        
+        // Ejecución nativa del ruteador visual SPA de tu app (Página 2)
+        this.showView("viewDashboard");
+        
+        // Cargar letreros y datos dinámicos del perfil en la interfaz (Páginas 2 y 3)
+        const welcomeName = document.getElementById("dashWelcomeName");
+        const userRole = document.getElementById("dashUserRole");
+        const avatarFrame = document.getElementById("userAvatarFrame");
+        
+        if (welcomeName) {
+            welcomeName.innerText = `${this.currentUser.names || 'Admin'} ${this.currentUser.lastnames || 'Raíz'}`;
+        }
+        if (userRole) {
+            userRole.innerText = this.currentUser.role;
+        }
+        if (this.currentUser.avatarData && avatarFrame) {
+            avatarFrame.innerHTML = `<img src="${this.currentUser.avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+        } else if (avatarFrame) {
+            avatarFrame.innerText = this.currentUser.avatar || "👤";
+        }
+        
+        const topBanner = document.getElementById("topBanner");
+        if (topBanner) {
+            topBanner.classList.remove("hidden");
+        }
+        if (typeof this.applySecurityCerberusPermissions === "function") {
+            this.applySecurityCerberusPermissions();
+        }
+        if (typeof App.renderDashboardData === "function") {
+            App.renderDashboardData();
+        }
+
+        /* 🛡️ INYECCIÓN OPERACIONAL: ENTRADA EN VIGOR DEL MONITOR DE INACTIVIDAD (5 MINUTOS) */
+        if (App.InactivityMonitor && typeof App.InactivityMonitor.init === "function") {
+            App.InactivityMonitor.init();
+        }
+        
         return; // Éxito total desde la nube corporativa
     }
-    
+
     /* =========================================================================
        FASE 2: RESPALDO DE HARDWARE SÓLO SI FIREBASE FALLÓ O SE VACIÓ
        ========================================================================= */
@@ -185,12 +224,18 @@ App.handleLogin = async function(e) {
 
 
 // Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
+// Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
 App.logout = function() {
-    if (this.currentUser) {
-        AppDB.addLog(this.currentUser.username, "LOGOUT", "Cierre de sesion voluntario.");
-    }
-    this.currentUser = null;
-    
+ /* APAGAR EL MONITOR PARA EVITAR COMPORTAMIENTOS ERRÁTICOS */
+ if (App.InactivityMonitor && typeof App.InactivityMonitor.stop === "function") {
+     App.InactivityMonitor.stop();
+ }
+
+ if (this.currentUser) {
+ AppDB.addLog(this.currentUser.username, "LOGOUT", "Cierre de sesion voluntario.");
+ }
+ this.currentUser = null;
+ 
     const userField = document.getElementById("loginUser");
     const passField = document.getElementById("loginPass");
     if (userField) userField.value = "";
@@ -447,3 +492,82 @@ window.onload = function() {
         }
     }, 600);
 };
+
+/* =========================================================================
+   MÓDULO: MONITOR CORPORATIVO DE INACTIVIDAD DE USUARIO (GOIA v2.02)
+   ========================================================================= */
+App.InactivityMonitor = {
+    timer: null,
+    // Tiempo límite estipulado por la gerencia: 5 minutos en milisegundos
+    TIMEOUT_MS: 5 * 60 * 1000, 
+
+    // Inicializar los escuchas de hardware al levantar la sesión
+    init() {
+        console.log("🛡️ SECURITY CORE: Activando monitor de inactividad perimetral (5 Minutos).");
+        this.resetTimer();
+
+        // Registrar los eventos universales de interacción humana en el navegador
+        const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+        
+        // Enlazar de forma segura limpiando referencias previas
+        events.forEach(eventName => {
+            window.removeEventListener(eventName, this.boundReset);
+            window.addEventListener(eventName, this.boundReset);
+        });
+    },
+
+    // Reiniciar la cuenta regresiva ante cualquier signo de vida del operador
+    resetTimer() {
+        if (this.timer) clearTimeout(this.timer);
+        
+        // Si no hay un usuario autenticado en el sistema, no iniciar el conteo
+        if (!App.currentUser) return;
+
+        this.timer = setTimeout(() => {
+            this.executeAutoLogout();
+        }, this.TIMEOUT_MS);
+    },
+
+    // Forzar la destrucción de la sesión y rebotar al formulario de Login
+    executeAutoLogout() {
+        console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono de estación.");
+        
+        if (App.currentUser) {
+            alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
+            
+            // 1. Destruir el objeto de identidad en la memoria RAM
+            App.currentUser = null;
+            
+            // 2. Limpiar cuadros de texto de formularios previos por resguardo de datos
+            const userField = document.getElementById("loginUser");
+            const passField = document.getElementById("loginPass");
+            if (userField) userField.value = "";
+            if (passField) passField.value = "";
+
+            // 3. Ocultar la barra superior (Banner de control)
+            const topBanner = document.getElementById("topBanner");
+            if (topBanner) topBanner.classList.add("hidden");
+
+            // 4. Detener cualquier reloj secundario en ejecución si tu app los tiene
+            if (window.AppTimerInterval) clearInterval(window.AppTimerInterval);
+
+            // 5. Rumbear al operador de vuelta al cascarón del Login SPA
+            if (typeof App.showView === "function") {
+                App.showView("viewLogin");
+            }
+        }
+    },
+
+    // Detener por completo el monitor al presionar voluntariamente "Cerrar Sesión"
+    stop() {
+        if (this.timer) clearTimeout(this.timer);
+        const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+        events.forEach(eventName => {
+            window.removeEventListener(eventName, this.boundReset);
+        });
+        console.log("🛡️ MONITOR: Escuchas perimetrales desactivados con éxito.");
+    }
+};
+
+// Crear un enlace persistente en la memoria de JavaScript para evitar duplicación de hilos
+App.InactivityMonitor.boundReset = App.InactivityMonitor.resetTimer.bind(App.InactivityMonitor);
