@@ -487,7 +487,7 @@ App.openReportsMenu = function() {
 };
 
 /* =========================================================================
-   MÓDULO DE EXPORTACIÓN CON DESGLOSE POR OPERARIO (v2.02) - PARTE 1 DE 2
+   MÓDULO DE EXPORTACIÓN CON DOBLE AGRUPACIÓN (v2.02) - PARTE 1 DE 2
    ========================================================================= */
 /* =========================================================================
    MÓDULO DE EXPORTACIÓN CON DOBLE AGRUPACIÓN (v2.02) - PARTE 1 DE 2
@@ -513,8 +513,8 @@ App.executeExportDataToPDF = function(tipoReporte) {
         fechaInicioFiltro = new Date(hoy.setDate(diferenciaLunes));
         fechaInicioFiltro.setHours(0, 0, 0, 0);
         
-        let fechaFinFiltrow = new Date(fechaInicioFiltro);
-        fechaFinFiltro = new Date(fechaFinFiltrow.setDate(fechaInicioFiltro.getDate() + 6));
+        let fechaAuxiliarFin = new Date(fechaInicioFiltro);
+        fechaFinFiltro = new Date(fechaAuxiliarFin.setDate(fechaInicioFiltro.getDate() + 6));
         fechaFinFiltro.setHours(23, 59, 59, 999);
     } 
     else if (tipoReporte === 'HISTORICO') {
@@ -530,7 +530,7 @@ App.executeExportDataToPDF = function(tipoReporte) {
     
     // MAPAS DINÁMICOS DE CONTROL DE AUDITORÍA
     let resumenPorUsuario = {};
-    let resumenPorActividad = {}; // NUEVO MATRICIAL DE COMPILACIÓN
+    let resumenPorActividad = {}; 
 
     const assignmentsData = AppDB.data.assignments;
     const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
@@ -561,7 +561,7 @@ App.executeExportDataToPDF = function(tipoReporte) {
         resumenPorUsuario[owner].metaTotal += itemMeta;
         resumenPorUsuario[owner].procesadasTotal += itemProcessed;
 
-        // C) NUEVA AGRUPACIÓN COLECTIVA POR TEXTO DE ACTIVIDAD (REQUERIMIENTO INYECTADO)
+        // C) AGRUPACIÓN COLECTIVA POR TEXTO DE ACTIVIDAD
         if (!resumenPorActividad[nombreActividadOriginal]) {
             resumenPorActividad[nombreActividadOriginal] = {
                 nombre: nombreActividadOriginal,
@@ -591,7 +591,6 @@ App.executeExportDataToPDF = function(tipoReporte) {
    MÓDULO DE EXPORTACIÓN CON DOBLE AGRUPACIÓN (v2.02) - PARTE 2 DE 2
    ========================================================================= */
 App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, resumenPorUsuario, resumenPorActividad, userFullName, userRole, activeUsername, tipoReporte, fechaInicio, fechaFin) {
-    
     // 1. Compilar tarjetas visuales del Resumen de Operarios
     let usuariosCardsHtml = "";
     Object.values(resumenPorUsuario).forEach(function(userMetrics) {
@@ -606,7 +605,7 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
             </div>`;
     });
 
-    // 2. NUEVA COMPILACIÓN: TABLA TOTALIZADA POR NOMBRE DE ACTIVIDAD GENERAL
+    // 2. COMPILACIÓN: TABLA TOTALIZADA POR NOMBRE DE ACTIVIDAD GENERAL
     let actividadesFilasHtml = "";
     Object.values(resumenPorActividad).forEach(function(act) {
         actividadesFilasHtml += `
@@ -669,7 +668,7 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
                 ${usuariosCardsHtml || '<p style="font-size:11px; color:#64748b; padding:5px;">Sin producción individual registrada.</p>'}
             </div>
 
-            <!-- SECCIÓN 2: TOTALIZACIÓN GENERAL CONSOLIDADA (BLOQUE ÚNICO VERDE) -->
+            <!-- SECCIÓN 2: TOTALIZACIÓN GENERAL CONSOLIDADA -->
             <div class="section-title">2. Matriz de Cierre y Totalización General del Equipo (Bloque Único)</div>
             <div class="summary-grid">
                 <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d; font-weight: uppercase;">TOTAL ACTIVIDADES COMPLETADAS</div><div class="summary-num">${teamActivityCount} Actividades</div></div>
@@ -678,7 +677,7 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
                 <div class="summary-box green" style="background: #f0fdf4;"><div style="font-size: 9px; color: #14532d; font-weight: uppercase;">IED GLOBAL DEL EQUIPO</div><div class="summary-num">${teamIED}%</div></div>
             </div>
 
-            <!-- NUEVA SECCIÓN COMPILADA 3: TOTALIZACIÓN FILTRADA ACUMULADA POR TIPO DE ACTIVIDAD (SIN ESTADO OPERATIVO) -->
+            <!-- SECCIÓN 3: TOTALIZACIÓN COLECTIVA POR TIPO DE ACTIVIDAD (REQUERIDA) -->
             <div class="section-title">3. Totalización Consolidada por Tipo de Actividad General</div>
             <table class="data-table activity-table" style="margin-bottom: 15px;">
                 <thead>
@@ -693,7 +692,7 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
                 </tbody>
             </table>
 
-            <!-- SECCIÓN 4: DESGLOSE FILA POR FILA CON ESTADOS -->
+            <!-- SECCIÓN 4: DESGLOSE FILA POR FILA -->
             <div class="section-title">4. Desglose Detallado por Fila / Actividad / Ítem Individual</div>
             <table class="data-table">
                 <thead>
@@ -717,6 +716,7 @@ App.renderUnifiedPdfLayout = function(tableRowsHtml, teamActivityCount, teamTota
         AppDB.addLog(activeUsername, "EXPORTAR_PDF", `Exportó balance consolidado analítico con doble agrupación: ${tipoReporte}`);
     }
 };
+
 
    /* =========================================================================
    MÓDULO DE EXPORTACIÓN CON DESGLOSE POR OPERARIO (v2.02) - PARTE 2 DE 2
