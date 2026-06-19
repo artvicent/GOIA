@@ -1,8 +1,6 @@
-
 /* =========================================================================
-   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS (v2.02) - PARTE 1 DE 2
+   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y FILTROS INTEGRADOS (v2.02)
    ========================================================================= */
-// Bolsa de memoria temporal persistente para almacenar las alertas descartadas
 App.closedAlertsMemory = App.closedAlertsMemory || [];
 
 App.renderDashboardData = function() {
@@ -23,6 +21,48 @@ App.renderDashboardData = function() {
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
     const isSupervisor = (activeUsername === "admin" || userLevel >= 2);
 
+    /* =========================================================================
+       INYECCIÓN DINÁMICA DEL TERCER FILTRO DE COLABORADORES EN LA BARRA
+       ========================================================================= */
+    let userSelect = document.getElementById("filterAssignmentUser");
+    
+    // Si el filtro no existe físicamente en la pantalla, lo creamos e inyectamos al lado del de "Todas las Cargas"
+    if (!userSelect && isSupervisor) {
+        const statusSelect = document.getElementById("filterAssignmentStatus");
+        if (statusSelect && statusSelect.parentNode) {
+            userSelect = document.createElement("select");
+            userSelect.id = "filterAssignmentUser";
+            userSelect.className = "form-control";
+            userSelect.style.padding = "6px";
+            userSelect.style.borderRadius = "4px";
+            userSelect.style.marginLeft = "8px"; // Separación elegante horizontal
+            userSelect.style.border = "1px solid #cbd5e1";
+            userSelect.style.color = "#334155";
+            userSelect.style.fontSize = "13px";
+            userSelect.style.fontWeight = "600";
+            
+            // Opción por defecto
+            userSelect.innerHTML = `<option value="all">Todos los Colaboradores</option>`;
+            
+            // Poblar el filtro con el listado de usuarios de tu base de datos Firebase
+            if (AppDB.data.users) {
+                Object.values(AppDB.data.users).forEach(function(u) {
+                    const cleanName = u.username.replace("@", "").toLowerCase();
+                    userSelect.innerHTML += `<option value="${cleanName}">👤 @${cleanName}</option>`;
+                });
+            }
+            
+            // Conectar el evento de cambio para que refresque la tabla al seleccionar un usuario
+            userSelect.onchange = function() { App.renderDashboardData(); };
+            
+            // Insertar el nuevo filtro inmediatamente después del selector de estados
+            statusSelect.parentNode.insertBefore(userSelect, statusSelect.nextSibling);
+        }
+    }
+
+    // Capturar el valor seleccionado en el nuevo filtro (si no existe, evalúa "all")
+    const currentUserFilter = userSelect ? userSelect.value : "all";
+
     let globalProcessedSum = 0;     
     let individualProcessedSum = 0; 
     let totalWarning = 0;
@@ -32,41 +72,33 @@ App.renderDashboardData = function() {
     let monitorHtml = "";
     const now = new Date();
 
-        var assignmentsData = AppDB.data.assignments;
+    var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-    /* =========================================================================
-       ORDENAMIENTO DINÁMICO RECALCULADO (GOIA v2.02)
-       ========================================================================= */
+    // ORDENAR: Coloca de primero las tareas abiertas y de último las completadas
     assignmentsArray.sort(function(a, b) {
         if (!a || !b) return 0;
-        
-        // 1. Evaluar matemáticamente si el ítem A está completado en caliente
         const metaA = parseInt(a.meta || a.target || 0);
         const procA = parseInt(a.processed || a.realizadas || 0);
         const estaCulminadoA = (a.status === "completed" || (procA >= metaA && metaA > 0));
-
-        // 2. Evaluar matemáticamente si el ítem B está completado en caliente
         const metaB = parseInt(b.meta || b.target || 0);
         const procB = parseInt(b.processed || b.realizadas || 0);
         const estaCulminadoB = (b.status === "completed" || (procB >= metaB && metaB > 0));
-        
-        // REGLA DE ORO DE PRIORIZACIÓN FISCAL:
-        // Si el ítem A está culminado y el B está pendiente, mandamos el A abajo (retorna 1)
         if (estaCulminadoA && !estaCulminadoB) return 1;
-        // Si el ítem A está pendiente y el B está culminado, mantenemos el A arriba (retorna -1)
         if (!estaCulminadoA && estaCulminadoB) return -1;
-        
-        return 0; // Si ambos están abiertos o ambos culminados, mantienen su orden natural
+        return 0;
     });
-
-    // 4. BUCLE DE RENDERIZADO (Continúa exactamente igual con el assignmentsArray.forEach de abajo)
-        // 4. BUCLE DE RENDERIZADO REESTRUCTURADO (GOIA v2.02 Corregido)
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
-        // FILTRADO DE GOBERNANZA OPERATIVA
-        if (!isSupervisor && item.assignedTo !== activeUsername) return;
+        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
+        const cleanActiveUser = String(activeUsername).trim().toLowerCase().replace("@", "");
+
+        // A) FILTRADO DE GOBERNANZA: El analista común solo ve sus propios registros
+        if (!isSupervisor && taskOwner !== cleanActiveUser) return;
+
+        // B) NUEVO FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
+        if (isSupervisor && currentUserFilter !== "all" && taskOwner !== currentUserFilter) return;
 
         // Filtrado de calendario mensual
         if (currentMonthFilter !== "all" && currentMonthFilter !== "current") {
@@ -81,8 +113,6 @@ App.renderDashboardData = function() {
 
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = parseInt(item.processed || item.realizadas || 0);
-        const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
-        const cleanActiveUser = String(activeUsername).trim().toLowerCase().replace("@", "");
 
         // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES
         globalProcessedSum += itemProcessed;
@@ -90,7 +120,6 @@ App.renderDashboardData = function() {
             individualProcessedSum += itemProcessed;
         }
 
-        // CONTROL CRONOLÓGICO: DETECTOR DE ALERTA MENOR A 30 MINUTOS
         if (item.status === "completed" || (itemProcessed >= itemMeta && itemMeta > 0)) {
             timeRemainingStr = " Culminada";
             statusClass = "completed";
@@ -131,9 +160,7 @@ App.renderDashboardData = function() {
         ` : "";
 
         const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
-
-        // Usamos una llave única basada en propiedades inmutables del ticket (ID o nombre hash)
-        const ticketSafeId = item.id || `task_${item.name ? item.name.replace(/\s+/g, '') : index}`;
+        const ticketSafeId = item.id || `task_${index}`;
 
         let tr = document.createElement("tr");
         tr.className = `status-row-${statusClass}`;
@@ -150,9 +177,7 @@ App.renderDashboardData = function() {
         `;
         tableBody.appendChild(tr);
 
-        // CORRECCIÓN CLAVE: Identificador único absoluto e inmune al ordenamiento (.sort)
         const alertaUniqueKey = `alert_${ticketSafeId}`;
-        
         if (esAlertaCritica && !App.closedAlertsMemory.includes(alertaUniqueKey)) {
             const labelTipoAlerta = statusClass === "expired" ? "🛑 GESTIÓN VENCIDA" : "⚠️ POR VENCER (<30 MIN)";
             const colorLetraAlerta = statusClass === "expired" ? "#991b1b" : "#9a3412";
@@ -163,15 +188,16 @@ App.renderDashboardData = function() {
                 <p style="margin: 3px 0 0 0; font-size: 11px; color: #1e293b; line-height: 1.3;">
                     La actividad <b>${item.name || item.title}</b> asignada a <b>@${item.assignedTo}</b> se encuentra en estado crítico (${timeRemainingStr}).
                 </p>
-                <button type="button" onclick="App.handleDismissAlertInline('${alertaUniqueKey}')" style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; color: #64748b;" title="Cerrar Alerta">&times;</button>
+                <button type="button" onclick="App.handleDismissAlertInline('${alertaUniqueKey}')" style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; color: #64748b;">&times;</button>
             </div>`;
         }
     });
 
-
-    // Pasa el flujo a la segunda parte para inyectar contadores y activar el barrido automático...
+    // Delegar al inyector final de contadores
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
 };
+
+
 /* =========================================================================
    MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS (v2.02) - PARTE 2 DE 2
    ========================================================================= */
