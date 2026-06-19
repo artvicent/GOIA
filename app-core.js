@@ -6,32 +6,72 @@
 const App = {
   currentUser: null,
   
-  init() {
-    console.log("Inicializando núcleo transaccional GOIA v2.02...");
-    
-    // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
-    const topBanner = document.getElementById("topBanner");
-    if (topBanner) {
-      topBanner.classList.add("hidden");
-    }
-    
-    // RESPALDO DE CONTROL DE RED: Si la base de datos falló o se vació, inyectamos un nodo ficticio para que el sistema no muera
-    if (typeof AppDB === 'undefined' || !AppDB.data) {
-        console.warn("⚠️ ALERTA: Red Cloud caída. Inicializando entorno de contingencia local.");
-        window.AppDB = window.AppDB || {};
-        AppDB.data = AppDB.data || { config: { passwordExpiryDays: 90 }, roles: { "Administrador": { lvl: 3 } } };
-        AppDB.login = async function() { return { success: false, msg: "Modo contingencia activo." }; };
-    }
+   init() {
+ console.log("Inicializando núcleo transaccional GOIA v2.02...");
+ 
+ // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
+ const topBanner = document.getElementById("topBanner");
+ if (topBanner) {
+ topBanner.classList.add("hidden");
+ }
+ 
+ // RESPALDO DE CONTROL DE RED: Si la base de datos falló o se vació, inyectamos un nodo ficticio
+ if (typeof AppDB === 'undefined' || !AppDB.data) {
+ console.warn("⚠️ ALERTA: Red Cloud caída. Inicializando entorno de contingencia local.");
+ window.AppDB = window.AppDB || {};
+ AppDB.data = AppDB.data || { config: { passwordExpiryDays: 90 }, roles: { "Administrador": { lvl: 3 } } };
+ AppDB.login = async function() { return { success: false, msg: "Modo contingencia activo." }; };
+ }
+ 
+ // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
+ if (AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
+ const logoImg = document.getElementById("appLogoImg");
+ if (logoImg) {
+ logoImg.src = AppDB.data.config.brandLogoBase64;
+ }
+ }
 
-    // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
-    if (AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
-      const logoImg = document.getElementById("appLogoImg");
-      if (logoImg) {
-        logoImg.src = AppDB.data.config.brandLogoBase64;
-      }
-    }
-    this.showView("viewLogin");
-  },
+ /* =========================================================================
+    RECUPERACIÓN INTERNA POST-REFRESCO (F5) - GOIA v2.02
+    ========================================================================= */
+ const savedSession = sessionStorage.getItem("goia_active_session");
+ if (savedSession) {
+     try {
+         // Desempaquetar el objeto de identidad y restaurarlo en la RAM
+         this.currentUser = JSON.parse(savedSession);
+         console.log(`♻️ NÚCLEO: Sesión de @${this.currentUser.username} restablecida con éxito tras presionar F5.`);
+         
+         // Redirigir directamente al Dashboard saltando la pantalla de Login
+         this.showView("viewDashboard");
+         
+         // Forzar el renderizado inmediato de componentes visuales de la interfaz
+         const welcomeName = document.getElementById("dashWelcomeName");
+         const userRole = document.getElementById("dashUserRole");
+         const avatarFrame = document.getElementById("userAvatarFrame");
+         
+         if (welcomeName) welcomeName.innerText = `${this.currentUser.names || 'Admin'} ${this.currentUser.lastnames || 'Raíz'}`;
+         if (userRole) userRole.innerText = this.currentUser.role;
+         if (this.currentUser.avatarData && avatarFrame) {
+             avatarFrame.innerHTML = `<img src="${this.currentUser.avatarData}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`;
+         }
+         
+         if (topBanner) topBanner.classList.remove("hidden");
+         if (typeof this.applySecurityCerberusPermissions === "function") this.applySecurityCerberusPermissions();
+         if (typeof App.renderDashboardData === "function") App.renderDashboardData();
+         
+         // Despertar nuevamente el monitor de inactividad de 5 minutos
+         if (App.InactivityMonitor && typeof App.InactivityMonitor.init === "function") App.InactivityMonitor.init();
+         return; // Fin del flujo de recuperación de F5
+     } catch (e) {
+         console.error("Error al restaurar sesión corrupta:", e);
+         sessionStorage.removeItem("goia_active_session");
+     }
+ }
+
+ // Si no existía sesión previa en caché, ir al Login normal
+ this.showView("viewLogin");
+ },
+
 
   // Ruteador lógico SPA puro basado en clases CSS .hidden
   showView(viewId) {
@@ -117,13 +157,13 @@ App.handleLogin = async function(e) {
     /* =========================================================================
        FASE 1: AUTENTICACIÓN DINÁMICA DE FIREBASE (PERMITE CAMBIO DE CLAVE)
        ========================================================================= */
-        /* =========================================================================
-       FASE 1: AUTENTICACIÓN DINÁMICA DE FIREBASE (PERMITE CAMBIO DE CLAVE)
-       ========================================================================= */
     const result = await AppDB.login(username, password);
     
     if (result.success) {
         this.currentUser = result.user;
+        
+        // GUARDAR RESPALDO DE SESIÓN ANTE F5 (INSTRUCCIÓN COHERENTE v2.02)
+        sessionStorage.setItem("goia_active_session", JSON.stringify(this.currentUser));
         
         // Evaluar políticas de caducidad de clave corporativa (Requerimiento PCI-DSS)
         const passDate = new Date(this.currentUser.passwordChangedDate || new Date());
@@ -142,10 +182,10 @@ App.handleLogin = async function(e) {
         userField.value = "";
         passField.value = "";
         
-        // Ejecución nativa del ruteador visual SPA de tu app (Página 2)
+        // Ejecución nativa del ruteador visual SPA de tu app
         this.showView("viewDashboard");
         
-        // Cargar letreros y datos dinámicos del perfil en la interfaz (Páginas 2 y 3)
+        // Cargar letreros y datos dinámicos del perfil en la interfaz
         const welcomeName = document.getElementById("dashWelcomeName");
         const userRole = document.getElementById("dashUserRole");
         const avatarFrame = document.getElementById("userAvatarFrame");
@@ -173,7 +213,7 @@ App.handleLogin = async function(e) {
             App.renderDashboardData();
         }
 
-        /* 🛡️ INYECCIÓN OPERACIONAL: ENTRADA EN VIGOR DEL MONITOR DE INACTIVIDAD (5 MINUTOS) */
+        /* 🛡️ MONITOR DE INACTIVIDAD PERIMETRAL (5 MINUTOS) */
         if (App.InactivityMonitor && typeof App.InactivityMonitor.init === "function") {
             App.InactivityMonitor.init();
         }
@@ -210,9 +250,32 @@ App.handleLogin = async function(e) {
                 passwordChangedDate: new Date().toISOString()
             };
             
+            // GUARDAR RESPALDO DE SESIÓN MAESTRA ANTE F5
+            sessionStorage.setItem("goia_active_session", JSON.stringify(this.currentUser));
+            
             userField.value = "";
             passField.value = "";
-            this.setupDashboardView();
+            
+            // Forzar redirección directa al dashboard en modo contingencia local
+            this.showView("viewDashboard");
+            
+            const welcomeName = document.getElementById("dashWelcomeName");
+            const userRole = document.getElementById("dashUserRole");
+            if (welcomeName) welcomeName.innerText = "Administrador De Contingencia";
+            if (userRole) userRole.innerText = "Administrador";
+            
+            const topBanner = document.getElementById("topBanner");
+            if (topBanner) topBanner.classList.remove("hidden");
+            
+            if (typeof this.applySecurityCerberusPermissions === "function") {
+                this.applySecurityCerberusPermissions();
+            }
+            if (typeof App.renderDashboardData === "function") {
+                App.renderDashboardData();
+            }
+            if (App.InactivityMonitor && typeof App.InactivityMonitor.init === "function") {
+                App.InactivityMonitor.init();
+            }
             return;
         }
     }
@@ -220,6 +283,7 @@ App.handleLogin = async function(e) {
     // Si fallaron tanto Firebase (Fase 1) como la llave maestra (Fase 2)
     alert(result.msg || "❌ Credenciales inválidas o error de descifrado en red.");
 };
+
 
 
 
