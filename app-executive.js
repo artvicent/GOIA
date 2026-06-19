@@ -1089,42 +1089,37 @@ App.openAssignmentModal = function() {
    MÓDULO DE PLAZOS COMPLEJOS (v2.02) - PARTE 2 DE 2 (CÁLCULO CRONOLÓGICO)
    ========================================================================= */
 App.executeCreateAssignmentCloud = function() {
-    // Captura de los campos obligatorios del formulario nativo de tu app
-    const userField = document.getElementById("taskAssignedTo") || document.querySelector("select");
-    const mgmtField = document.getElementById("taskManagementName") || document.querySelectorAll("select")[1];
-    const metaField = document.getElementById("taskMetaCarga") || document.querySelector("input[placeholder*='Meta']");
-    const refField = document.getElementById("taskReference") || document.getElementById("taskRef");
+    const userField = document.getElementById("taskAssignedTo");
+    const mgmtField = document.getElementById("taskManagementName");
+    const metaField = document.getElementById("taskMetaCarga");
+    const refField = document.getElementById("taskReference");
     const mailField = document.getElementById("taskMailUrl");
+    
+    // Captura estricta del campo de tiempo original intacto de tu HTML
+    const deadlineField = document.getElementById("taskDeadline") || document.querySelector("#modalAssignment input[type='number']");
 
-    if (!userField || !mgmtField || !metaField) {
-        return alert("❌ Error: Estructura del formulario alterada. No se localizaron las casillas nativas.");
-    }
+    if (!userField || !mgmtField || !metaField || !deadlineField) return;
 
     const user = userField.value;
     const name = mgmtField.value;
     const meta = parseInt(metaField.value || 0);
     const ref = refField ? refField.value.trim() : "S/R";
     const mail = mailField ? mailField.value.trim() : "";
+    
+    // Leer el valor en minutos plano escrito por el supervisor
+    const minutosIngresados = parseInt(deadlineField.value || 0);
 
-    if (!name || meta <= 0) return alert("Por favor, rellene los campos de Actividad y Meta de Carga obligatorios.");
+    if (!name || meta <= 0) return alert("Por favor, rellene los campos obligatorios de la actividad.");
+    if (minutosIngresados <= 0) return alert("⚠️ ALERTA OPERACIONAL: Debe asignar un tiempo estimado en minutos mayor a cero.");
 
-    // EXTRAER LOS COMPONENTES DE LA FILA TRIPLE INYECTADA
-    const days = parseInt(document.getElementById("taskDays")?.value || 0);
-    const hours = parseInt(document.getElementById("taskHours")?.value || 0);
-    const minutes = parseInt(document.getElementById("taskMinutes")?.value || 0);
-
-    if (days === 0 && hours === 0 && minutes === 0) {
-        return alert("⚠️ ALERTA OPERACIONAL: Asigne un plazo de entrega válido (Días, Horas o Minutos).");
-    }
-
-    // Algoritmo de adición de tiempo a futuro síncrono por milisegundos netos
+    // ALGORITMO CRONOLÓGICO: Calcular la estampa de tiempo exacta sumando los minutos a la hora actual
     const ahora = new Date();
-    const plazoMs = (days * 24 * 60 * 60 * 1000) + (hours * 60 * 60 * 1000) + (minutes * 60 * 1000);
+    const plazoMs = minutosIngresados * 60 * 1000; // Conversión síncrona a milisegundos netos
     const deadlineCalculado = new Date(ahora.getTime() + plazoMs);
 
     if (!AppDB.data.assignments) AppDB.data.assignments = [];
 
-    // Calcular el próximo ID incremental de la base de datos cloud
+    // Calcular ID autoincremental seguro evitando colapsos de vectores
     const assignmentsArray = Array.isArray(AppDB.data.assignments) ? AppDB.data.assignments : Object.values(AppDB.data.assignments);
     const nextId = assignmentsArray.length > 0 ? Math.max(...assignmentsArray.map(t => t ? parseInt(t.id || 0) : 0)) + 1 : 1;
 
@@ -1142,39 +1137,36 @@ App.executeCreateAssignmentCloud = function() {
         status: "pending",
         createdAt: ahora.toISOString(),
         timestamp: ahora.getTime(),
-        deadline: deadlineCalculado.toISOString() // Formato universal ISO para el motor de ordenamiento (.sort)
+        deadline: deadlineCalculado.toISOString() // Formato universal ISO para el ruteador .sort() y reportes analíticos
     };
 
-    // Inyectar en caliente en la memoria del cliente
+    // Inyectar en el nodo correspondiente de la base de datos cloud
     if (Array.isArray(AppDB.data.assignments)) {
         AppDB.data.assignments.push(nuevoTicket);
     } else {
         AppDB.data.assignments[nextId] = nuevoTicket;
     }
     
-    // Guardar cambios ejecutando el motor de cifrado nativo de tu db.js
+    // Guardar cambios ejecutando el motor original de cifrado de tu db.js
     AppDB.save();
 
-    // Registrar en las trazas de auditoría corporativa
+    // Registrar trazabilidad en las trazas de auditoría corporativa
     const activeUser = App.currentUser ? App.currentUser.username : "admin";
     if (typeof AppDB.addLog === "function") {
-        AppDB.addLog(activeUser, "CREAR_ACTIVIDAD", `Asignó tarea #${nextId} a @${user} con plazo de ${days}d ${hours}h ${minutes}m.`);
+        AppDB.addLog(activeUser, "CREAR_ACTIVIDAD", `Asignó tarea #${nextId} a @${user} con un plazo neto de ${minutosIngresados} minutos.`);
     }
 
     alert(`✅ Actividad #${nextId} emitida y sincronizada correctamente en la nube.`);
     
-    // Limpiar campos del formulario nativo
+    // Limpiar campos de la interfaz de forma nativa respetando tu HTML
     metaField.value = "";
+    deadlineField.value = "";
     if (refField) refField.value = "";
     if (mailField) mailField.value = "";
-    if (document.getElementById("taskDays")) document.getElementById("taskDays").value = "0";
-    if (document.getElementById("taskHours")) document.getElementById("taskHours").value = "0";
-    if (document.getElementById("taskMinutes")) document.getElementById("taskMinutes").value = "30";
 
-    // Cerrar la ventana modal ocultándola de nuevo
-    const modal = document.getElementById("modalAssignment") || document.getElementById("modalNewTask") || document.querySelector(".modal");
-    if (modal) modal.classList.add("hidden");
+    // Cerrar la ventana modal utilizando la clase nativa oculta de tu aplicación
+    document.getElementById("modalAssignment").classList.add("hidden");
     
-    // Refrescar el dashboard para que el ticket nuevo aparezca arriba
+    // Forzar la actualización inmediata de la tabla con los tickets pendientes arriba
     this.renderDashboardData();
 };
