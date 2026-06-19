@@ -1040,133 +1040,82 @@ App.openAboutModal = function() {
     `;
 };
 /* =========================================================================
-   MÓDULO DE PLAZOS COMPLEJOS (v2.02) - PARTE 1 DE 2 (INTERCEPTOR VISUAL)
+   MÓDULO: MÁSCARA VISUAL ELÁSTICA PARA PLAZOS COMPLEJOS (GOIA v2.02)
    ========================================================================= */
 App.openAssignmentModal = function() {
-    // 1. Intentar capturar el modal nativo usando los IDs estándar de tu interfaz
-    const modal = document.getElementById("modalAssignment") || document.getElementById("modalNewTask") || document.querySelector(".modal");
-    if (!modal) return console.error("❌ GOIA: No se localizó el contenedor estructural del modal.");
+    const modal = document.getElementById("modalAssignment");
+    if (!modal) return;
 
-    // Desbloquear la vista removiendo la clase oculta nativa de tu app
+    // 1. Desplegar la ventana modal nativa de tu aplicación
     modal.classList.remove("hidden");
 
-    // 2. Localizar el input de tiempo viejo (sea de tipo número o texto) para reconfigurarlo
-    const inputViejo = document.getElementById("taskDeadline") || document.getElementById("taskDuration") || modal.querySelector("input[type='number']");
+    // 2. Localizar el input original de minutos para aplicar el puente visual
+    const inputOriginalMinutos = document.getElementById("taskDeadline") || modal.querySelector("input[type='number']");
     
-    if (inputViejo && inputViejo.parentNode && !document.getElementById("taskDays")) {
-        const contenedorFila = inputViejo.parentNode;
+    if (inputOriginalMinutos && inputOriginalMinutos.parentNode) {
+        const contenedorFila = inputOriginalMinutos.parentNode;
         
-        // Ocultar el cuadro viejo de minutos para no romper las etiquetas CSS nativas
-        inputViejo.style.display = "none";
-        
-        // Actualizar el título de la casilla de forma corporativa
+        // Ocultar la casilla vieja en minutos de forma sutil sin borrarla del HTML
+        inputOriginalMinutos.style.display = "none";
+        inputOriginalMinutos.required = false; // Desactivar obligatoriedad nativa para evitar bloqueos
+
+        // Actualizar el letrero superior del formulario
         const label = contenedorFila.querySelector("label");
         if (label) label.innerText = "PLAZO OPERATIVO COMPLEJO DE ENTREGA";
 
-        // Inyectar el trío de casillas elásticas en una sola fila horizontal
-        const tripleFila = document.createElement("div");
-        tripleFila.style.display = "flex";
-        tripleFila.style.gap = "8px";
-        tripleFilaHtml = `
+        // 3. Si las tres casillas visuales ya existen en la pantalla, reiniciar sus valores a cero y salir
+        if (document.getElementById("maskDays")) {
+            document.getElementById("maskDays").value = "0";
+            document.getElementById("maskHours").value = "0";
+            document.getElementById("maskMinutes").value = "30";
+            inputOriginalMinutos.value = "30"; // Valor base por defecto
+            return;
+        }
+
+        // 4. Inyectar la fila triple de control horizontal compatible con tu CSS
+        const tripleFilaHtml = document.createElement("div");
+        tripleFilaHtml.id = "goiaTimeContainerMask";
+        tripleFilaHtml.style.display = "flex";
+        tripleFilaHtml.style.gap = "8px";
+        tripleFilaHtml.style.marginTop = "6px";
+        
+        tripleFilaHtml.innerHTML = `
             <div style="flex: 1;">
                 <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">DÍAS</span>
-                <input type="number" id="taskDays" min="0" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+                <input type="number" id="maskDays" min="0" value="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-weight: bold; background: #ffffff; color: #1e293b;">
             </div>
             <div style="flex: 1;">
                 <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">HORAS</span>
-                <input type="number" id="taskHours" min="0" max="23" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+                <input type="number" id="maskHours" min="0" max="23" value="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-weight: bold; background: #ffffff; color: #1e293b;">
             </div>
             <div style="flex: 1;">
                 <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">MINUTOS</span>
-                <input type="number" id="taskMinutes" min="0" max="59" value="30" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
-            </div>`;
+                <input type="number" id="maskMinutes" min="0" max="59" value="30" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-weight: bold; background: #ffffff; color: #1e293b;">
+            </div>
+        `;
         
-        tripleFila.innerHTML = tripleFilaHtml;
-        contenedorFila.appendChild(tripleFila);
+        contenedorFila.appendChild(tripleFilaHtml);
+
+        // 5. MOTOR DE CONVERSIÓN EN CALIENTE (Escucha los cambios y rellena el input oculto)
+        const calcularMinutosTotalesMascora = function() {
+            const d = parseInt(document.getElementById("maskDays").value || 0);
+            const h = parseInt(document.getElementById("maskHours").value || 0);
+            const m = parseInt(document.getElementById("maskMinutes").value || 0);
+            
+            // Fórmula transaccional: Convertir días y horas a minutos netos
+            const minutosCalculados = (d * 24 * 60) + (h * 60) + m;
+            
+            // Inyectar el resultado en el campo oculto original de tu HTML
+            inputOriginalMinutos.value = minutosCalculados;
+            console.log(`🎰 MÁSCARA GOIA: Sincronizando ${minutosCalculados} minutos hacia el esqueleto original.`);
+        };
+
+        // Enlazar los disparadores a las tres casillas nuevas
+        document.getElementById("maskDays").oninput = calcularMinutosTotalesMascora;
+        document.getElementById("maskHours").oninput = calcularMinutosTotalesMascora;
+        document.getElementById("maskMinutes").oninput = calcularMinutosTotalesMascora;
+        
+        // Forzar cálculo inicial por defecto (30 minutos)
+        inputOriginalMinutos.value = "30";
     }
-};
-/* =========================================================================
-   MÓDULO DE PLAZOS COMPLEJOS (v2.02) - PARTE 2 DE 2 (CÁLCULO CRONOLÓGICO)
-   ========================================================================= */
-App.executeCreateAssignmentCloud = function() {
-    const userField = document.getElementById("taskAssignedTo");
-    const mgmtField = document.getElementById("taskManagementName");
-    const metaField = document.getElementById("taskMetaCarga");
-    const refField = document.getElementById("taskReference");
-    const mailField = document.getElementById("taskMailUrl");
-    
-    // Captura estricta del campo de tiempo original intacto de tu HTML
-    const deadlineField = document.getElementById("taskDeadline") || document.querySelector("#modalAssignment input[type='number']");
-
-    if (!userField || !mgmtField || !metaField || !deadlineField) return;
-
-    const user = userField.value;
-    const name = mgmtField.value;
-    const meta = parseInt(metaField.value || 0);
-    const ref = refField ? refField.value.trim() : "S/R";
-    const mail = mailField ? mailField.value.trim() : "";
-    
-    // Leer el valor en minutos plano escrito por el supervisor
-    const minutosIngresados = parseInt(deadlineField.value || 0);
-
-    if (!name || meta <= 0) return alert("Por favor, rellene los campos obligatorios de la actividad.");
-    if (minutosIngresados <= 0) return alert("⚠️ ALERTA OPERACIONAL: Debe asignar un tiempo estimado en minutos mayor a cero.");
-
-    // ALGORITMO CRONOLÓGICO: Calcular la estampa de tiempo exacta sumando los minutos a la hora actual
-    const ahora = new Date();
-    const plazoMs = minutosIngresados * 60 * 1000; // Conversión síncrona a milisegundos netos
-    const deadlineCalculado = new Date(ahora.getTime() + plazoMs);
-
-    if (!AppDB.data.assignments) AppDB.data.assignments = [];
-
-    // Calcular ID autoincremental seguro evitando colapsos de vectores
-    const assignmentsArray = Array.isArray(AppDB.data.assignments) ? AppDB.data.assignments : Object.values(AppDB.data.assignments);
-    const nextId = assignmentsArray.length > 0 ? Math.max(...assignmentsArray.map(t => t ? parseInt(t.id || 0) : 0)) + 1 : 1;
-
-    const nuevoTicket = {
-        id: nextId,
-        name: name,
-        title: name,
-        assignedTo: user,
-        meta: meta,
-        target: meta,
-        processed: 0,
-        realizadas: 0,
-        reference: ref || "S/R",
-        mailUrl: mail || "",
-        status: "pending",
-        createdAt: ahora.toISOString(),
-        timestamp: ahora.getTime(),
-        deadline: deadlineCalculado.toISOString() // Formato universal ISO para el ruteador .sort() y reportes analíticos
-    };
-
-    // Inyectar en el nodo correspondiente de la base de datos cloud
-    if (Array.isArray(AppDB.data.assignments)) {
-        AppDB.data.assignments.push(nuevoTicket);
-    } else {
-        AppDB.data.assignments[nextId] = nuevoTicket;
-    }
-    
-    // Guardar cambios ejecutando el motor original de cifrado de tu db.js
-    AppDB.save();
-
-    // Registrar trazabilidad en las trazas de auditoría corporativa
-    const activeUser = App.currentUser ? App.currentUser.username : "admin";
-    if (typeof AppDB.addLog === "function") {
-        AppDB.addLog(activeUser, "CREAR_ACTIVIDAD", `Asignó tarea #${nextId} a @${user} con un plazo neto de ${minutosIngresados} minutos.`);
-    }
-
-    alert(`✅ Actividad #${nextId} emitida y sincronizada correctamente en la nube.`);
-    
-    // Limpiar campos de la interfaz de forma nativa respetando tu HTML
-    metaField.value = "";
-    deadlineField.value = "";
-    if (refField) refField.value = "";
-    if (mailField) mailField.value = "";
-
-    // Cerrar la ventana modal utilizando la clase nativa oculta de tu aplicación
-    document.getElementById("modalAssignment").classList.add("hidden");
-    
-    // Forzar la actualización inmediata de la tabla con los tickets pendientes arriba
-    this.renderDashboardData();
 };
