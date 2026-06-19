@@ -32,27 +32,37 @@ App.renderDashboardData = function() {
     let monitorHtml = "";
     const now = new Date();
 
-    var assignmentsData = AppDB.data.assignments;
+        var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-    // ORDENAR: Coloca de primero las "pending" o "warning" y de último las "completed"
+    /* =========================================================================
+       ORDENAMIENTO DINÁMICO RECALCULADO (GOIA v2.02)
+       ========================================================================= */
     assignmentsArray.sort(function(a, b) {
         if (!a || !b) return 0;
         
-        // Obtener el estado de cada ítem (normalizado a minúsculas)
-        const statusA = String(a.status || 'pending').toLowerCase();
-        const statusB = String(b.status || 'pending').toLowerCase();
+        // 1. Evaluar matemáticamente si el ítem A está completado en caliente
+        const metaA = parseInt(a.meta || a.target || 0);
+        const procA = parseInt(a.processed || a.realizadas || 0);
+        const estaCulminadoA = (a.status === "completed" || (procA >= metaA && metaA > 0));
+
+        // 2. Evaluar matemáticamente si el ítem B está completado en caliente
+        const metaB = parseInt(b.meta || b.target || 0);
+        const procB = parseInt(b.processed || b.realizadas || 0);
+        const estaCulminadoB = (b.status === "completed" || (procB >= metaB && metaB > 0));
         
-        // Si el ítem A está culminado y el B está abierto, movemos el A hacia abajo (retorna 1)
-        if (statusA === "completed" && statusB !== "completed") return 1;
-        // Si el ítem A está abierto y el B está culminado, mantenemos el A arriba (retorna -1)
-        if (statusA !== "completed" && statusB === "completed") return -1;
+        // REGLA DE ORO DE PRIORIZACIÓN FISCAL:
+        // Si el ítem A está culminado y el B está pendiente, mandamos el A abajo (retorna 1)
+        if (estaCulminadoA && !estaCulminadoB) return 1;
+        // Si el ítem A está pendiente y el B está culminado, mantenemos el A arriba (retorna -1)
+        if (!estaCulminadoA && estaCulminadoB) return -1;
         
-        return 0; // Si ambos tienen el mismo tipo de estado, mantienen su orden de creación
+        return 0; // Si ambos están abiertos o ambos culminados, mantienen su orden natural
     });
 
-    // 4. BUCLE DE RENDERIZADO (Continúa con el .forEach original de tu archivo)
+    // 4. BUCLE DE RENDERIZADO (Continúa exactamente igual con el assignmentsArray.forEach de abajo)
     assignmentsArray.forEach(function(item, index) {
+
         if (!item) return;
 
         // FILTRADO DE GOBERNANZA OPERATIVA
