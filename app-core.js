@@ -593,32 +593,44 @@ App.InactivityMonitor = {
     },
 
     // Forzar la destrucción de la sesión y rebotar al formulario de Login
+        // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
     executeAutoLogout() {
         console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono de estación.");
         
         if (App.currentUser) {
+            // 1. PURGA ABSOLUTA DE CACHÉ LOCAL DE SESIÓN (Cierra la brecha del Ctrl + F5)
+            sessionStorage.removeItem("goia_active_session");
+            sessionStorage.clear(); // Limpia cualquier otro rastro temporal en la pestaña
+            
             alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
             
-            // 1. Destruir el objeto de identidad en la memoria RAM
+            // 2. Destruir el objeto de identidad en la memoria RAM
             App.currentUser = null;
             
-            // 2. Limpiar cuadros de texto de formularios previos por resguardo de datos
+            // 3. Limpiar cuadros de texto de formularios previos por resguardo de datos
             const userField = document.getElementById("loginUser");
             const passField = document.getElementById("loginPass");
             if (userField) userField.value = "";
             if (passField) passField.value = "";
 
-            // 3. Ocultar la barra superior (Banner de control)
+            // 4. Ocultar la barra superior (Banner de control)
             const topBanner = document.getElementById("topBanner");
             if (topBanner) topBanner.classList.add("hidden");
 
-            // 4. Detener cualquier reloj secundario en ejecución si tu app los tiene
+            // 5. Detener cualquier reloj secundario en ejecución
             if (window.AppTimerInterval) clearInterval(window.AppTimerInterval);
+            if (window.AppDashboardIntervalActive) {
+                window.AppDashboardIntervalActive = false;
+                clearInterval(window.AppDashboardIntervalActive);
+            }
 
-            // 5. Rumbear al operador de vuelta al cascarón del Login SPA
+            // 6. Rumbear al operador de vuelta al cascarón del Login SPA
             if (typeof App.showView === "function") {
                 App.showView("viewLogin");
             }
+            
+            // Forzar un refresco sutil de la URL limpia para garantizar la muerte de variables huerfanas
+            window.location.hash = "login";
         }
     },
 
