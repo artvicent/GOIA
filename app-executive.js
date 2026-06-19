@@ -1178,3 +1178,81 @@ App.executeCreateAssignmentCloud = function() {
     // Refrescar el dashboard para que el ticket nuevo aparezca arriba
     this.renderDashboardData();
 };
+
+/* =========================================================================
+   PARCHE PERIMETRAL: SESTRABAR CAPTURA DE FORMULARIO DE TIEMPOS (v2.02)
+   ========================================================================= */
+(function() {
+    console.log("🛡️ MONITOR GOIA: Inicializando parche perimetral de botones...");
+    
+    // Función interna para buscar y reescribir los botones del esqueleto HTML
+    function aplicarParcheDeBotones() {
+        // 1. Localizar el botón de la interfaz que abre el modal de asignar actividad
+        const botonesAsignar = document.querySelectorAll("button, a");
+        botonesAsignar.forEach(function(btn) {
+            const textoHtml = String(btn.innerText || btn.textContent).toUpperCase();
+            const clickAtributo = String(btn.getAttribute("onclick") || "");
+            
+            // Si el botón dice Asignar Actividad o invoca la función vieja, lo interceptamos
+            if (textoHtml.includes("ASIGNAR") || textoHtml.includes("ACTIVIDAD") || clickAtributo.includes("openAssignmentModal")) {
+                btn.removeAttribute("onclick"); // Romper el enlace viejo corrupto del HTML
+                
+                // Sobreescribir el clic con nuestro interceptor de plazos complejos
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    console.log("🔒 INTERCEPTOR: Abriendo consola de plazos complejos.");
+                    
+                    // Forzar la apertura visual del modal
+                    const modal = document.getElementById("modalAssignment") || document.getElementById("modalNewTask") || document.querySelector(".modal");
+                    if (modal) modal.classList.remove("hidden");
+                    
+                    // Forzar la inyección de las tres casillas compactas (Días, Horas, Minutos)
+                    const inputViejo = document.getElementById("taskDeadline") || document.getElementById("taskDuration") || (modal ? modal.querySelector("input[type='number']") : null);
+                    
+                    if (inputViejo && inputViejo.parentNode && !document.getElementById("taskDays")) {
+                        const contenedorFila = inputViejo.parentNode;
+                        inputViejo.style.display = "none"; // Ocultar minutos viejos
+                        
+                        const label = contenedorFila.querySelector("label");
+                        if (label) label.innerText = "PLAZO OPERATIVO COMPLEJO DE ENTREGA";
+
+                        const tripleFila = document.createElement("div");
+                        tripleFila.style.display = "flex";
+                        tripleFila.style.gap = "8px";
+                        tripleFila.innerHTML = `
+                            <div style="flex: 1;">
+                                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">DÍAS</span>
+                                <input type="number" id="taskDays" min="0" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+                            </div>
+                            <div style="flex: 1;">
+                                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">HORAS</span>
+                                <input type="number" id="taskHours" min="0" max="23" value="0" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+                            </div>
+                            <div style="flex: 1;">
+                                <span style="font-size: 10px; color: #64748b; font-weight: bold; display: block; margin-bottom: 2px;">MINUTOS</span>
+                                <input type="number" id="taskMinutes" min="0" max="59" value="30" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align:center; font-weight:bold; background:#ffffff; color:#1e293b;">
+                            </div>`;
+                        contenedorFila.appendChild(tripleFila);
+                    }
+                });
+            }
+            
+            // 2. Interceptar el botón de guardado (Emitir Ticket) para redirigir al motor matemático
+            if (textoHtml.includes("EMITIR") || textoHtml.includes("GUARDAR") || clickAtributo.includes("executeCreateAssignmentCloud")) {
+                btn.removeAttribute("onclick");
+                btn.type = "button"; // Desactivar submits nativos que refrescan la app
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    if (typeof App.executeCreateAssignmentCloud === "function") {
+                        App.executeCreateAssignmentCloud();
+                    }
+                });
+            }
+        });
+    }
+
+    // Ejecutar el parche de forma síncrona en el arranque y tras pequeños retrasos para ganarle a Firebase
+    window.addEventListener("DOMContentLoaded", aplicarParcheDeBotones);
+    setTimeout(aplicarParcheDeBotones, 1500);
+    setTimeout(aplicarParcheDeBotones, 3000);
+})();
