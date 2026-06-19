@@ -592,47 +592,57 @@ App.InactivityMonitor = {
         }, this.TIMEOUT_MS);
     },
 
-    // Forzar la destrucción de la sesión y rebotar al formulario de Login
         // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
     executeAutoLogout() {
         console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono de estación.");
         
         if (App.currentUser) {
-            // 1. PURGA ABSOLUTA DE CACHÉ LOCAL DE SESIÓN (Cierra la brecha del Ctrl + F5)
+            // 1. PURGA ABSOLUTA DE MEMORIAS DEL NAVEGADOR (Cierra la brecha de Ctrl + F5 / Ctrl + Shift + R)
             sessionStorage.removeItem("goia_active_session");
-            sessionStorage.clear(); // Limpia cualquier otro rastro temporal en la pestaña
+            sessionStorage.clear();
+            
+            // BORRAR EL LOCALSTORAGE (Aquí es donde db.js o Firebase guardan la persistencia encriptada)
+            localStorage.removeItem("goia_active_session");
+            localStorage.removeItem("local_user");
+            localStorage.clear(); // Limpieza total de llaves persistentes de red
+
+            // 2. ELIMINACIÓN DE COOKIES DE SESIÓN EN EL DOMINIO
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
             
             alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
             
-            // 2. Destruir el objeto de identidad en la memoria RAM
+            // 3. Destruir el objeto de identidad en la memoria RAM
             App.currentUser = null;
             
-            // 3. Limpiar cuadros de texto de formularios previos por resguardo de datos
+            // 4. Limpiar cuadros de texto de formularios previos por resguardo de datos
             const userField = document.getElementById("loginUser");
             const passField = document.getElementById("loginPass");
             if (userField) userField.value = "";
             if (passField) passField.value = "";
 
-            // 4. Ocultar la barra superior (Banner de control)
+            // 5. Ocultar la barra superior (Banner de control)
             const topBanner = document.getElementById("topBanner");
             if (topBanner) topBanner.classList.add("hidden");
 
-            // 5. Detener cualquier reloj secundario en ejecución
+            // 6. Detener relojes secundarios e intervalos de barrido
             if (window.AppTimerInterval) clearInterval(window.AppTimerInterval);
             if (window.AppDashboardIntervalActive) {
                 window.AppDashboardIntervalActive = false;
                 clearInterval(window.AppDashboardIntervalActive);
             }
 
-            // 6. Rumbear al operador de vuelta al cascarón del Login SPA
+            // 7. Rumbear al operador de vuelta al cascarón del Login SPA
             if (typeof App.showView === "function") {
                 App.showView("viewLogin");
             }
             
-            // Forzar un refresco sutil de la URL limpia para garantizar la muerte de variables huerfanas
-            window.location.hash = "login";
+            // Forzar un redireccionamiento limpio rompiendo hilos persistentes en la pestaña
+            window.location.reload(); 
         }
     },
+
 
     // Detener por completo el monitor al presionar voluntariamente "Cerrar Sesión"
     stop() {
