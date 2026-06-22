@@ -4,7 +4,9 @@
  * 100% LIBRE DE ESTILOS INTRUSIVOS Y PROPIEDADES .STYLE
  */
 
-// Desplegar el panel general de administración para usuarios autorizados
+/* =========================================================================
+   MÓDULO: RESTRICCIÓN DE SEGURIDAD GENERAL DE ACCESOS RAÍZ (GOIA v2.02)
+   ========================================================================= */
 App.openAdminMenu = function() {
     // 1. Validar que la base de datos local y su configuración estén listas
     if (!AppDB || !AppDB.data) {
@@ -20,6 +22,11 @@ App.openAdminMenu = function() {
     // Evitar caídas del sistema leyendo el valor por defecto de forma segura
     var currentExpiry = AppDB.data.config.passwordExpiryDays || 90;
 
+    // DETERMINACIÓN DE PRIVILEGIOS DE INFRAESTRUCTURA (REGLA PCI-DSS)
+    // El rol Coordinador o Gerente NO es Administrador. Solo el alias exacto "admin" tiene acceso raíz.
+    const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username.toLowerCase().trim() : "admin";
+    const esAdminRaizAbsoluto = (activeUsername === "admin");
+
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
             <h3>Panel de Personal y Políticas</h3>
@@ -33,7 +40,7 @@ App.openAdminMenu = function() {
                 <button onclick="App.saveAdministrativeConfig()" class="btn-primary">Aplicar</button>
             </div>
             
-            <!-- SECCIÓN INTEGRADA: CARGA DE LOGOTIPO DE LA GERENCIA DESDE LA PC -->
+            <!-- CARGA DE LOGOTIPO DE LA GERENCIA DESDE LA PC -->
             <label class="mt-2" style="display: block; font-weight: bold; margin-bottom: 4px;">Logotipo Institucional (Pantalla de Login)</label>
             <div class="input-inline-row">
                 <input type="file" id="inputUploadBrandLogo" accept="image/*" class="form-control" style="width: 100%; padding: 4px;" onchange="App.handleUploadBrandLogoCloud(this)">
@@ -47,13 +54,11 @@ App.openAdminMenu = function() {
             </select>
         </div>
 
-        <!-- MÓDULO DE REINICIO DE FÁBRICA SÍNCRONO CON FIREBASE -->
-        <div class="maintenance-critical-card" style="margin-top: 15px; padding: 12px; border: 1px dashed #ef4444; border-radius: 6px; background: #fef2f2;">
+        <!-- MÓDULO DE REINICIO DE FÁBRICA: SE OCULTA SI NO ES EL ADMIN RAÍZ -->
+        <div class="maintenance-critical-card ${esAdminRaizAbsoluto ? '' : 'hidden'}" style="margin-top: 15px; padding: 12px; border: 1px dashed #ef4444; border-radius: 6px; background: #fef2f2;">
             <label style="color: #b91c1c; font-weight: bold; display: block; margin-bottom: 4px;">🚨 Mantenimiento Crítico de Servidor</label>
             <p style="color: #7f1d1d; font-size: 11px; margin: 0 0 10px 0; line-height: 1.4;">Al presionar este comando se purgarán de la nube de Firebase todos los registros de auditoría, las tareas cargadas y el personal secundario de forma definitiva.</p>
-            
-            <!-- ENLAZADO CON EL PROTOCOLO DE PURGA SEGURO DE APPDB -->
-            <button onclick="App.handleFactoryResetCloud()" class="btn-danger-reset" style="width:100%; padding:8px; background:#dc2626; color:white; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:11px;">
+            <button onclick="App.handleFactoryResetCloud()" class="btn-danger-reset" style="width:100%; padding:8px; background:#dc2626; color:white; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:11px;" type="button">
                 💥 REINICIAR BASE DE DATOS DE FÁBRICA
             </button>
         </div>
@@ -67,8 +72,8 @@ App.openAdminMenu = function() {
             <button onclick="App.listUsersAdmin()" class="btn-secondary font-bold" style="padding: 10px; font-weight: bold;">👥 Nómina Personal</button>
         </div>
         
-        <!-- ENLACE SEGURO INDEPENDIENTE: EVITA EL ALERTA DE BLOQUEO DE LA TABLA -->
-        <div class="modal-single-row" style="margin-top: 8px;">
+        <!-- ASIGNAR NUEVA CLAVE: SE OCULTA SI NO ES EL ADMIN RAÍZ -->
+        <div class="modal-single-row ${esAdminRaizAbsoluto ? '' : 'hidden'}" style="margin-top: 8px;">
             <button onclick="App.openDirectCredentialsModal('admin')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #eab308; color: black; border: none; border-radius: 4px; cursor: pointer;">
                 ⚙️ ASIGNAR NUEVA CLAVE PERSONALIZADA ADMIN
             </button>
@@ -80,7 +85,6 @@ App.openAdminMenu = function() {
             </button>
         </div>`;
 };
-
 
 // Función auxiliar para guardar la política de vencimiento de claves sin romper el flujo
 App.handleUpdateExpiryPolicyInline = function() {
