@@ -673,38 +673,50 @@ App.RealtimeNotificationCore = {
  if (!container) {
  container = document.createElement("div");
  container.id = "goiaToastContainer";
+ // Posicionamiento elástico absoluto perimetral (Fijo arriba a la derecha)
  container.style.position = "fixed";
- container.style.top = "20px";
- container.style.right = "20px";
- container.style.zIndex = "99999";
+ container.style.top = "24px";
+ container.style.right = "24px";
+ container.style.zIndex = "999999"; // Prioridad absoluta por encima de cualquier modal
  container.style.display = "flex";
  container.style.flexDirection = "column";
- container.style.gap = "10px";
- container.style.maxWidth = "320px";
+ container.style.gap = "12px";
+ container.style.width = "340px";
+ container.style.maxWidth = "calc(100vw - 48px)";
  document.body.appendChild(container);
  }
- 
- // Estructurar el cascarón de la alerta flotante libre de estilos intrusivos
+ // Estructurar el cascarón de la alerta flotante con diseño limpio y compacto
  const toast = document.createElement("div");
  toast.id = "toast_msg_" + noticeId;
- toast.className = "counter-card bg-warning"; 
- toast.style.position = "relative";
- toast.style.padding = "12px 35px 12px 12px";
- toast.style.borderLeft = "5px solid #2563eb"; 
- toast.style.boxShadow = "0 4px 6px -1px rgb(0 0 0 / 0.1)";
- toast.style.borderRadius = "4px";
  
+ // Inyección de propiedades elásticas limpias (No depende de counter-card)
+ toast.style.position = "relative";
+ toast.style.padding = "14px 40px 14px 14px";
+ toast.style.background = "#ffffff";
+ toast.style.color = "#0f172a";
+ toast.style.borderLeft = "5px solid #2563eb"; // Borde azul de emisión de ticket GOIA
+ toast.style.borderTop = "1px solid #e2e8f0";
+ toast.style.borderRight = "1px solid #e2e8f0";
+ toast.style.borderBottom = "1px solid #e2e8f0";
+ toast.style.boxShadow = "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)";
+ toast.style.borderRadius = "6px";
+ toast.style.animation = "fade font-sans 0.3s ease-out";
  toast.innerHTML = `
- <p style="margin: 0; font-size: 11px; font-weight: bold; color: #1e3a8a; letter-spacing: 0.5px;">🔔 NUEVA TAREA ASIGNADA</p>
- <p style="margin: 3px 0 0 0; font-size: 11px; font-weight: bold; color: #0f172a;">${title}</p>
- <p style="margin: 2px 0 0 0; font-size: 10px; color: #475569; line-height: 1.3;">${message || 'Tiene una nueva carga disponible.'}</p>
- <p style="margin: 4px 0 0 0; font-size: 9px; color: #64748b; font-weight: 600;">Asignado por: @${supervisor}</p>
- <!-- BOTÓN DE DESCARTE MANUAL EXIGIDO POR LA GERENCIA -->
- <button type="button" onclick="App.RealtimeNotificationCore.handleDismissNoticeInline('${noticeId}')" style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #64748b;" title="Cerrar Alerta">&times;</button>
+ <p style="margin: 0; font-size: 10px; font-weight: 800; color: #2563eb; letter-spacing: 0.8px; text-transform: uppercase;">🔔 Nueva Actividad Asignada</p>
+ <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: 700; color: #1e293b;">${title}</p>
+ <p style="margin: 3px 0 0 0; font-size: 11px; color: #475569; line-height: 1.4;">${message || 'Tiene una nueva carga disponible.'}</p>
+ <p style="margin: 6px 0 0 0; font-size: 10px; color: #64748b; font-weight: 600;">Asignado por: <span style="color:#1e3a8a;">@${supervisor}</span></p>
+ <!-- BOTÓN DE DESCARTE MANUAL INTERACTIVO -->
+ <button type="button" onclick="App.RealtimeNotificationCore.handleDismissNoticeInline('${noticeId}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; font-weight: bold; cursor: pointer; color: #94a3b8; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='#94a3b8'" title="Cerrar Alerta">&times;</button>
  `;
  container.appendChild(toast);
- 
- // REGLA OPERATIVA EXTRA: Reproducir un sutil sonido de alerta nativo del sistema
+ // Reloj de desvanecimiento automático: Si el analista no la cierra en 15 segundos, se limpia sola
+ setTimeout(() => {
+ if (document.getElementById("toast_msg_" + noticeId)) {
+     this.handleDismissNoticeInline(noticeId);
+ }
+ }, 15000);
+ // REGLA OPERATIVA: Sonido de alerta nativo
  try {
  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
  const osc = audioCtx.createOscillator();
@@ -712,8 +724,8 @@ App.RealtimeNotificationCore = {
  osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
  osc.connect(audioCtx.destination);
  osc.start();
- osc.stop(audioCtx.currentTime + 0.15);
- } catch (e) { console.log("Audio no permitido por políticas del navegador."); }
+ osc.stop(audioCtx.currentTime + 0.12);
+ } catch (e) { console.log("Audio bloqueado por el navegador."); }
  },
  
  // Marcar la notificación como leída en Firebase y desvanecer el cartel de la pantalla
