@@ -1,7 +1,7 @@
 /**
  * ADMINISTRACIÓN PARTE D: CATÁLOGO DE GESTIONES DE ADQUIRENCIA (app-admin-managements.js)
  * LÓGICA OPERACIONAL PURA - CERO ATRIBUTOS DE DISEÑO O ESTILOS EN LÍNEA
- * VERSIÓN PROTEGIDA v2.02 - INMUNE A CAÍDAS Y REINICIOS DE BASE DE DATOS
+ * VERSIÓN BLINDADA v2.02 - INMUNE A CAÍDAS Y REINICIOS DE BASE DE DATOS
  */
 
 // Desplegar la matriz de categorías operacionales autorizadas en la gerencia
@@ -106,7 +106,7 @@ App.executeCreateManagementCloud = function() {
     
     // Registrar evento en las trazas de auditoría cloud
     if (typeof AppDB.addLog === "function") {
-        AppDB.addLog(activeUser, "CREAR_CATALOGO", `Añadió categoría: ${name}`);
+        AppDB.addLog(activeUser, "CREAR_CATALOGO", "Añadió categoría: " + name);
     }
     
     alert("Nueva gestión de adquirencia incorporada con éxito.");
@@ -126,13 +126,13 @@ App.executeDeleteManagementCloud = function(id) {
     if (targetIndex === -1) return;
 
     const mgmtName = AppDB.data.managements[targetIndex].name;
-    const check = confirm(`⚠️ ALERTA DE CONFIGURACIÓN:\n¿Está seguro de que desea eliminar la categoría "${mgmtName}"?\n\nEsto desvinculará los reportes operacionales asociados.`);
+    const check = confirm("⚠️ ALERTA DE CONFIGURACIÓN:\n¿Está seguro de que desea eliminar la categoría \"" + mgmtName + "\"?\n\nEsto desvinculará los reportes operacionales asociados.");
     
     if (check) {
         const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
         
         if (typeof AppDB.addLog === "function") {
-            AppDB.addLog(activeUser, "BORRAR_CATALOGO", `Eliminó categoría: ${mgmtName}`);
+            AppDB.addLog(activeUser, "BORRAR_CATALOGO", "Eliminó categoría: " + mgmtName);
         }
         
         AppDB.data.managements.splice(targetIndex, 1);
@@ -142,3 +142,4 @@ App.executeDeleteManagementCloud = function(id) {
         this.openManagementsMenu();
     }
 };
+
