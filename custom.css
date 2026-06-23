@@ -1755,3 +1755,33 @@ body:has(#viewDashboard.hidden) footer {
     color: #1e1b4b;
 }
 .bg-individual .counter-num { color: #4f46e5; }
+
+/* =========================================================================
+   MATRIZ DE RESALTADO VISUAL DE ACTIVIDADES PENDIENTES (GOIA v2.02)
+   ========================================================================= */
+
+/* 1. Filas en Estado Pendiente Ordinario (Naranja Pálido / Crema) */
+tr.status-row-pending {
+    background-color: #fffbeb !important; /* Tono crema/naranja muy suave que no satura la vista */
+    transition: background-color 0.2s ease;
+}
+
+tr.status-row-pending td {
+    color: #1e293b !important; /* Texto oscuro de alta legibilidad */
+    border-bottom: 1px solid #fef08a !important; /* Línea divisoria tenue */
+}
+
+/* 2. Efecto Hover: Resalta sutilmente la fila al pasar el puntero del ratón */
+tr.status-row-pending:hover {
+    background-color: #fef9c3 !important; /* Un toque apenas más encendido al posicionarse encima */
+}
+
+/* 3. Ajuste de compatibilidad para las etiquetas de tiempo dentro de la fila */
+tr.status-row-pending .time-label-pending {
+    background-color: #fef08a;
+    color: #854d0e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+}
