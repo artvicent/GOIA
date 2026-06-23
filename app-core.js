@@ -632,51 +632,71 @@ App.InactivityMonitor = {
 };
 
 /* =========================================================================
-   MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - CORREGIDO
-   ========================================================================= */
-/* =========================================================================
-   MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - BLINDAJE TOTAL
+   MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - BLINDAJE DE ARRANQUE
    ========================================================================= */
 App.RealtimeNotificationCore = {
     listenerRef: null,
-    // Bolsa de memoria RAM para ignorar registros viejos cargados en el primer segundo
     timestampArranqueCliente: null,
+    isListeningActive: false,
  
     // Inicializar el escucha síncrono conectado a Firebase Realtime Database
     init() {
-        if (!App.currentUser || typeof firebase === 'undefined') return;
-        
-        const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
-        console.log(`📡 NOTIFICACIONES: Escucha perimetral activo para @${cleanUserKey}`);
- 
-        // Apagar escuchas previos para evitar duplicidad de hilos en la memoria
-        this.stop();
- 
-        // Capturar el milisegundo exacto del arranque del cliente para discriminar lo viejo
-        this.timestampArranqueCliente = new Date().getTime();
- 
-        // Apuntar de forma directa a la referencia del nodo personal del analista en la nube
-        this.listenerRef = firebase.database().ref("notifications/" + cleanUserKey);
-        
-        // Escucha nativa en caliente libre de índices rígidos de servidor
-        this.listenerRef.on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            if (!data) return;
- 
-            // 1. DISCRIMINADOR OPERATIVO LOCAL: Ignorar alertas históricas o ya leídas
-            if (data.status === "read") return;
+        // Retrasar sutilmente la ejecución para ganarle al retardo de sincronización de Firebase
+        setTimeout(() => {
+            if (typeof firebase === 'undefined' || !firebase.database) {
+                console.error("❌ GOIA CORE: SDK de Firebase no detectado en el DOM.");
+                return;
+            }
+
+            // CAPTURA BLINDADA DE IDENTIDAD: Si el objeto RAM falla, leer la interfaz visual
+            let usernameTarget = "admin";
+            if (App.currentUser && App.currentUser.username) {
+                usernameTarget = App.currentUser.username;
+            } else {
+                const badgeWeb = document.getElementById("dashWelcomeName");
+                const logoutBtn = document.querySelector(".btn-logout, button[onclick*='logout']");
+                // Si hay un panel abierto, deducir la sesión de forma elástica
+                if (badgeWeb && badgeWeb.innerText) {
+                    usernameTarget = badgeWeb.innerText.split(" ")[0].toLowerCase().trim();
+                } else {
+                    usernameTarget = "admin"; // Respaldo nativo de contingencia
+                }
+            }
+
+            const cleanUserKey = usernameTarget.toLowerCase().trim().replace("@", "").split(" ")[0];
+            console.log(`📡 NOTIFICACIONES CLOUD: Escucha perimetral activo para @${cleanUserKey.toUpperCase()}`);
+     
+            this.stop();
+     
+            this.timestampArranqueCliente = new Date().getTime();
+            this.listenerRef = firebase.database().ref("notifications/" + cleanUserKey);
             
-            // Si el ticket se creó antes de que el analista cargara la página, se descarta
-            const ticketTime = parseInt(data.createdAtNum || data.timestampNum || 0);
-            if (ticketTime < this.timestampArranqueCliente) return;
- 
-            // 2. Disparar la inyección visual del cartel flotante en la esquina de la pantalla
-            this.injectToastAlertToDOM(snapshot.key, data.title, data.createdBy, data.msg);
-        });
+            // Declarar bandera de protección para evitar bucles huerfanos
+            this.isListeningActive = true;
+
+            // Escucha nativa en caliente libre de índices rígidos de servidor
+            this.listenerRef.on("child_added", (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+     
+                if (data.status === "read") return;
+                
+                // DISCRIMINADOR DE TIEMPO REAL REAL: Ignorar alertas históricas del pasado
+                const ticketTime = parseInt(data.createdAtNum || data.timestampNum || 0);
+                // Si el ticket se creó antes de abrir esta pestaña, se descarta para no inundar la pantalla
+                if (ticketTime < this.timestampArranqueCliente - 5000) return;
+     
+                // Disparar la inyección visual del cartel flotante
+                this.injectToastAlertToDOM(snapshot.key, data.title, data.createdBy, data.msg);
+            });
+        }, 2000); // 2 segundos de colchón térmico de red
     },
  
     // Construir e inyectar el cartel flotante en la pantalla con el botón de cierre manual (×)
     injectToastAlertToDOM(noticeId, title, supervisor, message) {
+        // Evitar inyectar la misma alerta si ya está pintada en pantalla
+        if (document.getElementById("toast_msg_" + noticeId)) return;
+
         let container = document.getElementById("goiaToastContainer");
         if (!container) {
             container = document.createElement("div");
@@ -684,7 +704,7 @@ App.RealtimeNotificationCore = {
             container.style.position = "fixed";
             container.style.top = "24px";
             container.style.right = "24px";
-            container.style.zIndex = "999999"; // Prioridad por encima de modales
+            container.style.zIndex = "999999"; 
             container.style.display = "flex";
             container.style.flexDirection = "column";
             container.style.gap = "12px";
@@ -740,8 +760,16 @@ App.RealtimeNotificationCore = {
  
     // Marcar la notificación como leída de forma definitiva en Firebase
     handleDismissNoticeInline(noticeId) {
-        if (typeof firebase === 'undefined' || !App.currentUser) return;
-        const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        
+        let usernameTarget = "admin";
+        if (App.currentUser && App.currentUser.username) {
+            usernameTarget = App.currentUser.username;
+        } else {
+            const badgeWeb = document.getElementById("dashWelcomeName");
+            if (badgeWeb && badgeWeb.innerText) usernameTarget = badgeWeb.innerText.split(" ")[0].toLowerCase().trim();
+        }
+        const cleanUserKey = usernameTarget.toLowerCase().trim().replace("@", "").split(" ")[0];
         
         firebase.database().ref(`notifications/${cleanUserKey}/${noticeId}`).update({
             status: "read",
@@ -754,12 +782,14 @@ App.RealtimeNotificationCore = {
  
     // Apagar hilos de red al cerrar sesión
     stop() {
-        if (this.listenerRef) {
+        if (this.listenerRef && this.isListeningActive) {
             this.listenerRef.off();
             this.listenerRef = null;
+            this.isListeningActive = false;
         }
     }
 };
+
 
 // Crear un enlace persistente en la memoria de JavaScript para evitar duplicación de hilos
 App.InactivityMonitor.boundReset = App.InactivityMonitor.resetTimer.bind(App.InactivityMonitor);
