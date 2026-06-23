@@ -634,126 +634,131 @@ App.InactivityMonitor = {
 /* =========================================================================
    MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - CORREGIDO
    ========================================================================= */
+/* =========================================================================
+   MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - BLINDAJE TOTAL
+   ========================================================================= */
 App.RealtimeNotificationCore = {
- listenerRef: null,
+    listenerRef: null,
+    // Bolsa de memoria RAM para ignorar registros viejos cargados en el primer segundo
+    timestampArranqueCliente: null,
  
- // Inicializar el escucha síncrono conectado a Firebase Realtime Database
- init() {
- if (!App.currentUser || typeof firebase === 'undefined') return;
+    // Inicializar el escucha síncrono conectado a Firebase Realtime Database
+    init() {
+        if (!App.currentUser || typeof firebase === 'undefined') return;
+        
+        const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
+        console.log(`📡 NOTIFICACIONES: Escucha perimetral activo para @${cleanUserKey}`);
  
- const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
- console.log(`📡 NOTIFICACIONES: Escucha perimetral activo para @${cleanUserKey}`);
+        // Apagar escuchas previos para evitar duplicidad de hilos en la memoria
+        this.stop();
  
- // Apagar escuchas previos para evitar duplicidad de hilos en la RAM
- this.stop();
+        // Capturar el milisegundo exacto del arranque del cliente para discriminar lo viejo
+        this.timestampArranqueCliente = new Date().getTime();
  
- // Estampa de tiempo del milisegundo actual para ignorar alertas del pasado en el arranque
- const timestampFiltroEnCaliente = new Date().getTime();
+        // Apuntar de forma directa a la referencia del nodo personal del analista en la nube
+        this.listenerRef = firebase.database().ref("notifications/" + cleanUserKey);
+        
+        // Escucha nativa en caliente libre de índices rígidos de servidor
+        this.listenerRef.on("child_added", (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
  
- // Apuntar directamente a la rama de notificaciones personales del analista
- this.listenerRef = firebase.database().ref("notifications/" + cleanUserKey);
+            // 1. DISCRIMINADOR OPERATIVO LOCAL: Ignorar alertas históricas o ya leídas
+            if (data.status === "read") return;
+            
+            // Si el ticket se creó antes de que el analista cargara la página, se descarta
+            const ticketTime = parseInt(data.createdAtNum || data.timestampNum || 0);
+            if (ticketTime < this.timestampArranqueCliente) return;
  
- // FILTRO CRONOLÓGICO CLOUD: Captura únicamente los tickets creados a partir de este segundo
- this.listenerRef.orderByChild("createdAtNum").startAt(timestampFiltroEnCaliente).on("child_added", (snapshot) => {
- const data = snapshot.val();
- if (!data) return;
+            // 2. Disparar la inyección visual del cartel flotante en la esquina de la pantalla
+            this.injectToastAlertToDOM(snapshot.key, data.title, data.createdBy, data.msg);
+        });
+    },
  
- // Si la alerta ya fue leída o descartada anteriormente, la ignoramos
- if (data.status === "read") return;
+    // Construir e inyectar el cartel flotante en la pantalla con el botón de cierre manual (×)
+    injectToastAlertToDOM(noticeId, title, supervisor, message) {
+        let container = document.getElementById("goiaToastContainer");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "goiaToastContainer";
+            container.style.position = "fixed";
+            container.style.top = "24px";
+            container.style.right = "24px";
+            container.style.zIndex = "999999"; // Prioridad por encima de modales
+            container.style.display = "flex";
+            container.style.flexDirection = "column";
+            container.style.gap = "12px";
+            container.style.width = "340px";
+            container.style.maxWidth = "calc(100vw - 48px)";
+            document.body.appendChild(container);
+        }
  
- // Disparar la inyección visual en caliente del cartel informativo
- this.injectToastAlertToDOM(snapshot.key, data.title, data.createdBy, data.msg);
- });
- },
+        const toast = document.createElement("div");
+        toast.id = "toast_msg_" + noticeId;
+        
+        // Atributos elásticos de flotación absoluta (Estilo Zoho / Windows)
+        toast.style.position = "relative";
+        toast.style.padding = "14px 40px 14px 14px";
+        toast.style.background = "#ffffff";
+        toast.style.color = "#0f172a";
+        toast.style.borderLeft = "5px solid #2563eb"; // Borde azul corporativo GOIA
+        toast.style.borderTop = "1px solid #e2e8f0";
+        toast.style.borderRight = "1px solid #e2e8f0";
+        toast.style.borderBottom = "1px solid #e2e8f0";
+        toast.style.boxShadow = "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)";
+        toast.style.borderRadius = "6px";
+        
+        toast.innerHTML = `
+            <p style="margin: 0; font-size: 10px; font-weight: 800; color: #2563eb; letter-spacing: 0.8px; text-transform: uppercase;"><b>🔔 Nueva Actividad Asignada</b></p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: 700; color: #1e293b;">${title}</p>
+            <p style="margin: 3px 0 0 0; font-size: 11px; color: #475569; line-height: 1.4;">${message || 'Tiene una nueva carga disponible.'}</p>
+            <p style="margin: 6px 0 0 0; font-size: 10px; color: #64748b; font-weight: 600;">Asignado por: <span style="color:#1e3a8a;">@${supervisor}</span></p>
+            <!-- BOTÓN DE DESCARTE MANUAL INTERACTIVO -->
+            <button type="button" onclick="App.RealtimeNotificationCore.handleDismissNoticeInline('${noticeId}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; font-weight: bold; cursor: pointer; color: #94a3b8; padding: 0; line-height: 1;" title="Cerrar Alerta">&times;</button>
+        `;
+        
+        container.appendChild(toast);
  
- // Construir e inyectar el cartel flotante en la pantalla con el botón de cierre manual (×)
- injectToastAlertToDOM(noticeId, title, supervisor, message) {
- // Buscar o crear el contenedor global flotante en el esqueleto HTML
- let container = document.getElementById("goiaToastContainer");
- if (!container) {
- container = document.createElement("div");
- container.id = "goiaToastContainer";
- // Posicionamiento elástico absoluto perimetral (Fijo arriba a la derecha)
- container.style.position = "fixed";
- container.style.top = "24px";
- container.style.right = "24px";
- container.style.zIndex = "999999"; // Prioridad absoluta por encima de cualquier modal
- container.style.display = "flex";
- container.style.flexDirection = "column";
- container.style.gap = "12px";
- container.style.width = "340px";
- container.style.maxWidth = "calc(100vw - 48px)";
- document.body.appendChild(container);
- }
- // Estructurar el cascarón de la alerta flotante con diseño limpio y compacto
- const toast = document.createElement("div");
- toast.id = "toast_msg_" + noticeId;
+        // Reloj de desvanecimiento automático a los 15 segundos
+        setTimeout(() => {
+            if (document.getElementById("toast_msg_" + noticeId)) {
+                this.handleDismissNoticeInline(noticeId);
+            }
+        }, 15000);
  
- // Inyección de propiedades elásticas limpias (No depende de counter-card)
- toast.style.position = "relative";
- toast.style.padding = "14px 40px 14px 14px";
- toast.style.background = "#ffffff";
- toast.style.color = "#0f172a";
- toast.style.borderLeft = "5px solid #2563eb"; // Borde azul de emisión de ticket GOIA
- toast.style.borderTop = "1px solid #e2e8f0";
- toast.style.borderRight = "1px solid #e2e8f0";
- toast.style.borderBottom = "1px solid #e2e8f0";
- toast.style.boxShadow = "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)";
- toast.style.borderRadius = "6px";
- toast.style.animation = "fade font-sans 0.3s ease-out";
- toast.innerHTML = `
- <p style="margin: 0; font-size: 10px; font-weight: 800; color: #2563eb; letter-spacing: 0.8px; text-transform: uppercase;">🔔 Nueva Actividad Asignada</p>
- <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: 700; color: #1e293b;">${title}</p>
- <p style="margin: 3px 0 0 0; font-size: 11px; color: #475569; line-height: 1.4;">${message || 'Tiene una nueva carga disponible.'}</p>
- <p style="margin: 6px 0 0 0; font-size: 10px; color: #64748b; font-weight: 600;">Asignado por: <span style="color:#1e3a8a;">@${supervisor}</span></p>
- <!-- BOTÓN DE DESCARTE MANUAL INTERACTIVO -->
- <button type="button" onclick="App.RealtimeNotificationCore.handleDismissNoticeInline('${noticeId}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; font-weight: bold; cursor: pointer; color: #94a3b8; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='#94a3b8'" title="Cerrar Alerta">&times;</button>
- `;
- container.appendChild(toast);
- // Reloj de desvanecimiento automático: Si el analista no la cierra en 15 segundos, se limpia sola
- setTimeout(() => {
- if (document.getElementById("toast_msg_" + noticeId)) {
-     this.handleDismissNoticeInline(noticeId);
- }
- }, 15000);
- // REGLA OPERATIVA: Sonido de alerta nativo
- try {
- const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
- const osc = audioCtx.createOscillator();
- osc.type = "sine";
- osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
- osc.connect(audioCtx.destination);
- osc.start();
- osc.stop(audioCtx.currentTime + 0.12);
- } catch (e) { console.log("Audio bloqueado por el navegador."); }
- },
+        // Generar pitido síncrono nativo de hardware
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+            osc.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        } catch (e) { console.log("Audio restringido por el navegador."); }
+    },
  
- // Marcar la notificación como leída en Firebase y desvanecer el cartel de la pantalla
- handleDismissNoticeInline(noticeId) {
- if (typeof firebase === 'undefined' || !App.currentUser) return;
+    // Marcar la notificación como leída de forma definitiva en Firebase
+    handleDismissNoticeInline(noticeId) {
+        if (typeof firebase === 'undefined' || !App.currentUser) return;
+        const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
+        
+        firebase.database().ref(`notifications/${cleanUserKey}/${noticeId}`).update({
+            status: "read",
+            dismissedAt: new Date().toISOString()
+        });
  
- const cleanUserKey = App.currentUser.username.toLowerCase().trim().replace("@", "");
+        const elementoToast = document.getElementById("toast_msg_" + noticeId);
+        if (elementoToast) elementoToast.remove();
+    },
  
- // 1. Actualizar el estatus en Firebase para que no vuelva a aparecer al refrescar
- firebase.database().ref(`notifications/${cleanUserKey}/${noticeId}`).update({
- status: "read",
- dismissedAt: new Date().toISOString()
- }).then(() => {
- console.log(`🛡️ MONITOR: Alerta cloud ${noticeId} archivada correctamente.`);
- });
- 
- // 2. Remover visualmente el contenedor Toast de la pantalla
- const elementoToast = document.getElementById("toast_msg_" + noticeId);
- if (elementoToast) elementoToast.remove();
- },
- 
- // Apagar el hilo de escucha al cerrar sesión
- stop() {
- if (this.listenerRef) {
- this.listenerRef.off();
- this.listenerRef = null;
- }
- }
+    // Apagar hilos de red al cerrar sesión
+    stop() {
+        if (this.listenerRef) {
+            this.listenerRef.off();
+            this.listenerRef = null;
+        }
+    }
 };
 
 // Crear un enlace persistente en la memoria de JavaScript para evitar duplicación de hilos
