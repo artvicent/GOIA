@@ -163,74 +163,79 @@ document.getElementById("modalContent").innerHTML = `
 </form>
 `;
 };
+/* =========================================================================
+   MOTOR DE EMISIÓN DE TICKETS CON CERROJO TRANSACCIONAL (v2.02 Corregido)
+   ========================================================================= */
+// Variable global de control en la RAM para bloquear clics en ráfaga del ratón
+App.isAssignmentSubmittingLock = false;
+
 App.executeCreateAssignment = function(e) {
-e.preventDefault();
-try {
-if (typeof AppDB === 'undefined' || !AppDB.data) {
-alert("Error crítico: El motor de base de datos AppDB no responde.");
-return;
-}
-// Capturar los elementos correspondientes del formulario inyectado
-const userTarget = document.getElementById("asigUserTarget").value;
-const mgmtNameSelected = document.getElementById("asigMgmtName").value;
-const mailLink = document.getElementById("asigMailLink").value.trim();
-const meta = parseInt(document.getElementById("asigMeta").value) || 0;
-const reference = document.getElementById("asigRef").value.trim();
-const durationMin = parseInt(document.getElementById("asigDuration").value) || 30;
-const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-const userRole = App.currentUser ? App.currentUser.role : "Analista";
-const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
-const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
-// Control estricto de Gobernanza Jerárquica PCI
-if (userLevel < 2 && userTarget !== activeUser) {
-alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
-return false;
-}
-// Inicializar arreglos base si se encuentran limpios en Firebase
-if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
-if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
-AppDB.data.assignments = [];
-}
-// INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
-var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
-AppDB.data.config.ticketCounter = assignedTicketNum;
-const now = new Date();
-const deadline = new Date(now.getTime() + durationMin * 60000);
-var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + mgmtNameSelected;
-// Inyectar el registro indexado con doble mapeo al array vivo
-AppDB.data.assignments.push({
-id: assignedTicketNum,
-name: ticketTitleFormatted, // Se guarda estructurado automáticamente
-title: "Ticket #" + assignedTicketNum,
-assignedTo: userTarget,
-managementName: mgmtNameSelected,
-source: mgmtNameSelected,
-mailUrl: mailLink,
-meta: meta,
-target: meta,
-processed: 0,
-reference: reference,
-status: "pending",
-createdAt: now.toISOString(),
-deadline: deadline.toISOString(),
-timeStart: now.toISOString(),
-timeEnd: deadline.toISOString(),
-duration: durationMin,
-createdBy: activeUser
-});
-// Cifrar con el algoritmo XOR y transmitir a Firebase
-        /* =========================================================================
-           BLOQUE OPERACIONAL DE INYECCIÓN DE NOTIFICACIONES (GOIA v2.02)
-           ========================================================================= */
-        // 1. Registrar el ticket en el array vivo original del LocalStorage/AppDB
+    e.preventDefault();
+    
+    // CERROJO LOG OPERACIONAL: Si hay una carga activa, anula el segundo disparo
+    if (App.isAssignmentSubmittingLock) {
+        console.warn("⚠️ CORE GOIA: Doble envío bloqueado de forma transparente.");
+        return false;
+    }
+    
+    try {
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            alert("Error crítico: El motor de base de datos AppDB no responde.");
+            return;
+        }
+
+        // Capturar los elementos correspondientes del formulario inyectado
+        const userTarget = document.getElementById("asigUserTarget").value;
+        const mgmtNameSelected = document.getElementById("asigMgmtName").value;
+        const mailLink = document.getElementById("asigMailLink").value.trim();
+        const meta = parseInt(document.getElementById("asigMeta").value) || 0;
+        const reference = document.getElementById("asigRef").value.trim();
+        const durationMin = parseInt(document.getElementById("asigDuration").value) || 30;
+        
+        // Elemento opcional del nombre de la actividad (asigName)
+        const asigNameElement = document.getElementById("asigName");
+        const asigNameText = asigNameElement ? asigNameElement.value.trim() : "";
+
+        const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
+        const userRole = App.currentUser ? App.currentUser.role : "Analista";
+        const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
+        const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
+
+        // Control estricto de Gobernanza Jerárquica PCI
+        if (userLevel < 2 && userTarget !== activeUser) {
+            alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
+            return false;
+        }
+
+        // Inicializar arreglos base si se encuentran limpios en Firebase
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
+
+        // ENCLAVAR CERROJO: Congela el proceso para evitar duplicaciones
+        App.isAssignmentSubmittingLock = true;
+
+        // INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
+        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+        AppDB.data.config.ticketCounter = assignedTicketNum;
+        
+        const now = new Date();
+        const deadline = new Date(now.getTime() + durationMin * 60000);
+        
+        // Formatear el título integrando el asigName si existe en la interfaz
+        const sufijoNombreTicket = asigNameText ? asigNameText : mgmtNameSelected;
+        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + sufijoNombreTicket;
+
+        // 1. INYECTAR EL REGISTRO AL ARRAY VIVO (UNA SOLA VEZ)
         AppDB.data.assignments.push({
             id: assignedTicketNum,
             name: ticketTitleFormatted, 
             title: "Ticket #" + assignedTicketNum,
-            assignedTo: userTarget, 
+            assignedTo: userTarget,
             managementName: mgmtNameSelected,
             source: mgmtNameSelected,
-            mailUrl: mailLink, 
+            mailUrl: mailLink,
             meta: meta,
             target: meta,
             processed: 0,
@@ -245,62 +250,65 @@ createdBy: activeUser
         });
 
         // 2. INYECCIÓN EN CALIENTE EN FIREBASE REALTIME DATABASE PARA ALERTA POPUP
-        if (typeof firebase !== 'undefined' && firebase.database) {
+        // Se ejecuta únicamente si la tarea se le asigna a un tercero
+        if (typeof firebase !== 'undefined' && firebase.database && userTarget.toLowerCase().trim() !== activeUser.toLowerCase().trim()) {
             try {
                 const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
                 
                 // Generar una llave única en la nube para la notificación
                 const newNoticeRef = firebase.database().ref("notifications/" + cleanTargetKey).push();
                 
-                // Payload puramente informativo y auditable
                 newNoticeRef.set({
                     id: assignedTicketNum,
                     title: "Ticket #" + assignedTicketNum,
-                    msg: "Se le ha asignado la actividad: " + asigName + " con una meta de " + meta + " unidades.",
+                    msg: "Se le ha asignado la actividad: " + sufijoNombreTicket + " con una meta de " + meta + " unidades.",
                     createdBy: activeUser,
                     status: "unread",
                     createdAt: now.toISOString()
                 });
-                console.log("📡 NOTIFICADOR CLOUD: Alerta de asignación transmitida con éxito a Firebase.");
+                console.log("📡 NOTIFICADOR CLUID: Alerta de asignación transmitida con éxito a Firebase.");
             } catch (err) {
                 console.error("Error no crítico al propagar notificación en red:", err);
             }
         }
 
-        // 3. Sincronizar persistencia local y guardar cambios masivos de tu AppDB original
+        // 3. Sincronizar persistencia local y transmitir cambios masivos a la nube de Firebase
         AppDB.save();
         
         if (typeof AppDB.addLog === "function") {
-            AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket #${assignedTicketNum} a @${userTarget} por ${durationMin} minutos.`);
+            AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emito con exito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
         }
 
+        // Limpiar los cuadros de texto del formulario nativo
+        if (asigNameElement) asigNameElement.value = "";
+        document.getElementById("asigMeta").value = "";
+        document.getElementById("asigDuration").value = "30";
+        if (document.getElementById("asigMailLink")) document.getElementById("asigMailLink").value = "";
+        if (document.getElementById("asigRef")) document.getElementById("asigRef").value = "";
+
         document.getElementById("modalOverlay").classList.add("hidden");
-        alert(`✅ ¡Ticket #${assignedTicketNum} Emitido con Éxito!`);
+        alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
         
-        // Recargar la tabla organizada con las tareas pendientes arriba
+        // LIBERAR CERROJO: Permite futuras emisiones normales
+        App.isAssignmentSubmittingLock = false;
+
+        // Recargar la tabla organizada con las tareas pendientes arriba en tu app-executive
         if (typeof App.renderDashboardData === 'function') {
             App.renderDashboardData();
         } else {
             window.location.reload();
         }
 
-AppDB.save();
-AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
-document.getElementById("modalOverlay").classList.add("hidden");
-alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
-// Forzar actualización del Dashboard en caliente
-if (typeof App.renderDashboardData === 'function') {
-App.renderDashboardData();
-} else {
-window.location.reload();
-}
-} catch (error) {
-console.error("Error crítico de transmisión cloud de asignaciones: ", error);
-alert("Fallo en el transporte digital: " + error.message);
-}
+    } catch (error) {
+        // LIBERAR CERROJO EN CASO DE ERROR DE RED para no bloquear la interfaz
+        App.isAssignmentSubmittingLock = false;
+        console.error("Error crítico de transmisión cloud de asignaciones: ", error);
+        alert("Fallo en el transporte digital: " + error.message);
+    }
 };
+
 // Inactivar el emisor de tickets express duplicado
 App.handleCreateTicketAssignment = function(event) {
-if (event) event.preventDefault();
-App.openAssignmentModal();
+    if (event) event.preventDefault();
+    App.openAssignmentModal();
 };
