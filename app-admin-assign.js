@@ -219,6 +219,71 @@ duration: durationMin,
 createdBy: activeUser
 });
 // Cifrar con el algoritmo XOR y transmitir a Firebase
+        /* =========================================================================
+           BLOQUE OPERACIONAL DE INYECCIÓN DE NOTIFICACIONES (GOIA v2.02)
+           ========================================================================= */
+        // 1. Registrar el ticket en el array vivo original del LocalStorage/AppDB
+        AppDB.data.assignments.push({
+            id: assignedTicketNum,
+            name: ticketTitleFormatted, 
+            title: "Ticket #" + assignedTicketNum,
+            assignedTo: userTarget, 
+            managementName: mgmtNameSelected,
+            source: mgmtNameSelected,
+            mailUrl: mailLink, 
+            meta: meta,
+            target: meta,
+            processed: 0,
+            reference: reference,
+            status: "pending",
+            createdAt: now.toISOString(),
+            deadline: deadline.toISOString(),
+            timeStart: now.toISOString(),
+            timeEnd: deadline.toISOString(),
+            duration: durationMin,
+            createdBy: activeUser
+        });
+
+        // 2. INYECCIÓN EN CALIENTE EN FIREBASE REALTIME DATABASE PARA ALERTA POPUP
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            try {
+                const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
+                
+                // Generar una llave única en la nube para la notificación
+                const newNoticeRef = firebase.database().ref("notifications/" + cleanTargetKey).push();
+                
+                // Payload puramente informativo y auditable
+                newNoticeRef.set({
+                    id: assignedTicketNum,
+                    title: "Ticket #" + assignedTicketNum,
+                    msg: "Se le ha asignado la actividad: " + asigName + " con una meta de " + meta + " unidades.",
+                    createdBy: activeUser,
+                    status: "unread",
+                    createdAt: now.toISOString()
+                });
+                console.log("📡 NOTIFICADOR CLOUD: Alerta de asignación transmitida con éxito a Firebase.");
+            } catch (err) {
+                console.error("Error no crítico al propagar notificación en red:", err);
+            }
+        }
+
+        // 3. Sincronizar persistencia local y guardar cambios masivos de tu AppDB original
+        AppDB.save();
+        
+        if (typeof AppDB.addLog === "function") {
+            AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket #${assignedTicketNum} a @${userTarget} por ${durationMin} minutos.`);
+        }
+
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert(`✅ ¡Ticket #${assignedTicketNum} Emitido con Éxito!`);
+        
+        // Recargar la tabla organizada con las tareas pendientes arriba
+        if (typeof App.renderDashboardData === 'function') {
+            App.renderDashboardData();
+        } else {
+            window.location.reload();
+        }
+
 AppDB.save();
 AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emitió con éxito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
 document.getElementById("modalOverlay").classList.add("hidden");
