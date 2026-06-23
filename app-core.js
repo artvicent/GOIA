@@ -521,119 +521,97 @@ window.onload = function() {
 };
 
 /* =========================================================================
-   MÓDULO: MONITOR CORPORATIVO DE INACTIVIDAD DE USUARIO (GOIA v2.02)
+   MÓDULO: MONITOR CORPORATIVO DE INACTIVIDAD CON ARRANQUE BLINDADO (v2.02)
    ========================================================================= */
 App.InactivityMonitor = {
     timer: null,
-    // Tiempo límite estipulado por la gerencia: 5 minutos en milisegundos
-    TIMEOUT_MS: 5 * 60 * 1000, 
+    TIMEOUT_MS: 5 * 60 * 1000, // 5 minutos exactos de reloj corporativo
 
     // Inicializar los escuchas de hardware al levantar la sesión
     init() {
-        console.log("🛡️ SECURITY CORE: Activando monitor de inactividad perimetral (5 Minutos).");
-        this.resetTimer();
+        // Colchón de 3 segundos para esperar que Firebase termine de cargar el perfil en RAM
+        setTimeout(() => {
+            console.log("🛡️ MONITOR INACTIVIDAD: Inicializando analizador de hardware...");
+            
+            // Si pasados 3 segundos no hay usuario logueado en la interfaz, abortar
+            const badgeWeb = document.getElementById("dashWelcomeName");
+            if (!App.currentUser && (!badgeWeb || !badgeWeb.innerText)) {
+                console.warn("⚠️ MONITOR: Cancelando arranque. No se detectó sesión activa.");
+                return;
+            }
 
-        // Registrar los eventos universales de interacción humana en el navegador
-        const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
-        
-        // Enlazar de forma segura limpiando referencias previas
-        events.forEach(eventName => {
-            window.removeEventListener(eventName, this.boundReset);
-            window.addEventListener(eventName, this.boundReset);
-        });
+            // Iniciar la cuenta regresiva por primera vez
+            this.resetTimer();
+
+            // Registrar los eventos universales de interacción humana en la pestaña
+            const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+            
+            events.forEach(eventName => {
+                window.removeEventListener(eventName, this.boundReset);
+                window.addEventListener(eventName, this.boundReset);
+            });
+            
+            console.log("✅ MONITOR ACTIVADO: La sesión se cerrará tras 5 minutos de abandono.");
+        }, 3000); // 3 segundos de tolerancia térmica de red
     },
 
-    // Reiniciar la cuenta regresiva ante cualquier signo de vida del operador
+    // Reiniciar la cuenta regresiva ante cualquier signo de vida del operador en la pestaña
     resetTimer() {
         if (this.timer) clearTimeout(this.timer);
         
-        // Si no hay un usuario autenticado en el sistema, no iniciar el conteo
-        if (!App.currentUser) return;
-
         this.timer = setTimeout(() => {
             this.executeAutoLogout();
         }, this.TIMEOUT_MS);
     },
 
-        // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
-        // Forzar la destrucción absoluta de la sesión y rebotar al formulario de Login
+    // Forzar la destrucción de la sesión y rebotar al formulario de Login
     executeAutoLogout() {
-        console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono de estación.");
+        console.warn("🔒 SECURITY CRITICAL: Sesión revocada de forma automática por abandono.");
         
-        if (App.currentUser) {
-            // 1. ANULACIÓN DE INSTANCIA Y PRIVILEGIOS DE SESIÓN EN FIREBASE (IndexedDB)
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-                try {
-                    // Este comando destruye el token real en los servidores de Google y purga IndexedDB de raíz
-                    firebase.auth().signOut().then(function() {
-                        console.log("🛡️ MONITOR: Token nativo de Firebase revocado con éxito de IndexedDB.");
-                    }).catch(function(err) {
-                        console.error("Error al revocar token nativo:", err);
-                    });
-                } catch (e) {
-                    console.error("Error síncrono al invocar signOut:", e);
-                }
-            }
-
-            // 2. PURGA COMPLETA DE MEMORIAS VOLÁTILES Y PERSISTENTES LOCALES
+        // Ejecutar la limpieza absoluta de la RAM de tu app original
+        App.currentUser = null;
+        
+        // Limpiar sessionStorage para que no reviva la sesión huerfana
+        if (typeof sessionStorage !== 'undefined') {
             sessionStorage.removeItem("goia_active_session");
             sessionStorage.clear();
-            localStorage.removeItem("goia_active_session");
-            localStorage.removeItem("local_user");
-            localStorage.clear();
+        }
 
-            // 3. ELIMINACIÓN DE COOKIES DE SEGURIDAD EN EL DOMINIO
-            document.cookie.split(";").forEach(function(c) { 
-                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-            });
-            
-            alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
-            
-            // 4. Destruir el objeto de identidad en la memoria RAM
-            App.currentUser = null;
-            
-            // 5. Limpiar cuadros de texto de formularios previos por resguardo de datos
-            const userField = document.getElementById("loginUser");
-            const passField = document.getElementById("loginPass");
-            if (userField) userField.value = "";
-            if (passField) passField.value = "";
+        alert("🔒 ALERTA DE SEGURIDAD:\nSu sesión ha sido cerrada automáticamente por inactividad mayor a 5 minutos.");
+        
+        // Limpiar los cuadros de texto del formulario de login
+        const userField = document.getElementById("loginUser");
+        const passField = document.getElementById("loginPass");
+        if (userField) userField.value = "";
+        if (passField) passField.value = "";
 
-            // 6. Ocultar la barra superior (Banner de control)
-            const topBanner = document.getElementById("topBanner");
-            if (topBanner) topBanner.classList.add("hidden");
+        // Ocultar la barra superior nativa
+        const topBanner = document.getElementById("topBanner");
+        if (topBanner) topBanner.classList.add("hidden");
 
-            // 7. Detener relojes secundarios e intervalos de barrido
-            if (window.AppTimerInterval) clearInterval(window.AppTimerInterval);
-            if (window.AppDashboardIntervalActive) {
-                window.AppDashboardIntervalActive = false;
-                clearInterval(window.AppDashboardIntervalActive);
-            }
+        // Detener intervalos de barrido secundarios del dashboard
+        if (window.AppDashboardIntervalActive) clearInterval(window.AppDashboardIntervalActive);
 
-            // 8. Rumbear al operador de vuelta al cascarón del Login SPA
-            if (typeof App.showView === "function") {
-                App.showView("viewLogin");
-            }
-            
-            // 9. Forzar un redireccionamiento limpio rompiendo hilos en la pestaña
-            window.location.reload(); 
+        // Rebotar al login usando el ruteador SPA de tu app
+        if (typeof App.showView === "function") {
+            App.showView("viewLogin");
         }
     },
 
-
-    // Detener por completo el monitor al presionar voluntariamente "Cerrar Sesión"
+    // Apagar el monitor al presionar voluntariamente "Cerrar Sesión"
     stop() {
         if (this.timer) clearTimeout(this.timer);
         const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
         events.forEach(eventName => {
             window.removeEventListener(eventName, this.boundReset);
         });
-        console.log("🛡️ MONITOR: Escuchas perimetrales desactivados con éxito.");
+        console.log("🛡️ MONITOR: Temporizador apagado de forma segura.");
     }
 };
 
-/* =========================================================================
-   MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - CORREGIDO
-   ========================================================================= */
+// Crear el enlace de persistencia requerido para el control de hardware al final del bloque
+App.InactivityMonitor.boundReset = App.InactivityMonitor.resetTimer.bind(App.InactivityMonitor);
+
 /* =========================================================================
    MÓDULO: ALERTAS OPERATIVAS EN TIEMPO REAL (GOIA v2.02) - BLINDAJE TOTAL
    ========================================================================= */
