@@ -471,128 +471,196 @@ App.markAssignmentAsCompleted = function(index) {
 };
 
 /* =========================================================================
-   MÓDULO DE REPORTES AUDITABLES EN ALTA DENSIDAD (v2.02) - PARTE 1 DE 2
+   MÓDULO: CENTRO DE REPORTES CON SELECCIÓN DE SEMANAS (GOIA v2.02)
    ========================================================================= */
 App.openReportsMenu = function() {
     if (!AppDB.data || !AppDB.data.assignments) {
         return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
     }
 
-    // Desplegar el modal general del esqueleto de la aplicación
     document.getElementById("modalOverlay").classList.remove("hidden");
 
-    // Inyectar el panel de opciones de reportes conectado al motor cronológico
+    // 1. CALCULAR LAS SEMANAS DISPONIBLES DINÁMICAMENTE
+    const hoy = new Date();
+    const añoActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth();
+
+    let opcionesSemanasHtml = "";
+    
+    // A) CALCULO DE EMERGENCIA: Agregar la última semana del mes anterior (Soberanía de Cierre Fiscal)
+    const primerDiaMesActual = new Date(añoActual, mesActual, 1);
+    // Retroceder 3 días antes del inicio del mes para capturar la última semana del ciclo pasado
+    const lunesMesAnterior = new Date(primerDiaMesActual);
+    lunesMesAnterior.setDate(lunesMesAnterior.getDate() - 7);
+    
+    // Ajustar al lunes de esa última semana pasada
+    const diaLunesAnterior = lunesMesAnterior.getDay();
+    const difLunesAnterior = lunesMesAnterior.getDate() - diaLunesAnterior + (diaLunesAnterior === 0 ? -6 : 1);
+    lunesMesAnterior.setDate(difLunesAnterior);
+    
+    const domingoMesAnterior = new Date(lunesMesAnterior);
+    domingoMesAnterior.setDate(domingoMesAnterior.getDate() + 6);
+    
+    opcionesSemanasHtml += `<option value="ANTERIOR_ULTIMA">⬅️ Última Semana Mes Anterior (${lunesMesAnterior.toLocaleDateString("es-VE")} al ${domingoMesAnterior.toLocaleDateString("es-VE")})</option>`;
+
+    // B) CALCULAR LAS SEMANAS DEL MES EN CURSO
+    let fechaBucle = new Date(añoActual, mesActual, 1);
+    // Ajustar el bucle al primer lunes del mes actual
+    let diaBucle = fechaBucle.getDay();
+    let difLunesBucle = fechaBucle.getDate() - diaBucle + (diaBucle === 0 ? -6 : 1);
+    // Si el lunes cae en el mes anterior, forzar que inicie el día 1
+    if (difLunesBucle < 1) difLunesBucle = 1;
+    fechaBucle.setDate(difLunesBucle);
+
+    let numeroSemana = 1;
+    while (fechaBucle.getMonth() === mesActual) {
+        let lunesSemana = new Date(fechaBucle);
+        lunesSemana.setHours(0,0,0,0);
+        
+        let domingoSemana = new Date(fechaBucle);
+        domingoSemana.setDate(domingoSemana.getDate() + 6);
+        domingoSemana.setHours(23,59,59,999);
+        
+        // Formatear la cadena de visualización para la jefatura
+        const labelSemana = `Semana #${numeroSemana} del Mes (${lunesSemana.toLocaleDateString("es-VE")} al ${domingoSemana.toLocaleDateString("es-VE")})`;
+        
+        // Guardamos el rango de fechas separado por un guión en el value del select
+        const valueSemana = `${lunesSemana.getTime()}_${domingoSemana.getTime()}`;
+        
+        // Marcar la semana actual en curso por defecto
+        const esSemanaActual = (hoy >= lunesSemana && hoy <= domingoSemana) ? "selected" : "";
+        
+        opcionesSemanasHtml += `<option value="${valueSemana}" ${esSemanaActual}>📅 ${labelSemana}</option>`;
+        
+        // Avanzar 7 días al siguiente lunes
+        fechaBucle.setDate(fechaBucle.getDate() + 7);
+        numeroSemana++;
+    }
+
+    // 2. INYECTAR LA INTERFAZ DE CONTROL CRONOLÓGICO CON EL NUEVO DESPLEGABLE
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
-            <h3>📊 Centro de Reportería y Auditoría Corporativa</h3>
+            <h3>📊 Centro de Reportería y Auditoría Cronológica</h3>
             <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
         </div>
         
-        <div class="admin-config-card" style="padding: 15px; background: #c6e5f5; border-radius: 6px; border: 1px solid #cbd5e1;">
+        <div class="admin-config-card" style="padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1;">
             <div style="margin-bottom: 15px; text-align: center;">
-                <h4 style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: bold;">Reportes de Actividades Realizadas</h4>
-                <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el rango temporal requerido para consolidar la totalización por actividades y metas.</p>
+                <h4 style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: bold;">Gerencia General de Adquirencia</h4>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el corte y el rango de calendario para compilar el informe auditable.</p>
             </div>
             
-            <!-- ENLACES DE ACCIÓN CRONOLÓGICA DE ALTA DENSIDAD -->
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
                 
-                <!-- ACCIÓN 1: FILTRAR Y GENERAR REPORTE SEMANAL -->
-                <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left;">
-                    📅 Generar Corte Semanal Actual (Semana en Curso)
-                </button>
+                <!-- CONTROL EXIGIDO: SELECTOR DE SEMANA COMPLEJA -->
+                <div class="form-group" style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; background: #f8fafc;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:6px; color:#1e3a8a;">CRITERIO DE FILTRADO SEMANAL:</label>
+                    <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a;">
+                        ${opcionesSemanasHtml}
+                    </select>
+                    <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; font-size:11px;">
+                        📥 Emitir Reporte Semanal Seleccionado
+                    </button>
+                </div>
                 
-                <!-- ACCIÓN 2: FILTRAR Y GENERAR REPORTE MENSUAL ACUMULADO -->
+                <!-- ACCIÓN 2: CORTE MENSUAL ACUMULADO -->
                 <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left;">
-                    📈 Generar Corte Mensual Acumulado (Mes Activo)
+                    📈 Emitir Reporte Mensual Acumulado (Mes Activo)
                 </button>
                 
-                <!-- ACCIÓN 3: FILTRAR Y GENERAR HISTÓRICO DE 6 MESES -->
+                <!-- ACCIÓN 3: HISTÓRICO DE 6 MESES -->
                 <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; text-align: left;">
-                    🔎 Descargar Historial Retrospectivo Consolidado (Últimos 6 Meses)
+                    🔎 Descargar Historial Retrospectivo Consolidado (6 Meses)
                 </button>
                 
             </div>
             
-            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #0f52a9; padding-top: 10px;color: #0f52a9;">
+            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
             </div>
         </div>
     `;
 };
+
 /* =========================================================================
-   MÓDULO DE EXPORTACIÓN CRONOLÓGICA UNIVERSAL (v2.02) - PARTE 1 DE 2
+   MÓDULO: MOTOR CRONOLÓGICO DE FILTRADO INTERCEPTOR (GOIA v2.02)
    ========================================================================= */
 App.executeExportDataToPDF = function(tipoReporte) {
     if (!AppDB.data || !AppDB.data.assignments) {
         return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
     }
 
-    console.log(`⚙️ CORE GOIA: Generando balance analítico tipo: ${tipoReporte}`);
-
-    // 1. Captura de Identidad del Auditor en Sesión
     const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
     const userRole = App.currentUser ? App.currentUser.role : "Gerente";
     const userFullName = `${App.currentUser?.names || 'Arturo'} ${App.currentUser?.lastnames || 'Valero'}`;
 
-    // 2. Establecer Parámetros Cronológicos Universitarios (Año Actual: 2026)
     const hoy = new Date();
     let fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), 1); 
     let fechaFinFiltro = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59); 
 
+    // INTERCEPTAR Y EXTRAER EL RANGO CRONOLÓGICO SELECCIONADO POR EL SUPERVISOR
     if (tipoReporte === 'SEMANAL') {
-        const diaSemana = hoy.getDay(); 
-        const diferenciaLunes = hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1); 
-        fechaInicioFiltro = new Date(hoy.setDate(diferenciaLunes));
-        fechaInicioFiltro.setHours(0, 0, 0, 0);
+        const selectSemana = document.getElementById("selectTargetAuditWeek");
+        if (!selectSemana) return alert("Error: Selector de semanas ausente.");
         
-        let fechaAuxiliarFin = new Date(fechaInicioFiltro);
-        fechaFinFiltro = new Date(fechaAuxiliarFin.setDate(fechaInicioFiltro.getDate() + 6));
-        fechaFinFiltro.setHours(23, 59, 59, 999);
+        const valorSeleccionado = selectSemana.value;
+        
+        if (valorSeleccionado === "ANTERIOR_ULTIMA") {
+            // Re-calcular el rango de cierre de mes anterior para el motor de descarte
+            const primerDiaMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fechaInicioFiltro = new Date(primerDiaMesActual);
+            fechaInicioFiltro.setDate(fechaInicioFiltro.getDate() - 7);
+            const diaL = fechaInicioFiltro.getDay();
+            const difL = fechaInicioFiltro.getDate() - diaL + (diaL === 0 ? -6 : 1);
+            fechaInicioFiltro.setDate(difL);
+            fechaInicioFiltro.setHours(0, 0, 0, 0);
+            
+            fechaFinFiltro = new Date(fechaInicioFiltro);
+            fechaFinFiltro.setDate(fechaInicioFiltro.getDate() + 6);
+            fechaFinFiltro.setHours(23, 59, 59, 999);
+        } else {
+            // Desempaquetar estampas de tiempo numéricas enviadas por el select HTML
+            const hilosTiempo = valorSeleccionado.split("_");
+            fechaInicioFiltro = new Date(parseInt(hilosTiempo[0]));
+            fechaFinFiltro = new Date(parseInt(hilosTiempo[1]));
+        }
     } 
     else if (tipoReporte === 'HISTORICO') {
         fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
         fechaInicioFiltro.setHours(0, 0, 0, 0);
     }
 
-    // 3. Inicialización de Acumuladores de Cargas en Tres Niveles
     let teamTotalMeta = 0;
     let teamTotalProcessed = 0;
     let teamActivityCount = 0;
     let tableRowsHtml = "";
-    
-    // MAPAS DINÁMICOS DE CONTROL DE AUDITORÍA
     let resumenPorUsuario = {};
     let resumenPorActividad = {}; 
 
     const assignmentsData = AppDB.data.assignments;
     const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-    // 4. BUCLE OPERACIONAL: FILTRADO CRONOLÓGICO Y MATRICES DE CRUCE
     assignmentsArray.forEach(function(item) {
         if (!item) return;
 
         const itemDate = new Date(item.createdAt || item.timestamp || hoy);
+        
+        // FILTRO CRONOLÓGICO SELECCIONADO POR EL SUPERVISOR (Inmune a saltos de mes)
         if (itemDate < fechaInicioFiltro || itemDate > fechaFinFiltro) return;
 
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = parseInt(item.processed || item.realizadas || 0);
-        
         let owner = String(item.assignedTo || item.createdBy || "S/A").trim().toLowerCase().replace("@", "");
         
-        // CORRECCIÓN CLAVE: Extraemos el nombre limpio de la actividad sin el prefijo del Ticket para agrupar con éxito
         let nombreActividadOriginal = String(item.name || item.title || "Ticket Sin Nombre").trim();
-        // Si el string contiene un guión, removemos el prefijo "Ticket #X - " para dejar solo el nombre puro de la tarea
         if (nombreActividadOriginal.includes(" - ")) {
             nombreActividadOriginal = nombreActividadOriginal.split(" - ").slice(1).join(" - ").trim();
         }
 
-        // A) Acumulación General del Equipo
         teamTotalMeta += itemMeta;
         teamTotalProcessed += itemProcessed;
         teamActivityCount++;
 
-        // B) Acumulación por Colaborador Individual
         if (!resumenPorUsuario[owner]) {
             resumenPorUsuario[owner] = { username: owner, actividades: 0, metaTotal: 0, procesadasTotal: 0 };
         }
@@ -600,13 +668,8 @@ App.executeExportDataToPDF = function(tipoReporte) {
         resumenPorUsuario[owner].metaTotal += itemMeta;
         resumenPorUsuario[owner].procesadasTotal += itemProcessed;
 
-        // C) AGRUPACIÓN COLECTIVA REAL POR TEXTO DE ACTIVIDAD ÚNICA (REQUERIMIENTO CORREGIDO)
         if (!resumenPorActividad[nombreActividadOriginal]) {
-            resumenPorActividad[nombreActividadOriginal] = {
-                nombre: nombreActividadOriginal,
-                metaAcumulada: 0,
-                procesadaAcumulada: 0
-            };
+            resumenPorActividad[nombreActividadOriginal] = { nombre: nombreActividadOriginal, metaAcumulada: 0, procesadaAcumulada: 0 };
         }
         resumenPorActividad[nombreActividadOriginal].metaAcumulada += itemMeta;
         resumenPorActividad[nombreActividadOriginal].procesadaAcumulada += itemProcessed;
@@ -623,9 +686,10 @@ App.executeExportDataToPDF = function(tipoReporte) {
             </tr>`;
     });
 
-    // Delegar síncronamente hacia el renderizador unificado de la maqueta
+    // Enviar al renderizador final de la maqueta de 4 niveles (Parte 2)
     App.renderUnifiedPdfLayout(tableRowsHtml, teamActivityCount, teamTotalMeta, teamTotalProcessed, resumenPorUsuario, resumenPorActividad, userFullName, userRole, activeUsername, tipoReporte, fechaInicioFiltro, fechaFinFiltro);
 };
+
 /* =========================================================================
    MÓDULO DE EXPORTACIÓN CON DOBLE AGRUPACIÓN (v2.02) - PARTE 2 DE 2
    ========================================================================= */
