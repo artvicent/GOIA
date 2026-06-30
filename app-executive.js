@@ -84,19 +84,23 @@ App.renderDashboardData = function() {
     var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-    // ORDENAR: Coloca de primero las tareas abiertas y de último las completadas
+        // ORDENAR: Coloca de primero las tareas abiertas y de último las completadas
     assignmentsArray.sort(function(a, b) {
         if (!a || !b) return 0;
         const metaA = parseInt(a.meta || a.target || 0);
-        const procA = parseInt(a.processed || a.realizadas || 0);
+        // CORRECCIÓN TRANSPARENTE: Evaluar el valor más alto absoluto entre ambos campos de progreso
+        const procA = Math.max(parseInt(a.processed || 0), parseInt(a.realizadas || 0));
         const estaCulminadoA = (a.status === "completed" || (procA >= metaA && metaA > 0));
+        
         const metaB = parseInt(b.meta || b.target || 0);
-        const procB = parseInt(b.processed || b.realizadas || 0);
+        const procB = Math.max(parseInt(b.processed || 0), parseInt(b.realizadas || 0));
         const estaCulminadoB = (b.status === "completed" || (procB >= metaB && metaB > 0));
+        
         if (estaCulminadoA && !estaCulminadoB) return 1;
         if (!estaCulminadoA && estaCulminadoB) return -1;
         return 0;
     });
+
     assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
@@ -121,7 +125,8 @@ App.renderDashboardData = function() {
         let esAlertaCritica = false;
 
         const itemMeta = parseInt(item.meta || item.target || 0);
-        const itemProcessed = parseInt(item.processed || item.realizadas || 0);
+        // CORRECCIÓN TRANSPARENTE: Unificar la lectura de avances para el renderizador de la tabla
+        const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
 
         // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES
         globalProcessedSum += itemProcessed;
@@ -142,7 +147,7 @@ App.renderDashboardData = function() {
             metaTotalCount += itemMeta;
             processedTotalCount += itemProcessed;
 
-                        if (diffMin <= 0) {
+            if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
                 // CORRECCIÓN CLAVE: Forzamos la clase a danger para que el CSS nativo la pinte de rojo
                 statusClass = "danger"; 
@@ -150,7 +155,6 @@ App.renderDashboardData = function() {
                 totalDanger++;
                 esAlertaCritica = true;
             } else if (diffMin <= 30) {
-
                 timeRemainingStr = ` ${diffMin} min`;
                 statusClass = "warning";
                 cardAlertClass = "bg-warning";
