@@ -6,8 +6,22 @@
 const App = {
   currentUser: null,
   
-     init() {
+      init() {
     console.log("Inicializando núcleo transaccional GOIA v2.02...");
+    
+    /* =========================================================================
+       🛡️ PROTOCOLO DE PURGA CLOUD (GOIA v2.02 Corregido)
+       Forzar a Firebase a descartar el búfer IndexedDB congelado el 23 de Junio
+       ========================================================================= */
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        try {
+            firebase.database().goOffline();
+            firebase.database().goOnline();
+            console.log("♻️ CORE: Búfer IndexedDB purgado. Forzando sincronización en vivo con la nube.");
+        } catch(e) { 
+            console.error("Error síncrono en purga perimetral de caché:", e); 
+        }
+    }
     
     // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
     const topBanner = document.getElementById("topBanner");
@@ -34,8 +48,6 @@ const App = {
     // Directo al Login limpio sin evaluar sessionStorage corrupto
     this.showView("viewLogin");
   },
-
-
 
   // Ruteador lógico SPA puro basado en clases CSS .hidden
   showView(viewId) {
