@@ -539,11 +539,9 @@ App.openReportsMenu = function() {
     
     // A) CALCULO DE EMERGENCIA: Agregar la última semana del mes anterior (Soberanía de Cierre Fiscal)
     const primerDiaMesActual = new Date(añoActual, mesActual, 1);
-    // Retroceder 3 días antes del inicio del mes para capturar la última semana del ciclo pasado
     const lunesMesAnterior = new Date(primerDiaMesActual);
     lunesMesAnterior.setDate(lunesMesAnterior.getDate() - 7);
     
-    // Ajustar al lunes de esa última semana pasada
     const diaLunesAnterior = lunesMesAnterior.getDay();
     const difLunesAnterior = lunesMesAnterior.getDate() - diaLunesAnterior + (diaLunesAnterior === 0 ? -6 : 1);
     lunesMesAnterior.setDate(difLunesAnterior);
@@ -555,10 +553,8 @@ App.openReportsMenu = function() {
 
     // B) CALCULAR LAS SEMANAS DEL MES EN CURSO
     let fechaBucle = new Date(añoActual, mesActual, 1);
-    // Ajustar el bucle al primer lunes del mes actual
     let diaBucle = fechaBucle.getDay();
     let difLunesBucle = fechaBucle.getDate() - diaBucle + (diaBucle === 0 ? -6 : 1);
-    // Si el lunes cae en el mes anterior, forzar que inicie el día 1
     if (difLunesBucle < 1) difLunesBucle = 1;
     fechaBucle.setDate(difLunesBucle);
 
@@ -571,23 +567,17 @@ App.openReportsMenu = function() {
         domingoSemana.setDate(domingoSemana.getDate() + 6);
         domingoSemana.setHours(23,59,59,999);
         
-        // Formatear la cadena de visualización para la jefatura
         const labelSemana = `Semana #${numeroSemana} del Mes (${lunesSemana.toLocaleDateString("es-VE")} al ${domingoSemana.toLocaleDateString("es-VE")})`;
-        
-        // Guardamos el rango de fechas separado por un guión en el value del select
         const valueSemana = `${lunesSemana.getTime()}_${domingoSemana.getTime()}`;
-        
-        // Marcar la semana actual en curso por defecto
         const esSemanaActual = (hoy >= lunesSemana && hoy <= domingoSemana) ? "selected" : "";
         
         opcionesSemanasHtml += `<option value="${valueSemana}" ${esSemanaActual}>📅 ${labelSemana}</option>`;
         
-        // Avanzar 7 días al siguiente lunes
         fechaBucle.setDate(fechaBucle.getDate() + 7);
         numeroSemana++;
     }
 
-    // 2. INYECTAR LA INTERFAZ DE CONTROL CRONOLÓGICO CON EL NUEVO DESPLEGABLE
+    // 2. INYECTAR LA INTERFAZ DE CONTROL CRONOLÓGICO SANEADA SIN TEXTOS HUÉRFANOS
     document.getElementById("modalContent").innerHTML = `
         <div class="modal-inner-header">
             <h3>📊 Centro de Reportería y Auditoría Cronológica</h3>
@@ -600,41 +590,32 @@ App.openReportsMenu = function() {
                 <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el corte y el rango de calendario para compilar el informe auditable.</p>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
                 
-                <!-- CONTROL EXIGIDO: SELECTOR DE SEMANA COMPLEJA -->
-                <div class="form-group" style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; background: #f8fafc;">
+                <!-- CORTE 1: REPORTE DIARIO (GESTIONES DE HOY) -->
+                <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📅 EMITIR REPORTE DIARIO (GESTIONES DE HOY)
+                </button>
+
+                <!-- CORTE 2: SELECTOR DE SEMANA COMPLEJA -->
+                <div class="form-group" style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; background: #f8fafc; margin-top: 4px;">
                     <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:6px; color:#1e3a8a;">CRITERIO DE FILTRADO SEMANAL:</label>
-                    <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a;">
+                    <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a; margin-bottom: 8px;">
                         ${opcionesSemanasHtml}
                     </select>
-                    // ... (El selector de la semana compleja "selectTargetAuditWeek" se mantiene igual arriba) ...
-                
-                    <!-- NUEVO CONTROL EXIGIDO: CORTE DIARIO EN VIVO (Misma fecha de hoy) -->
-                    <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left; margin-bottom: 4px;">
-                        📅 Emitir Reporte Diario (Gestiones de Hoy)
-                    </button>
-                    
-                    <!-- ACCIÓN 2: CORTE MENSUAL ACUMULADO -->
-                    <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left;">
-                        📈 Emitir Reporte Mensual Acumulado (Mes Activo)
-                    </button>
-                    
-                    // ... (El resto del botón histórico y pie de modal continúan igual abajo) ...
-
-                    <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; font-size:11px;">
-                        📥 Emitir Reporte Semanal Seleccionado
+                    <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size:11px;">
+                        🔷 EMITIR REPORTE SEMANAL SELECCIONADO
                     </button>
                 </div>
                 
-                <!-- ACCIÓN 2: CORTE MENSUAL ACUMULADO -->
-                <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left;">
-                    📈 Emitir Reporte Mensual Acumulado (Mes Activo)
+                <!-- CORTE 3: CORTE MENSUAL ACUMULADO -->
+                <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px;">
+                    📈 EMITIR REPORTE MENSUAL ACUMULADO (MES ACTIVO)
                 </button>
                 
-                <!-- ACCIÓN 3: HISTÓRICO DE 6 MESES -->
-                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; text-align: left;">
-                    🔎 Descargar Historial Retrospectivo Consolidado (6 Meses)
+                <!-- CORTE 4: HISTÓRICO DE 6 MESES -->
+                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    🔎 DESCARGAR HISTORIAL RETROSPECTIVO CONSOLIDADO (6 MESES)
                 </button>
                 
             </div>
