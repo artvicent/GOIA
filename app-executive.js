@@ -608,6 +608,20 @@ App.openReportsMenu = function() {
                     <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a;">
                         ${opcionesSemanasHtml}
                     </select>
+                    // ... (El selector de la semana compleja "selectTargetAuditWeek" se mantiene igual arriba) ...
+                
+                    <!-- NUEVO CONTROL EXIGIDO: CORTE DIARIO EN VIVO (Misma fecha de hoy) -->
+                    <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left; margin-bottom: 4px;">
+                        📅 Emitir Reporte Diario (Gestiones de Hoy)
+                    </button>
+                    
+                    <!-- ACCIÓN 2: CORTE MENSUAL ACUMULADO -->
+                    <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: left;">
+                        📈 Emitir Reporte Mensual Acumulado (Mes Activo)
+                    </button>
+                    
+                    // ... (El resto del botón histórico y pie de modal continúan igual abajo) ...
+
                     <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 10px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; font-size:11px;">
                         📥 Emitir Reporte Semanal Seleccionado
                     </button>
@@ -633,7 +647,7 @@ App.openReportsMenu = function() {
 };
 
 /* =========================================================================
-   MÓDULO: MOTOR CRONOLÓGICO DE FILTRADO INTERCEPTOR (GOIA v2.02)
+   MÓDULO: MOTOR CRONOLÓGICO CON FILTRO DIARIO EN VIVO (GOIA v2.02)
    ========================================================================= */
 App.executeExportDataToPDF = function(tipoReporte) {
     if (!AppDB.data || !AppDB.data.assignments) {
@@ -648,15 +662,19 @@ App.executeExportDataToPDF = function(tipoReporte) {
     let fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), 1); 
     let fechaFinFiltro = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59); 
 
-    // INTERCEPTAR Y EXTRAER EL RANGO CRONOLÓGICO SELECCIONADO POR EL SUPERVISOR
-    if (tipoReporte === 'SEMANAL') {
+    // INTERCEPTOR CRONOLÓGICO EXPANDIDO
+    if (tipoReporte === 'DIARIO') {
+        // Fijar el inicio de la búsqueda a las 12:00 AM de hoy
+        fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+        // Fijar el fin de la búsqueda a las 11:59 PM de hoy
+        fechaFinFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+    }
+    else if (tipoReporte === 'SEMANAL') {
         const selectSemana = document.getElementById("selectTargetAuditWeek");
         if (!selectSemana) return alert("Error: Selector de semanas ausente.");
-        
         const valorSeleccionado = selectSemana.value;
         
         if (valorSeleccionado === "ANTERIOR_ULTIMA") {
-            // Re-calcular el rango de cierre de mes anterior para el motor de descarte
             const primerDiaMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
             fechaInicioFiltro = new Date(primerDiaMesActual);
             fechaInicioFiltro.setDate(fechaInicioFiltro.getDate() - 7);
@@ -669,7 +687,6 @@ App.executeExportDataToPDF = function(tipoReporte) {
             fechaFinFiltro.setDate(fechaInicioFiltro.getDate() + 6);
             fechaFinFiltro.setHours(23, 59, 59, 999);
         } else {
-            // Desempaquetar estampas de tiempo numéricas enviadas por el select HTML
             const hilosTiempo = valorSeleccionado.split("_");
             fechaInicioFiltro = new Date(parseInt(hilosTiempo[0]));
             fechaFinFiltro = new Date(parseInt(hilosTiempo[1]));
