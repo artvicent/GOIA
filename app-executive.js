@@ -211,7 +211,7 @@ App.renderDashboardData = function() {
 
 
 /* =========================================================================
-   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS (v2.02) - PARTE 2 DE 2
+   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y GRÁFICAS IED (v2.02) - PARTE 2 DE 2
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     // 1. Inyección de valores netos en los contadores corporativos
@@ -234,46 +234,89 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     document.getElementById("countWarning").innerText = totalWarning;
     document.getElementById("countDanger").innerText = totalDanger;
     
+    // 2. CÁLCULO NETO DEL ÍNDICE IED PARA LA GRÁFICA VISUAL
     let ied = 0;
     if (metaTotalCount > 0) {
         ied = Math.round((processedTotalCount / metaTotalCount) * 100);
     }
     document.getElementById("countPerformance").innerText = `${ied}%`;
-    
-    // 2. Poblar el monitor lateral con alertas activas o mensaje de tranquilidad
-    const monitorContainer = document.getElementById("monitorContainer");
-    if (monitorContainer) {
-        monitorContainer.innerHTML = monitorHtml || `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
+
+    // 3. DETERMINACIÓN CRÍTICA DEL COLOR DE LA GRÁFICA (Degradé Ejecutivo Semáforo)
+    let colorGraficaIED = "#dc2626"; // Rojo por defecto (Eficiencia Crítica < 50%)
+    if (ied >= 80) {
+        colorGraficaIED = "#16a34a"; // Verde (Eficiencia Óptima >= 80%)
+    } else if (ied >= 50) {
+        colorGraficaIED = "#ea580c"; // Naranja (Eficiencia Regular)
     }
 
-    // 3. RELOJ DE BARRIDO AUTOMÁTICO (Recalcula los minutos restantes cada 10 segundos)
+    // 4. CONSTRUCCIÓN DE LA MATRIZ DE LA GRÁFICA VISUAL EN CSS PURO
+    // Esta barra de alta densidad visual encajará de forma nativa arriba del monitor de alertas
+    let graficaVisualIedHtml = `
+        <div class="ied-chart-card-wrapper" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; text-transform: uppercase;">📊 Desempeño Operativo del Índice IED</span>
+                <span style="font-size: 14px; font-weight: 800; color: ${colorGraficaIED};">${ied}% Eficiencia</span>
+            </div>
+            
+            <!-- Contenedor Base de la Barra de Gráfica -->
+            <div style="width: 100%; background-color: #f1f5f9; border-radius: 9999px; height: 10px; overflow: hidden; display: flex;">
+                <!-- Barra de Progreso Elástica que se estira dinámicamente con el valor de ied -->
+                <div style="width: ${ied}%; background-color: ${colorGraficaIED}; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out;"></div>
+            </div>
+            
+            <!-- Leyenda Informativa de Niveles Fiscales para Control de Arturo Valero -->
+            <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748b; margin-top: 5px; font-weight: bold;">
+                <span>0% Crítico</span>
+                <span style="color: ${ied >= 50 && ied < 80 ? '#ea580c' : '#64748b'};">50% Regular</span>
+                <span style="color: ${ied >= 80 ? '#16a34a' : '#64748b'};">80% Objetivo Cumplido</span>
+            </div>
+        </div>
+    `;
+
+    // 5. POBLAR EL MONITOR LATERAL INTERCALANDO LA NUEVA GRÁFICA CON LAS ALERTAS CRÍTICAS
+    const monitorContainer = document.getElementById("monitorContainer");
+    if (monitorContainer) {
+        // La gráfica se posiciona fija arriba de todo y las tarjetas de alerta se listan abajo
+        monitorContainer.innerHTML = graficaVisualIedHtml + (monitorHtml || `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`);
+    }
+
+    // Pasa el flujo a la segunda parte para mantener activo el reloj de barrido asíncrono...
+    App.activateDashboardIntervalWatcher();
+};
+/* =========================================================================
+   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y GRÁFICAS IED (v2.02) - PARTE 2 DE 2
+   ========================================================================= */
+App.activateDashboardIntervalWatcher = function() {
+    // RELOJ DE BARRIDO AUTOMÁTICO (Recalcula y redibuja la gráfica y los minutos restantes)
     if (!window.AppDashboardIntervalActive) {
         window.AppDashboardIntervalActive = true;
         setInterval(function() {
             if (document.getElementById("viewDashboard") && !document.getElementById("viewDashboard").classList.contains("hidden")) {
-                App.renderDashboardData(); // Ejecución síncrona en caliente
+                App.renderDashboardData(); // Ejecución en caliente
             }
         }, 10000); 
     }
 };
 
-// 4. FUNCIÓN EXIGIDA PARA CERRAR Y DESCARTAR MANUALMENTE CADA ALERTA
+// FUNCIÓN EXIGIDA PARA CERRAR Y DESCARTAR MANUALMENTE LAS ALERTAS DEL MONITOR
 App.handleDismissAlertInline = function(alertId) {
     if (!App.closedAlertsMemory.includes(alertId)) {
-        // Almacenar el ID en la lista de exclusión para que el bucle no lo vuelva a renderizar
         App.closedAlertsMemory.push(alertId);
     }
-    // Remover inmediatamente el elemento visual de la pantalla
     const contenedorAlerta = document.getElementById(alertId);
     if (contenedorAlerta) {
         contenedorAlerta.remove();
     }
     console.log(`🛡️ MONITOR: Alerta ${alertId} descartada por el supervisor.`);
     
-    // Si la pantalla se queda vacía, reinyectar el letrero de tranquilidad corporativa
+    // Si ya no quedan más alertas visuales debajo de la gráfica, mantener el letrero de tranquilidad
     const monitorContainer = document.getElementById("monitorContainer");
-    if (monitorContainer && monitorContainer.children.length === 0) {
-        monitorContainer.innerHTML = `<p class="monitor-empty-text">Cero alertas. Operación bajo parámetros normales.</p>`;
+    // Al evaluar los hijos, descartamos la tarjeta de la gráfica (.ied-chart-card-wrapper)
+    const tieneAlertasRestantes = monitorContainer ? (monitorContainer.children.length > 1) : false;
+    if (monitorContainer && !tieneAlertasRestantes) {
+        // Mantener la gráfica pero limpiar la zona de alertas baja
+        const graficaVieja = monitorContainer.querySelector(".ied-chart-card-wrapper")?.outerHTML || "";
+        monitorContainer.innerHTML = graficaVieja + `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`;
     }
 };
 
