@@ -1785,3 +1785,45 @@ tr.status-row-pending .time-label-pending {
     font-weight: 700;
     font-size: 11px;
 }
+/* =========================================================================
+   MATRIZ DE COLORES CRÍTICOS PARA FILAS DE LA TABLA (GOIA v2.02)
+   ========================================================================= */
+
+/* 1. GESTIONES VENCIDAS: Rojo pálido de advertencia corporativa */
+tr.status-row-danger {
+    background-color: #fef2f2 !important; /* Fondo rojo tenue elegante */
+    transition: background-color 0.2s ease;
+}
+tr.status-row-danger td {
+    color: #991b1b !important; /* Texto rojo oscuro de alta legibilidad */
+    border-bottom: 1px solid #fee2e2 !important;
+}
+
+/* 2. GESTIONES POR VENCER (<30 MIN): Amarillo/Naranja pálido de atención */
+tr.status-row-warning {
+    background-color: #fff7ed !important; /* Fondo naranja pálido suave */
+    transition: background-color 0.2s ease;
+}
+tr.status-row-warning td {
+    color: #c2410c !important; /* Texto naranja oscuro */
+    border-bottom: 1px solid #ffedd5 !important;
+}
+
+/* 3. ETIQUETAS CRONOLÓGICAS INTERNAS DE ALERTA */
+tr.status-row-danger .time-label-expired {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+tr.status-row-warning .time-label-warning {
+    background-color: #f97316 !important;
+    color: #ffffff !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
