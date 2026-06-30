@@ -142,13 +142,15 @@ App.renderDashboardData = function() {
             metaTotalCount += itemMeta;
             processedTotalCount += itemProcessed;
 
-            if (diffMin <= 0) {
+                        if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
-                statusClass = "expired";
+                // CORRECCIÓN CLAVE: Forzamos la clase a danger para que el CSS nativo la pinte de rojo
+                statusClass = "danger"; 
                 cardAlertClass = "bg-danger";
                 totalDanger++;
                 esAlertaCritica = true;
             } else if (diffMin <= 30) {
+
                 timeRemainingStr = ` ${diffMin} min`;
                 statusClass = "warning";
                 cardAlertClass = "bg-warning";
@@ -171,14 +173,15 @@ App.renderDashboardData = function() {
         const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
         const ticketSafeId = item.id || `task_${index}`;
 
-        let tr = document.createElement("tr");
-        tr.className = `status-row-${statusClass}`;
+                let tr = document.createElement("tr");
+        tr.className = `status-row-${statusClass}`; // Ahora generará de forma correcta status-row-danger
         tr.innerHTML = `
             <td><b>${item.name || item.title || 'Ticket'}</b>${ownerLabel}</td>
             <td class="text-center font-bold">${itemMeta}</td>
             <td class="text-center">${itemProcessed}</td>
             <td class="text-center"><span class="badge-reference">${item.reference || "S/R"}</span></td>
-            <td class="text-center"><span class="time-label-${statusClass}">${timeRemainingStr}</span></td>
+            <!-- CORRECCIÓN DE LA ETIQUETA CRONOLÓGICA DE ALERTA ROJA -->
+            <td class="text-center"><span class="time-label-${statusClass === 'danger' ? 'expired' : statusClass}">${timeRemainingStr}</span></td>
             <td class="text-center">
                 ${mailButtonHtml}
                 <button onclick="App.openUpdateProgressModal(${index})" class="btn-secondary">Progreso</button>
