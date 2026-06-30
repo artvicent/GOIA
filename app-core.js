@@ -6,63 +6,68 @@
 const App = {
   currentUser: null,
   
-      init() {
-    console.log("Inicializando núcleo transaccional GOIA v2.02...");
-    
-    /* =========================================================================
-       🛡️ PROTOCOLO DE PURGA CLOUD (GOIA v2.02 Corregido)
-       Forzar a Firebase a descartar el búfer IndexedDB congelado el 23 de Junio
-       ========================================================================= */
-    if (typeof firebase !== 'undefined' && firebase.database) {
-        try {
-            firebase.database().goOffline();
-            firebase.database().goOnline();
-            console.log("♻️ CORE: Búfer IndexedDB purgado. Forzando sincronización en vivo con la nube.");
-        } catch(e) { 
-            console.error("Error síncrono en purga perimetral de caché:", e); 
-        }
-    }
-    
-    // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
-    const topBanner = document.getElementById("topBanner");
-    if (topBanner) {
-      topBanner.classList.add("hidden");
-    }
-    
-    // RESPALDO DE CONTROL DE RED: Si la base de datos falló o se vació, inyectamos un nodo ficticio
-    if (typeof AppDB === 'undefined' || !AppDB.data) {
-        console.warn("⚠️ ALERTA: Red Cloud caída. Inicializando entorno de contingencia local.");
-        window.AppDB = window.AppDB || {};
-        AppDB.data = AppDB.data || { config: { passwordExpiryDays: 90 }, roles: { "Administrador": { lvl: 3 } } };
-        AppDB.login = async function() { return { success: false, msg: "Modo contingencia activo." }; };
-    }
+          init() {
+        console.log("Inicializando núcleo transaccional GOIA v2.02...");
+        
+        /* =========================================================================
+           🛡️ RED DE SEGURIDAD OPERATIVA: CONEXIÓN EN VIVO INMUNE A CACHÉ DESFASADA
+           Evita que usuarios sin actualizar la página lean el búfer del pasado.
+           ========================================================================= */
+        setTimeout(function() {
+            try {
+                if (typeof AppDB !== 'undefined' && typeof AppDB.on === 'function') {
+                    console.log("♻️ CORE: Sincronizando túnel cloud de db.js para ignorar datos locales viejos.");
+                    
+                    // Forzar a db.js a conectarse en vivo y descargar la verdad actual desde Firebase
+                    AppDB.on('value', function() {
+                        console.log("🟢 NÚCLEO: Datos en vivo descargados con éxito desde el servidor cloud.");
+                    });
+                }
+            } catch(e) { 
+                console.warn("Aviso preventivo en sincronización de caché:", e); 
+            }
+        }, 1000); // 1 segundo de colchón para asegurar que db.js esté listo en el navegador
 
-    // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
-    if (AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
-      const logoImg = document.getElementById("appLogoImg");
-      if (logoImg) {
-        logoImg.src = AppDB.data.config.brandLogoBase64;
-      }
-    }
-    
-    // Directo al Login limpio sin evaluar sessionStorage corrupto
-    this.showView("viewLogin");
-  },
-
-  // Ruteador lógico SPA puro basado en clases CSS .hidden
-  showView(viewId) {
-    const views = ["viewLogin", "viewDashboard"];
-    views.forEach(function(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        if (id === viewId) {
-          el.classList.remove("hidden");
-        } else {
-          el.classList.add("hidden");
+        // Inicializar el estado de la interfaz ocultando el banner superior de fábrica
+        const topBanner = document.getElementById("topBanner");
+        if (topBanner) {
+            topBanner.classList.add("hidden");
         }
-      }
-    });
-  },
+        
+        // RESPALDO DE CONTROL DE RED: Si la base de datos falló o se vació, inyectamos un nodo ficticio
+        if (typeof AppDB === 'undefined' || !AppDB.data) {
+            console.warn("⚠️ ALERTA: Red Cloud caída. Inicializando entorno de contingencia local.");
+            window.AppDB = window.AppDB || {};
+            AppDB.data = AppDB.data || { config: { passwordExpiryDays: 90 }, roles: { "Administrador": { lvl: 3 } } };
+            AppDB.login = async function() { return { success: false, msg: "Modo contingencia activo." }; };
+        }
+
+        // SINCRONIZACIÓN UNIVERSAL EN FRÍO DEL LOGO INSTITUCIONAL
+        if (AppDB.data && AppDB.data.config && AppDB.data.config.brandLogoBase64) {
+            const logoImg = document.getElementById("appLogoImg");
+            if (logoImg) {
+                logoImg.src = AppDB.data.config.brandLogoBase64;
+            }
+        }
+        
+        // Directo al Login limpio sin evaluar sessionStorage corrupto
+        this.showView("viewLogin");
+    },
+
+    // Ruteador lógico SPA puro basado en clases CSS .hidden
+    showView(viewId) {
+        const views = ["viewLogin", "viewDashboard"];
+        views.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === viewId) {
+                    el.classList.remove("hidden");
+                } else {
+                    el.classList.add("hidden");
+                }
+            }
+        });
+    },
 
   // Cargar los letreros y componentes dinámicos del perfil al ingresar con éxito
   setupDashboardView() {
