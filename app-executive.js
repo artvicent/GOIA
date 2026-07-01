@@ -574,8 +574,6 @@ App.openReportsMenu = function() {
                     </button>
                 </div>
                 
-                                // ... (El bloque semanal selectTargetAuditWeek se mantiene igual arriba) ...
-                
                 <!-- CORTE 3: REPORTE MENSUAL ACUMULADO DEL MES ACTIVO (JULIO) -->
                 <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px;">
                     📈 EMITIR REPORTE MENSUAL ACUMULADO (MES ACTIVO)
