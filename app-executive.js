@@ -1123,30 +1123,78 @@ App.openAboutModal = function() {
     `;
 };
 /* =========================================================================
-   PARCHE DE GOBERNANZA: REINICIO MENSUAL DEL TOP EFICIENCIA (GOIA v2.02)
+   PARCHE DE GOBERNANZA INTEGRAL: REINICIO MENSUAL DEL TOP (v2.02)
    ========================================================================= */
-// Guardamos una copia de la función original para no romper el renderizado de las otras tarjetas
-App.originalCompleteDashboardRendering = App.completeDashboardRendering;
-
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     
-    // 1. Ejecutar el volcado de datos original en las tarjetas de metas y gestiones
-    if (typeof App.originalCompleteDashboardRendering === "function") {
-        App.originalCompleteDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
+    // 1. Ejecutar los contadores y acumuladores estándar de tu app
+    document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
+    
+    const labelTotal = document.getElementById("labelTotalRealizadas");
+    const cardIndiv = document.getElementById("cardIndividualProduction");
+    
+    if (isSupervisor) {
+        if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
+        if (cardIndiv) {
+            cardIndiv.classList.remove("hidden");
+            document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString("es-VE");
+        }
+    } else {
+        if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
+        if (cardIndiv) cardIndiv.classList.add("hidden");
     }
 
-    // 2. INTERCEPTOR MATEMÁTICO DEL CICLO MENSUAL
-    // Si la suma de gestiones del ciclo actual de Julio es 0, el Top DEBE amanecer vacío
-    if (globalProcessedSum === 0) {
-        console.log("♻️ CORE GOIA: Ciclo limpio detectado. Vaciando tarjeta de honor del Top.");
-        
-        // Capturar el ID exacto de la tarjeta del Top en tu index.html
-        const topEffElement = document.getElementById("countTopEfficiency") || 
-                              document.getElementById("dashTopUser") || 
-                              document.getElementById("countTopEficiencia");
-                              
-        if (topEffElement) {
-            topEffElement.innerText = "Sin registros";
-        }
+    document.getElementById("countWarning").innerText = totalWarning;
+    document.getElementById("countDanger").innerText = totalDanger;
+    
+    let ied = 0;
+    if (metaTotalCount > 0) {
+        ied = Math.round((processedTotalCount / metaTotalCount) * 100);
     }
+    document.getElementById("countPerformance").innerText = `${ied}%`;
+
+    // 2. RASTREADOR OPERACIONAL: Forzar reinicio del Top si Julio está en 0
+    if (globalProcessedSum === 0) {
+        console.log("♻️ CORE GOIA: Limpiando la tarjeta de honor del Top por inicio de mes.");
+        
+        // Buscamos todos los elementos de texto en las tarjetas superiores de tu pantalla
+        const elementosPanel = document.querySelectorAll(".counter-card h3, .counter-card div, .counter-card span, h3, p");
+        
+        elementosPanel.forEach(function(el) {
+            const texto = el.innerText || "";
+            // Si el cuadro contiene el arroba de un usuario, sabemos con certeza que es la tarjeta del Top
+            if (texto.includes("@") && (texto.includes("u)") || texto.includes("gestiones") || el.parentNode.innerText.toLowerCase().includes("eficiencia") || el.parentNode.innerText.toLowerCase().includes("top"))) {
+                el.innerText = "Sin registros";
+            }
+        });
+    }
+
+    // 3. Pintar la gráfica IED
+    let colorGraficaIED = "#dc2626";
+    if (ied >= 80) colorGraficaIED = "#16a34a";
+    else if (ied >= 50) colorGraficaIED = "#ea580c";
+
+    let graficaVisualIedHtml = `
+        <div class="ied-chart-card-wrapper" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; text-transform: uppercase;">📊 Desempeño Operativo del Índice IED</span>
+                <span style="font-size: 14px; font-weight: 800; color: ${colorGraficaIED};">${ied}% Eficiencia</span>
+            </div>
+            <div style="width: 100%; background-color: #f1f5f9; border-radius: 9999px; height: 10px; overflow: hidden; display: flex;">
+                <div style="width: ${ied}%; background-color: ${colorGraficaIED}; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748b; margin-top: 5px; font-weight: bold;">
+                <span>0% Crítico</span>
+                <span>50% Regular</span>
+                <span>80% Objetivo Cumplido</span>
+            </div>
+        </div>`;
+
+    const monitorContainer = document.getElementById("monitorContainer");
+    if (monitorContainer) {
+        monitorContainer.innerHTML = graficaVisualIedHtml + (monitorHtml || `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`);
+    }
+
+    App.activateDashboardIntervalWatcher();
 };
+
