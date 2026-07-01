@@ -164,13 +164,18 @@ document.getElementById("modalContent").innerHTML = `
 `;
 };
 /* =========================================================================
-   MOTOR DE EMISIÓN CLOUD CON LLAVES ÚNICAS ANTI-SOBREESCRITURA (v2.02)
+   MOTOR DE EMISIÓN CLOUD UNIVERSAL - COMPATIBILIDAD AL ALZA (GOIA v2.02)
    ========================================================================= */
+App.isAssignmentSubmittingLock = false;
+
 App.executeCreateAssignment = function(e) {
-    e.preventDefault();
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     
     if (App.isAssignmentSubmittingLock) {
-        console.warn("⚠️ CORE GOIA: Doble envío bloqueado de forma transparente.");
+        console.warn("⚠️ CORE GOIA: Intento de doble envío bloqueado.");
         return false;
     }
     
@@ -180,7 +185,7 @@ App.executeCreateAssignment = function(e) {
             return;
         }
 
-        // Capturar los elementos correspondientes del formulario inyectado
+        // Capturar elementos correspondientes del formulario inyectado
         const userTarget = document.getElementById("asigUserTarget").value;
         const mgmtNameSelected = document.getElementById("asigMgmtName").value;
         const mailLink = document.getElementById("asigMailLink").value.trim();
@@ -207,17 +212,12 @@ App.executeCreateAssignment = function(e) {
         const deadline = new Date(now.getTime() + durationMin * 60000);
         const sufijoNombreTicket = asigNameText ? asigNameText : mgmtNameSelected;
 
-        /* =========================================================================
-           🚀 MEJORA CRÍTICA: TRANSMISIÓN POR ID ÚNICO INDEPENDIENTE DE FIREBASE
-           ========================================================================= */
-        // Generamos un identificador único irrepetible basado en milisegundos y tokens aleatorios
+        // Generar una llave alfanumérica única irrepetible inmune a colisiones de red
         const ticketUnicoGeneradoId = "TK_" + now.getTime() + "_" + Math.random().toString(36).substr(2, 5).toUpperCase();
-        
         var ticketTitleFormatted = "Ticket - " + sufijoNombreTicket;
 
-        // Estructura del Payload de adquirencia
         const payloadTicketObj = {
-            id: ticketUnicoGeneradoId, // Ya no usa el contador numérico que se pisaba
+            id: ticketUnicoGeneradoId,
             name: ticketTitleFormatted, 
             title: sufijoNombreTicket,
             assignedTo: userTarget,
@@ -238,18 +238,22 @@ App.executeCreateAssignment = function(e) {
             createdBy: activeUser
         };
 
-        // Si la base de datos se maneja como Objeto en lugar de Array, aseguramos compatibilidad
         if (!AppDB.data.assignments) AppDB.data.assignments = {};
         
-        // Guardamos el ticket indexado bajo su propia llave exclusiva en la nube
+        // Registrar el ticket bajo su propia casilla exclusiva en la nube
         AppDB.data.assignments[ticketUnicoGeneradoId] = payloadTicketObj;
 
-        // Enviar la notificación en tiempo real al analista secundario
+        /* =========================================================================
+           📡 NOTIFICADOR EN TIEMPO REAL CON SINTAXIS UNIVERSAL COMPATIBLE
+           Se corrige para usar .set() directo sobre un ID numérico aleatorio continuo
+           ========================================================================= */
         if (typeof firebase !== 'undefined' && firebase.database && userTarget.toLowerCase().trim() !== activeUser.toLowerCase().trim()) {
             try {
                 const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
-                const newNoticeRef = firebase.database().ref("notifications/" + cleanTargetKey).push();
-                newNoticeRef.set({
+                const uniqueNoticeKey = "NOT_" + now.getTime();
+                
+                // Apuntar directamente al nodo usando la llave única construida por software
+                firebase.database().ref("notifications/" + cleanTargetKey + "/" + uniqueNoticeKey).set({
                     id: ticketUnicoGeneradoId,
                     title: "Nueva Actividad",
                     msg: "Se le ha asignado la actividad: " + sufijoNombreTicket,
@@ -258,24 +262,26 @@ App.executeCreateAssignment = function(e) {
                     createdAt: now.toISOString(),
                     createdAtNum: now.getTime()
                 });
-            } catch (err) { console.error("Error al propagar notificación:", err); }
+                console.log("📡 NOTIFICADOR: Alerta enviada con éxito mediante sintaxis universal.");
+            } catch (err) { 
+                console.error("Error al propagar notificación en red:", err); 
+            }
         }
 
-        // Incrementar el contador solo a modo de registro histórico opcional
         if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
         AppDB.data.config.ticketCounter = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
 
-        // Sincronizar en la nube de Firebase
+        // EJECUCIÓN CLAVE: Guardar y transmitir cambios masivos de tu AppDB original
         AppDB.save();
         
         if (typeof AppDB.addLog === "function") {
             AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket con ID único asignado a @${userTarget}`);
         }
 
-        // Limpiar los cuadros de texto
+        // Limpiar cuadros de texto
         if (asigNameElement) asigNameElement.value = "";
-        document.getElementById("asigMeta").value = "";
-        document.getElementById("asigDuration").value = "30";
+        if (document.getElementById("asigMeta")) document.getElementById("asigMeta").value = "";
+        if (document.getElementById("asigDuration")) document.getElementById("asigDuration").value = "30";
         if (document.getElementById("asigMailLink")) document.getElementById("asigMailLink").value = "";
         if (document.getElementById("asigRef")) document.getElementById("asigRef").value = "";
 
