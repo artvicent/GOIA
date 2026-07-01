@@ -1123,7 +1123,7 @@ App.openAboutModal = function() {
     `;
 };
 /* =========================================================================
-   PARCHE DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02)
+   MÓDULO DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02 CORREGIDO)
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     
@@ -1154,18 +1154,28 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     document.getElementById("countPerformance").innerText = `${ied}%`;
 
     /* =========================================================================
-       🔒 INTERCEPTOR DEL PODIO DE ENCABEZADO: REINICIAR TOP USER EN JULIO
+       🔒 BLOQUEO ANTI-PARPADEO DEL PODIO DE ENCABEZADO (GOIA v2.02)
        ========================================================================= */
     const podioElementoHeader = document.getElementById("topUserWorker");
     
     if (globalProcessedSum === 0) {
-        // Si las gestiones totales de julio están en cero, limpiamos el podio de honor
-        console.log("♻️ CORE GOIA: Nuevo ciclo detectado. Vaciando podio de honor superior.");
+        // A) SI EL MES AMANECIÓ EN CERO: Forzar letrero y congelar propiedad para matar el setInterval de db.js
         if (podioElementoHeader) {
-            podioElementoHeader.innerText = "Sin registros";
+            // Sobreescribimos el setter de texto nativo del navegador en este elemento específico
+            // De esta forma, si db.js intenta escribir el nombre viejo, el navegador lo ignora
+            Object.defineProperty(podioElementoHeader, 'innerText', {
+                value: "Sin registros",
+                writable: false, // Bloqueo de escritura perimetral absoluto
+                configurable: true // Permite desbloquearlo después cuando haya producción
+            });
         }
     } else {
-        // LÓGICA DE RECALCULO EN CALIENTE: Hállar el líder real del mes en curso (Julio)
+        // B) SI YA HAY GESTIONES EN JULIO: Desbloquear el nodo y calcular el líder del mes en curso
+        if (podioElementoHeader) {
+            // Eliminar el candado de solo lectura para permitir el flujo dinámico
+            delete podioElementoHeader.innerText; 
+        }
+
         let conteoJulioPorUsuario = {};
         let maxGestionesJulio = 0;
         let liderActualJulio = "Sin registros";
@@ -1178,13 +1188,12 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
             if (!item) return;
             const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
             
-            // Procesar únicamente tickets emitidos en este mes activo
+            // Filtrar y procesar únicamente tickets pertenecientes al mes fiscal activo (Julio)
             if (itemDate.getMonth() === hoyTop.getMonth() && itemDate.getFullYear() === hoyTop.getFullYear()) {
                 const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
                 let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
 
                 if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
-                    if (!conteoJulioPorUsuario[owner]) conteoCicloActualPorUsuario[owner] = 0; // Seguridad de inicialización
                     conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
                 }
             }
