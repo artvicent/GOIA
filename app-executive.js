@@ -254,7 +254,7 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
         const total = conteoJulioPorUsuario[username];
         if (total > maxGestionesJulio) {
             maxGestionesJulio = total;
-            liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} u)`;
+            liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} Gestiones)`;
         }
     });
 
