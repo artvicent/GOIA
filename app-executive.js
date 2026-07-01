@@ -181,11 +181,14 @@ App.renderDashboardData = function() {
 
 
 /* =========================================================================
-   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y GRÁFICAS IED (v2.02) - PARTE 2 DE 2
+   SISTEMA DE AUDITORÍA CRONOLÓGICA: PODIO TOP EFICIENCIA (CÓDIGO NATIVO CORREGIDO)
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
-    // 1. Inyección de valores netos en los contadores corporativos
-    document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
+    
+    // 1. Inyección nativa en las tarjetas del panel superior
+    if (document.getElementById("countTotal")) {
+        document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
+    }
     
     const labelTotal = document.getElementById("labelTotalRealizadas");
     const cardIndiv = document.getElementById("cardIndividualProduction");
@@ -194,65 +197,101 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
         if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
         if (cardIndiv) {
             cardIndiv.classList.remove("hidden");
-            document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString("es-VE");
+            if (document.getElementById("countIndividual")) {
+                document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString("es-VE");
+            }
         }
     } else {
         if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
         if (cardIndiv) cardIndiv.classList.add("hidden");
     }
 
-    document.getElementById("countWarning").innerText = totalWarning;
-    document.getElementById("countDanger").innerText = totalDanger;
+    if (document.getElementById("countWarning")) document.getElementById("countWarning").innerText = totalWarning;
+    if (document.getElementById("countDanger")) document.getElementById("countDanger").innerText = totalDanger;
     
-    // 2. CÁLCULO NETO DEL ÍNDICE IED PARA LA GRÁFICA VISUAL
     let ied = 0;
     if (metaTotalCount > 0) {
         ied = Math.round((processedTotalCount / metaTotalCount) * 100);
     }
-    document.getElementById("countPerformance").innerText = `${ied}%`;
-
-    // 3. DETERMINACIÓN CRÍTICA DEL COLOR DE LA GRÁFICA (Degradé Ejecutivo Semáforo)
-    let colorGraficaIED = "#dc2626"; // Rojo por defecto (Eficiencia Crítica < 50%)
-    if (ied >= 80) {
-        colorGraficaIED = "#16a34a"; // Verde (Eficiencia Óptima >= 80%)
-    } else if (ied >= 50) {
-        colorGraficaIED = "#ea580c"; // Naranja (Eficiencia Regular)
+    if (document.getElementById("countPerformance")) {
+        document.getElementById("countPerformance").innerText = `${ied}%`;
     }
 
-    // 4. CONSTRUCCIÓN DE LA MATRIZ DE LA GRÁFICA VISUAL EN CSS PURO
-    // Esta barra de alta densidad visual encajará de forma nativa arriba del monitor de alertas
+    // 2. CORRECCIÓN DE RAÍZ: FILTRADO CRONOLÓGICO DEL TOP USER
+    const podioElementoHeader = document.getElementById("topUserWorker");
+    
+    let conteoJulioPorUsuario = {};
+    let maxGestionesJulio = 0;
+    let liderActualJulio = "Sin registros";
+
+    const assignmentsData = AppDB.data.assignments;
+    const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
+    const hoyTop = new Date();
+
+    assignmentsArray.forEach(function(item) {
+        if (!item) return;
+        
+        // CORRECCIÓN MATEMÁTICA: Forzar la lectura de la fecha real de creación de la tarea
+        const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
+        
+        // CONDICIÓN OPERATIVA: El ticket DEBE pertenecer estrictamente al mes y año en curso (Julio 2026)
+        const esMismoMes = (itemDate.getMonth() === hoyTop.getMonth());
+        const esMismoAño = (itemDate.getFullYear() === hoyTop.getFullYear());
+
+        if (esMismoMes && esMismoAño) {
+            const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
+            let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
+
+            // Excluir de la competencia transaccional las cuentas maestras y tickets huérfanos
+            if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
+                conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
+            }
+        }
+    });
+
+    // Determinar de forma transparente quién es el líder exclusivo del mes en curso
+    Object.keys(conteoJulioPorUsuario).forEach(function(username) {
+        const total = conteoJulioPorUsuario[username];
+        if (total > maxGestionesJulio) {
+            maxGestionesJulio = total;
+            liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} u)`;
+        }
+    });
+
+    // Inyectar el resultado final de forma directa en el nodo nativo del HTML sin máscaras CSS
+    if (podioElementoHeader) {
+        podioElementoHeader.textContent = liderActualJulio;
+    }
+
+    // 3. Renderizar la barra de la gráfica elástica del Índice IED
+    let colorGraficaIED = "#dc2626";
+    if (ied >= 80) colorGraficaIED = "#16a34a";
+    else if (ied >= 50) colorGraficaIED = "#ea580c";
+
     let graficaVisualIedHtml = `
         <div class="ied-chart-card-wrapper" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px; text-transform: uppercase;">📊 Desempeño Operativo del Índice IED</span>
                 <span style="font-size: 14px; font-weight: 800; color: ${colorGraficaIED};">${ied}% Eficiencia</span>
             </div>
-            
-            <!-- Contenedor Base de la Barra de Gráfica -->
             <div style="width: 100%; background-color: #f1f5f9; border-radius: 9999px; height: 10px; overflow: hidden; display: flex;">
-                <!-- Barra de Progreso Elástica que se estira dinámicamente con el valor de ied -->
                 <div style="width: ${ied}%; background-color: ${colorGraficaIED}; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out;"></div>
             </div>
-            
-            <!-- Leyenda Informativa de Niveles Fiscales para Control de Arturo Valero -->
             <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748b; margin-top: 5px; font-weight: bold;">
                 <span>0% Crítico</span>
-                <span style="color: ${ied >= 50 && ied < 80 ? '#ea580c' : '#64748b'};">50% Regular</span>
-                <span style="color: ${ied >= 80 ? '#16a34a' : '#64748b'};">80% Objetivo Cumplido</span>
+                <span>50% Regular</span>
+                <span>80% Objetivo Cumplido</span>
             </div>
-        </div>
-    `;
+        </div>`;
 
-    // 5. POBLAR EL MONITOR LATERAL INTERCALANDO LA NUEVA GRÁFICA CON LAS ALERTAS CRÍTICAS
     const monitorContainer = document.getElementById("monitorContainer");
     if (monitorContainer) {
-        // La gráfica se posiciona fija arriba de todo y las tarjetas de alerta se listan abajo
         monitorContainer.innerHTML = graficaVisualIedHtml + (monitorHtml || `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`);
     }
 
-    // Pasa el flujo a la segunda parte para mantener activo el reloj de barrido asíncrono...
     App.activateDashboardIntervalWatcher();
 };
+
 /* =========================================================================
    MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y GRÁFICAS IED (v2.02) - PARTE 2 DE 2
    ========================================================================= */
@@ -1137,12 +1176,13 @@ App.openAboutModal = function() {
         </div>
     `;
 };
+
 /* =========================================================================
    MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.02) - PARTE 1 DE 2
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     
-    // 1. Inyección de valores netos en los contadores corporativos superiores
+    // A) Inyección de valores netos en los contadores corporativos superiores
     if (document.getElementById("countTotal")) {
         document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
     }
@@ -1179,50 +1219,50 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
        ========================================================================= */
     const podioElementoHeader = document.getElementById("topUserWorker");
     
-    if (globalProcessedSum === 0) {
-        // Si el mes de Julio está iniciando en cero, la cabecera muestra "Sin registros" de forma fija
-        if (podioElementoHeader) {
-            podioElementoHeader.textContent = "Sin registros";
-        }
-    } else {
-        // Si ya hay producción en Julio, extraemos el líder real de este mes activo
-        let conteoJulioPorUsuario = {};
-        let maxGestionesJulio = 0;
-        let liderActualJulio = "Sin registros";
+    let conteoJulioPorUsuario = {};
+    let maxGestionesJulio = 0;
+    let liderActualJulio = "Sin registros";
 
-        const assignmentsData = AppDB.data.assignments;
-        const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
-        const hoyTop = new Date();
+    const assignmentsData = AppDB.data.assignments;
+    const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
+    const hoyTop = new Date();
 
-        assignmentsArray.forEach(function(item) {
-            if (!item) return;
-            const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
-            
-            // Filtrar estrictamente para procesar solo los datos de Julio de este año
-            if (itemDate.getMonth() === hoyTop.getMonth() && itemDate.getFullYear() === hoyTop.getFullYear()) {
-                const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
-                let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
-
-                if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
-                    conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
-                }
-            }
-        });
+    assignmentsArray.forEach(function(item) {
+        if (!item) return;
         
-        Object.keys(conteoJulioPorUsuario).forEach(function(username) {
-            const total = conteoJulioPorUsuario[username];
-            if (total > maxGestionesJulio) {
-                maxGestionesJulio = total;
-                liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} u)`;
-            }
-        });
+        // Forzar la lectura de la fecha real de creación de la tarea en Firebase
+        const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
+        
+        // CONDICIÓN OPERATIVA: El ticket DEBE pertenecer estrictamente al mes y año en curso (Julio)
+        const esMismoMes = (itemDate.getMonth() === hoyTop.getMonth());
+        const esMismoAño = (itemDate.getFullYear() === hoyTop.getFullYear());
 
-        if (podioElementoHeader) {
-            podioElementoHeader.textContent = liderActualJulio;
+        if (esMismoMes && esMismoAño) {
+            const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
+            let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
+
+            // Excluir de la competencia a las cuentas maestras y tickets vacíos
+            if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
+                conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
+            }
         }
+    });
+    
+    // Determinar de forma transparente quién es el líder real del mes activo
+    Object.keys(conteoJulioPorUsuario).forEach(function(username) {
+        const total = conteoJulioPorUsuario[username];
+        if (total > maxGestionesJulio) {
+            maxGestionesJulio = total;
+            liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} u)`;
+        }
+    });
+
+    // Inyectar el resultado directo en el HTML nativo sin parpadeos ni bloqueos de memoria
+    if (podioElementoHeader) {
+        podioElementoHeader.innerText = liderActualJulio;
     }
 
-    // 2. Dibujar la barra de la gráfica elástica del Índice IED
+    // B) Dibujar la barra de la gráfica elástica del Índice IED
     let colorGraficaIED = "#dc2626";
     if (ied >= 80) colorGraficaIED = "#16a34a";
     else if (ied >= 50) colorGraficaIED = "#ea580c";
@@ -1280,7 +1320,7 @@ App.handleDismissAlertInline = function(alertId) {
     }
 };
 
-// MENÚ DE REPORTES SANEADO: Integra de forma equilibrada todos los cortes requeridos
+// MENÚ DE REPORTES CONSOLIDADO (Asegura los botones Diario, Semanal, Mensual y del Mes Anterior)
 App.openReportsMenu = function() {
     if (!AppDB.data || !AppDB.data.assignments) {
         return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
@@ -1341,7 +1381,6 @@ App.openReportsMenu = function() {
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                
                 <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
                     📅 EMITIR REPORTE DIARIO (GESTIONES DE HOY)
                 </button>
@@ -1367,8 +1406,8 @@ App.openReportsMenu = function() {
                 <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px;">
                     🔎 DESCARGAR HISTORIAL RETROSPECTIVO CONSOLIDADO (6 MESES)
                 </button>
-                
             </div>
+            
             <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
             </div>
