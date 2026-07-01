@@ -1,7 +1,4 @@
-/* =========================================================================
-   MÓDULO: RENDERIZADOR DINÁMICO DE ALERTAS Y FILTROS INTEGRADOS (v2.02)
-   ========================================================================= */
-App.closedAlertsMemory = App.closedAlertsMemory || [];
+
 
 /* =========================================================================
    MÓDULO: RENDERIZADOR DINÁMICO DE REINICIO MENSUAL DE CICLO (v2.02) - PARTE 1 DE 2
@@ -56,7 +53,7 @@ App.renderDashboardData = function() {
         return 0;
     });
 
-    assignmentsArray.forEach(function(item, index) {
+        assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
         const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
@@ -65,25 +62,29 @@ App.renderDashboardData = function() {
         // A) FILTRADO DE GOBERNANZA: El analista común solo ve sus propios registros
         if (!isSupervisor && taskOwner !== cleanActiveUser) return;
 
-        // B) NUEVO FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
+        // B) FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
         if (isSupervisor && currentUserFilter !== "all" && taskOwner !== currentUserFilter) return;
 
         /* =========================================================================
-           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (PCI-DSS)
-           Si el filtro dice "Ciclo Activo" (all), obligamos a acumular SOLO el mes en curso (Julio)
+           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (HOMOLOGADO v2.02)
+           Corregido para sincronizar el formato ISO string con el índice 0-11 de JS
            ========================================================================= */
         const itemDate = new Date(item.createdAt || item.timestamp || now);
+        // Validar que la fecha se haya convertido a un objeto Date válido en la RAM
+        const fechaValida = !isNaN(itemDate.getTime());
         
         if (currentMonthFilter === "all" || currentMonthFilter === "current") {
-            const esMismoMes = (itemDate.getMonth() === now.getMonth());
-            const esMismoAño = (itemDate.getFullYear() === now.getFullYear());
+            // Comparación síncrona exacta contra el mes activo de este milisegundo (Julio)
+            const esMismoMes = fechaValida && (itemDate.getMonth() === now.getMonth());
+            const esMismoAño = fechaValida && (itemDate.getFullYear() === now.getFullYear());
             
-            // Si el ticket pertenece a Junio o meses anteriores, se ignora del ciclo actual de medición
+            // Si la tarea es de Junio o meses anteriores, se archiva del ciclo actual
             if (!esMismoMes || !esMismoAño) return;
         } 
         else {
-            // Si el supervisor usa el filtro desplegable para auditar un mes histórico previo
-            if ((itemDate.getMonth() + 1).toString() !== currentMonthFilter) return;
+            // Filtro manual del catálogo histórico: sumamos 1 para acoplar el 0-11 con el 1-12 del select
+            const stringMesItem = fechaValida ? (itemDate.getMonth() + 1).toString() : "0";
+            if (stringMesItem !== currentMonthFilter) return;
         }
 
         let timeRemainingStr = " Evaluando...";
@@ -94,7 +95,7 @@ App.renderDashboardData = function() {
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
 
-        // ACUMULADORES OPERATIVOS CON EL FILTRO EXCLUSIVO DEL MES EN CURSO YA APLICADO
+        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES CON FILTRO HOMOLOGADO
         globalProcessedSum += itemProcessed;
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
             individualProcessedSum += itemProcessed;
@@ -112,8 +113,9 @@ App.renderDashboardData = function() {
             
             metaTotalCount += itemMeta;
             processedTotalCount += itemProcessed;
-/* =========================================================================
-   MÓDULO: RENDERIZADOR DINÁMICO DE REINICIO MENSUAL DE CICLO (v2.02) - PARTE 2 DE 2
+            
+            /* =========================================================================
+   MÓDULO DE RECALCULO CRONOLÓGICO DE ALERTAS (GOIA v2.02) - PARTE 2 DE 2
    ========================================================================= */
             if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
@@ -175,7 +177,7 @@ App.renderDashboardData = function() {
         }
     });
 
-    // Delegar el volcado final de contadores recalculados para reiniciar las tarjetas superiores
+    // Enviar el volcado final al bloque de reportes y gráfica que pegamos en la última línea
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
 };
 
