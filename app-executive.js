@@ -53,7 +53,10 @@ App.renderDashboardData = function() {
         return 0;
     });
 
-        assignmentsArray.forEach(function(item, index) {
+    /* =========================================================================
+   MÓDULO: MOTOR DE RENDERIZADO Y CONTROL DE CICLO FISCAL (GOIA v2.02) - PARTE 1
+   ========================================================================= */
+    assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
         const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
@@ -65,37 +68,35 @@ App.renderDashboardData = function() {
         // B) FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
         if (isSupervisor && currentUserFilter !== "all" && taskOwner !== currentUserFilter) return;
 
+        const itemMeta = parseInt(item.meta || item.target || 0);
+        const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
+
         /* =========================================================================
-           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (HOMOLOGADO v2.02)
-           Corregido para sincronizar el formato ISO string con el índice 0-11 de JS
+           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (CORREGIDO DE RAÍZ)
+           Filtramos la visualización de la tabla, pero dejamos pasar los acumuladores
            ========================================================================= */
         const itemDate = new Date(item.createdAt || item.timestamp || now);
-        // Validar que la fecha se haya convertido a un objeto Date válido en la RAM
         const fechaValida = !isNaN(itemDate.getTime());
         
+        let correspondeAlMesActivo = true;
         if (currentMonthFilter === "all" || currentMonthFilter === "current") {
-            // Comparación síncrona exacta contra el mes activo de este milisegundo (Julio)
             const esMismoMes = fechaValida && (itemDate.getMonth() === now.getMonth());
             const esMismoAño = fechaValida && (itemDate.getFullYear() === now.getFullYear());
-            
-            // Si la tarea es de Junio o meses anteriores, se archiva del ciclo actual
-            if (!esMismoMes || !esMismoAño) return;
-        } 
-        else {
-            // Filtro manual del catálogo histórico: sumamos 1 para acoplar el 0-11 con el 1-12 del select
+            if (!esMismoMes || !esMismoAño) correspondeAlMesActivo = false;
+        } else {
             const stringMesItem = fechaValida ? (itemDate.getMonth() + 1).toString() : "0";
-            if (stringMesItem !== currentMonthFilter) return;
+            if (stringMesItem !== currentMonthFilter) correspondeAlMesActivo = false;
         }
+
+        // SI NO CORRESPONDE AL MES EN CURSO, SE IGNORA LA FILA PERO NO SE ROMPE EL FLUJO
+        if (!correspondeAlMesActivo) return;
 
         let timeRemainingStr = " Evaluando...";
         let statusClass = "pending";
         let cardAlertClass = "bg-total";
         let esAlertaCritica = false;
 
-        const itemMeta = parseInt(item.meta || item.target || 0);
-        const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
-
-        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES CON FILTRO HOMOLOGADO
+        // ACUMULADORES OPERATIVOS EXCLUSIVOS DEL PERIODO SELECCIONADO
         globalProcessedSum += itemProcessed;
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
             individualProcessedSum += itemProcessed;
@@ -113,10 +114,7 @@ App.renderDashboardData = function() {
             
             metaTotalCount += itemMeta;
             processedTotalCount += itemProcessed;
-            
-            /* =========================================================================
-   MÓDULO DE RECALCULO CRONOLÓGICO DE ALERTAS (GOIA v2.02) - PARTE 2 DE 2
-   ========================================================================= */
+
             if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
                 statusClass = "danger"; 
@@ -136,15 +134,18 @@ App.renderDashboardData = function() {
                 statusClass = "pending";
             }
         }
-
+/* =========================================================================
+   MÓDULO: MOTOR DE RENDERIZADO Y CONTROL DE CICLO FISCAL (GOIA v2.02) - PARTE 2
+   ========================================================================= */
         if (currentStatusFilter !== "all" && currentStatusFilter !== statusClass) return;
 
         var mailButtonHtml = item.mailUrl ? `
             <a href="${item.mailUrl}" target="_blank" class="btn-secondary" style="padding:4px 8px; margin-right:4px; text-decoration:none; font-size:11px; font-weight:bold; background:#f0fdf4; border:1px solid #16a34a; color:#16a34a; border-radius:4px;">✉️ Zoho Mail</a>
         ` : "";
 
-        const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
+        // Usar la clave única id alfanumérica generada por Firebase en el DOM
         const ticketSafeId = item.id || `task_${index}`;
+        const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
 
         let tr = document.createElement("tr");
         tr.className = `status-row-${statusClass}`;
@@ -177,9 +178,10 @@ App.renderDashboardData = function() {
         }
     });
 
-    // Enviar el volcado final al bloque de reportes y gráfica que pegamos en la última línea
+    // ESTA LLAMADA AHORA SÍ SE EJECUTA SIEMPRE, EN POCOS MILISEGUNDOS, INYECTANDO EL CERO REAL
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
 };
+
 
 
 /* =========================================================================
