@@ -1138,42 +1138,11 @@ App.openAboutModal = function() {
     `;
 };
 /* =========================================================================
-   MÓDULO DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02 CORREGIDO)
+   MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.02) - PARTE 1 DE 2
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     
-    // 1. Inyección síncrona en los contadores corporativos superiores
-    document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
-    
-    const labelTotal = document.getElementById("labelTotalRealizadas");
-    const cardIndiv = document.getElementById("cardIndividualProduction");
-    
-    if (isSupervisor) {
-        if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
-        if (cardIndiv) {
-            cardIndiv.classList.remove("hidden");
-            document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString("es-VE");
-        }
-    } else {
-        if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
-        if (cardIndiv) cardIndiv.classList.add("hidden");
-    }
-
-    document.getElementById("countWarning").innerText = totalWarning;
-    document.getElementById("countDanger").innerText = totalDanger;
-    
-    let ied = 0;
-    if (metaTotalCount > 0) {
-        ied = Math.round((processedTotalCount / metaTotalCount) * 100);
-    }
-    document.getElementById("countPerformance").innerText = `${ied}%`;
-
-    /* =========================================================================
-   MÓDULO DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02 REPARADO)
-   ========================================================================= */
-App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
-    
-    // 1. Inyección síncrona en los contadores corporativos superiores
+    // 1. Inyección de valores netos en los contadores corporativos superiores
     if (document.getElementById("countTotal")) {
         document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
     }
@@ -1204,31 +1173,19 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     if (document.getElementById("countPerformance")) {
         document.getElementById("countPerformance").innerText = `${ied}%`;
     }
-};
+
     /* =========================================================================
-       🔒 MÁSCARA ESTÉTICA ANTI-PARPADEO SINTAXIS CERTIFICADA
+       🔒 LÓGICA DE GOBERNANZA NATIVA: CÁLCULO DEL TOP EXCLUSIVO DE JULIO
        ========================================================================= */
     const podioElementoHeader = document.getElementById("topUserWorker");
     
     if (globalProcessedSum === 0) {
-        // A) SI EL MES AMANECIÓ EN CERO: Forzamos el texto de forma limpia y segura
+        // Si el mes de Julio está iniciando en cero, la cabecera muestra "Sin registros" de forma fija
         if (podioElementoHeader) {
-            podioElementoHeader.style.display = "inline"; 
-            podioElementoHeader.innerText = "Sin registros";
-            
-            let styleParche = document.getElementById("goiaTopUserFixStyle");
-            if (!styleParche) {
-                styleParche = document.createElement("style");
-                styleParche.id = "goiaTopUserFixStyle";
-                styleParche.innerHTML = "#topUserWorker { font-size: 0 !important; } #topUserWorker::before { content: 'Sin registros' !important; font-size: 13px !important; font-weight: bold !important; color: #ffffff !important; }";
-                document.head.appendChild(styleParche);
-            }
+            podioElementoHeader.textContent = "Sin registros";
         }
     } else {
-        // B) SI YA HAY GESTIONES EN JULIO: Destruimos la máscara CSS y calculamos el líder real
-        let styleParche = document.getElementById("goiaTopUserFixStyle");
-        if (styleParche) styleParche.remove();
-
+        // Si ya hay producción en Julio, extraemos el líder real de este mes activo
         let conteoJulioPorUsuario = {};
         let maxGestionesJulio = 0;
         let liderActualJulio = "Sin registros";
@@ -1241,6 +1198,7 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
             if (!item) return;
             const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
             
+            // Filtrar estrictamente para procesar solo los datos de Julio de este año
             if (itemDate.getMonth() === hoyTop.getMonth() && itemDate.getFullYear() === hoyTop.getFullYear()) {
                 const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
                 let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
@@ -1260,11 +1218,11 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
         });
 
         if (podioElementoHeader) {
-            podioElementoHeader.innerText = liderActualJulio;
+            podioElementoHeader.textContent = liderActualJulio;
         }
     }
 
-    // 3. Dibujar la barra de la gráfica elástica del Índice IED
+    // 2. Dibujar la barra de la gráfica elástica del Índice IED
     let colorGraficaIED = "#dc2626";
     if (ied >= 80) colorGraficaIED = "#16a34a";
     else if (ied >= 50) colorGraficaIED = "#ea580c";
@@ -1291,4 +1249,128 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     }
 
     App.activateDashboardIntervalWatcher();
+};
+/* =========================================================================
+   MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.02) - PARTE 2 DE 2
+   ========================================================================= */
+App.activateDashboardIntervalWatcher = function() {
+    if (!window.AppDashboardIntervalActive) {
+        window.AppDashboardIntervalActive = true;
+        setInterval(function() {
+            if (document.getElementById("viewDashboard") && !document.getElementById("viewDashboard").classList.contains("hidden")) {
+                App.renderDashboardData(); 
+            }
+        }, 10000); 
+    }
+};
+
+App.handleDismissAlertInline = function(alertId) {
+    if (!App.closedAlertsMemory.includes(alertId)) {
+        App.closedAlertsMemory.push(alertId);
+    }
+    const contenedorAlerta = document.getElementById(alertId);
+    if (contenedorAlerta) {
+        contenedorAlerta.remove();
+    }
+    const monitorContainer = document.getElementById("monitorContainer");
+    const tieneAlertasRestantes = monitorContainer ? (monitorContainer.children.length > 1) : false;
+    if (monitorContainer && !tieneAlertasRestantes) {
+        const graficaVieja = monitorContainer.querySelector(".ied-chart-card-wrapper")?.outerHTML || "";
+        monitorContainer.innerHTML = graficaVieja + `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`;
+    }
+};
+
+// MENÚ DE REPORTES SANEADO: Integra de forma equilibrada todos los cortes requeridos
+App.openReportsMenu = function() {
+    if (!AppDB.data || !AppDB.data.assignments) {
+        return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
+    }
+
+    document.getElementById("modalOverlay").classList.remove("hidden");
+
+    const hoy = new Date();
+    const añoActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth();
+
+    let opcionesSemanasHtml = "";
+    
+    const primerDiaMesActual = new Date(añoActual, mesActual, 1);
+    const lunesMesAnterior = new Date(primerDiaMesActual);
+    lunesMesAnterior.setDate(lunesMesAnterior.getDate() - 7);
+    const diaLunesAnterior = lunesMesAnterior.getDay();
+    const difLunesAnterior = lunesMesAnterior.getDate() - diaLunesAnterior + (diaLunesAnterior === 0 ? -6 : 1);
+    lunesMesAnterior.setDate(difLunesAnterior);
+    const domingoMesAnterior = new Date(lunesMesAnterior);
+    domingoMesAnterior.setDate(domingoMesAnterior.getDate() + 6);
+    
+    opcionesSemanasHtml += `<option value="ANTERIOR_ULTIMA">⬅️ Última Semana Mes Anterior (${lunesMesAnterior.toLocaleDateString("es-VE")} al ${domingoMesAnterior.toLocaleDateString("es-VE")})</option>`;
+
+    let fechaBucle = new Date(añoActual, mesActual, 1);
+    let diaBucle = fechaBucle.getDay();
+    let difLunesBucle = fechaBucle.getDate() - diaBucle + (diaBucle === 0 ? -6 : 1);
+    if (difLunesBucle < 1) difLunesBucle = 1;
+    fechaBucle.setDate(difLunesBucle);
+
+    let numeroSemana = 1;
+    while (fechaBucle.getMonth() === mesActual) {
+        let lunesSemana = new Date(fechaBucle);
+        lunesSemana.setHours(0,0,0,0);
+        let domingoSemana = new Date(fechaBucle);
+        domingoSemana.setDate(domingoSemana.getDate() + 6);
+        domingoSemana.setHours(23,59,59,999);
+        
+        const labelSemana = `Semana #${numeroSemana} del Mes (${lunesSemana.toLocaleDateString("es-VE")} al ${domingoSemana.toLocaleDateString("es-VE")})`;
+        const valueSemana = `${lunesSemana.getTime()}_${domingoSemana.getTime()}`;
+        const esSemanaActual = (hoy >= lunesSemana && hoy <= domingoSemana) ? "selected" : "";
+        
+        opcionesSemanasHtml += `<option value="${valueSemana}" ${esSemanaActual}>📅 ${labelSemana}</option>`;
+        fechaBucle.setDate(fechaBucle.getDate() + 7);
+        numeroSemana++;
+    }
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>📊 Centro de Reportería y Auditoría Cronológica</h3>
+            <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-card" style="padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <div style="margin-bottom: 15px; text-align: center;">
+                <h4 style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: bold;">Gerencia General de Adquirencia</h4>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el corte y el rango de calendario para compilar el informe auditable.</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                
+                <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📅 EMITIR REPORTE DIARIO (GESTIONES DE HOY)
+                </button>
+
+                <div class="form-group" style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; background: #f8fafc;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:6px; color:#1e3a8a;">CRITERIO DE FILTRADO SEMANAL:</label>
+                    <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a; margin-bottom: 8px;">
+                        ${opcionesSemanasHtml}
+                    </select>
+                    <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 11px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size:11px;">
+                        🔷 EMITIR REPORTE SEMANAL SELECCIONADO
+                    </button>
+                </div>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📈 EMITIR REPORTE MENSUAL ACUMULADO (MES ACTIVO)
+                </button>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('MES_ANTERIOR')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📅 EMITIR REPORTE DEL MES ANTERIOR (CIERRE FISCAL)
+                </button>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    🔎 DESCARGAR HISTORIAL RETROSPECTIVO CONSOLIDADO (6 MESES)
+                </button>
+                
+            </div>
+            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
+            </div>
+        </div>`;
 };
