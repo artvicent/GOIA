@@ -1122,3 +1122,31 @@ App.openAboutModal = function() {
         </div>
     `;
 };
+/* =========================================================================
+   PARCHE DE GOBERNANZA: REINICIO MENSUAL DEL TOP EFICIENCIA (GOIA v2.02)
+   ========================================================================= */
+// Guardamos una copia de la función original para no romper el renderizado de las otras tarjetas
+App.originalCompleteDashboardRendering = App.completeDashboardRendering;
+
+App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
+    
+    // 1. Ejecutar el volcado de datos original en las tarjetas de metas y gestiones
+    if (typeof App.originalCompleteDashboardRendering === "function") {
+        App.originalCompleteDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
+    }
+
+    // 2. INTERCEPTOR MATEMÁTICO DEL CICLO MENSUAL
+    // Si la suma de gestiones del ciclo actual de Julio es 0, el Top DEBE amanecer vacío
+    if (globalProcessedSum === 0) {
+        console.log("♻️ CORE GOIA: Ciclo limpio detectado. Vaciando tarjeta de honor del Top.");
+        
+        // Capturar el ID exacto de la tarjeta del Top en tu index.html
+        const topEffElement = document.getElementById("countTopEfficiency") || 
+                              document.getElementById("dashTopUser") || 
+                              document.getElementById("countTopEficiencia");
+                              
+        if (topEffElement) {
+            topEffElement.innerText = "Sin registros";
+        }
+    }
+};
