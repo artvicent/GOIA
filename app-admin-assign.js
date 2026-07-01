@@ -164,15 +164,11 @@ document.getElementById("modalContent").innerHTML = `
 `;
 };
 /* =========================================================================
-   MOTOR DE EMISIÓN DE TICKETS CON CERROJO TRANSACCIONAL (v2.02 Corregido)
+   MOTOR DE EMISIÓN CLOUD CON LLAVES ÚNICAS ANTI-SOBREESCRITURA (v2.02)
    ========================================================================= */
-// Variable global de control en la RAM para bloquear clics en ráfaga del ratón
-App.isAssignmentSubmittingLock = false;
-
 App.executeCreateAssignment = function(e) {
     e.preventDefault();
     
-    // CERROJO LOG OPERACIONAL: Si hay una carga activa, anula el segundo disparo
     if (App.isAssignmentSubmittingLock) {
         console.warn("⚠️ CORE GOIA: Doble envío bloqueado de forma transparente.");
         return false;
@@ -192,7 +188,6 @@ App.executeCreateAssignment = function(e) {
         const reference = document.getElementById("asigRef").value.trim();
         const durationMin = parseInt(document.getElementById("asigDuration").value) || 30;
         
-        // Elemento opcional del nombre de la actividad (asigName)
         const asigNameElement = document.getElementById("asigName");
         const asigNameText = asigNameElement ? asigNameElement.value.trim() : "";
 
@@ -201,37 +196,30 @@ App.executeCreateAssignment = function(e) {
         const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
         const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
 
-        // Control estricto de Gobernanza Jerárquica PCI
         if (userLevel < 2 && userTarget !== activeUser) {
-            alert("🚨 Operación Denegada: Los analistas y especialistas de nivel 1 solo tienen permitido auto-asignarse cargas operacionales.");
+            alert("🚨 Operación Denegada: Los analistas de nivel 1 solo tienen permitido auto-asignarse cargas.");
             return false;
         }
 
-        // Inicializar arreglos base si se encuentran limpios en Firebase
-        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0, title: "Gerencia General de Adquirencia" };
-        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
-            AppDB.data.assignments = [];
-        }
-
-        // ENCLAVAR CERROJO: Congela el proceso para evitar duplicaciones
         App.isAssignmentSubmittingLock = true;
 
-        // INCREMENTO DEL CONTADOR GLOBAL TRANSACCIONAL SÍNCRONO
-        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
-        AppDB.data.config.ticketCounter = assignedTicketNum;
-        
         const now = new Date();
         const deadline = new Date(now.getTime() + durationMin * 60000);
-        
-        // Formatear el título integrando el asigName si existe en la interfaz
         const sufijoNombreTicket = asigNameText ? asigNameText : mgmtNameSelected;
-        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + sufijoNombreTicket;
 
-        // 1. INYECTAR EL REGISTRO AL ARRAY VIVO (UNA SOLA VEZ)
-        AppDB.data.assignments.push({
-            id: assignedTicketNum,
+        /* =========================================================================
+           🚀 MEJORA CRÍTICA: TRANSMISIÓN POR ID ÚNICO INDEPENDIENTE DE FIREBASE
+           ========================================================================= */
+        // Generamos un identificador único irrepetible basado en milisegundos y tokens aleatorios
+        const ticketUnicoGeneradoId = "TK_" + now.getTime() + "_" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        
+        var ticketTitleFormatted = "Ticket - " + sufijoNombreTicket;
+
+        // Estructura del Payload de adquirencia
+        const payloadTicketObj = {
+            id: ticketUnicoGeneradoId, // Ya no usa el contador numérico que se pisaba
             name: ticketTitleFormatted, 
-            title: "Ticket #" + assignedTicketNum,
+            title: sufijoNombreTicket,
             assignedTo: userTarget,
             managementName: mgmtNameSelected,
             source: mgmtNameSelected,
@@ -239,6 +227,7 @@ App.executeCreateAssignment = function(e) {
             meta: meta,
             target: meta,
             processed: 0,
+            realizadas: 0,
             reference: reference,
             status: "pending",
             createdAt: now.toISOString(),
@@ -247,39 +236,43 @@ App.executeCreateAssignment = function(e) {
             timeEnd: deadline.toISOString(),
             duration: durationMin,
             createdBy: activeUser
-        });
+        };
 
-        // 2. INYECCIÓN EN CALIENTE EN FIREBASE REALTIME DATABASE PARA ALERTA POPUP
-        // Se ejecuta únicamente si la tarea se le asigna a un tercero
+        // Si la base de datos se maneja como Objeto en lugar de Array, aseguramos compatibilidad
+        if (!AppDB.data.assignments) AppDB.data.assignments = {};
+        
+        // Guardamos el ticket indexado bajo su propia llave exclusiva en la nube
+        AppDB.data.assignments[ticketUnicoGeneradoId] = payloadTicketObj;
+
+        // Enviar la notificación en tiempo real al analista secundario
         if (typeof firebase !== 'undefined' && firebase.database && userTarget.toLowerCase().trim() !== activeUser.toLowerCase().trim()) {
             try {
                 const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
-                
-                // Generar una llave única en la nube para la notificación
                 const newNoticeRef = firebase.database().ref("notifications/" + cleanTargetKey).push();
-                
                 newNoticeRef.set({
-                    id: assignedTicketNum,
-                    title: "Ticket #" + assignedTicketNum,
-                    msg: "Se le ha asignado la actividad: " + sufijoNombreTicket + " con una meta de " + meta + " unidades.",
+                    id: ticketUnicoGeneradoId,
+                    title: "Nueva Actividad",
+                    msg: "Se le ha asignado la actividad: " + sufijoNombreTicket,
                     createdBy: activeUser,
                     status: "unread",
-                    createdAt: now.toISOString()
+                    createdAt: now.toISOString(),
+                    createdAtNum: now.getTime()
                 });
-                console.log("📡 NOTIFICADOR CLUID: Alerta de asignación transmitida con éxito a Firebase.");
-            } catch (err) {
-                console.error("Error no crítico al propagar notificación en red:", err);
-            }
+            } catch (err) { console.error("Error al propagar notificación:", err); }
         }
 
-        // 3. Sincronizar persistencia local y transmitir cambios masivos a la nube de Firebase
+        // Incrementar el contador solo a modo de registro histórico opcional
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
+        AppDB.data.config.ticketCounter = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+
+        // Sincronizar en la nube de Firebase
         AppDB.save();
         
         if (typeof AppDB.addLog === "function") {
-            AppDB.addLog(activeUser, "EMITIR_TICKET", "Se emito con exito el Ticket #" + assignedTicketNum + " asignado a @" + userTarget);
+            AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket con ID único asignado a @${userTarget}`);
         }
 
-        // Limpiar los cuadros de texto del formulario nativo
+        // Limpiar los cuadros de texto
         if (asigNameElement) asigNameElement.value = "";
         document.getElementById("asigMeta").value = "";
         document.getElementById("asigDuration").value = "30";
@@ -287,12 +280,10 @@ App.executeCreateAssignment = function(e) {
         if (document.getElementById("asigRef")) document.getElementById("asigRef").value = "";
 
         document.getElementById("modalOverlay").classList.add("hidden");
-        alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
+        alert("✅ ¡Actividad Asignada con Éxito!\n\nCada colaborador mantendrá su registro independiente en la nube.");
         
-        // LIBERAR CERROJO: Permite futuras emisiones normales
         App.isAssignmentSubmittingLock = false;
 
-        // Recargar la tabla organizada con las tareas pendientes arriba en tu app-executive
         if (typeof App.renderDashboardData === 'function') {
             App.renderDashboardData();
         } else {
@@ -300,15 +291,8 @@ App.executeCreateAssignment = function(e) {
         }
 
     } catch (error) {
-        // LIBERAR CERROJO EN CASO DE ERROR DE RED para no bloquear la interfaz
         App.isAssignmentSubmittingLock = false;
         console.error("Error crítico de transmisión cloud de asignaciones: ", error);
         alert("Fallo en el transporte digital: " + error.message);
     }
-};
-
-// Inactivar el emisor de tickets express duplicado
-App.handleCreateTicketAssignment = function(event) {
-    if (event) event.preventDefault();
-    App.openAssignmentModal();
 };
