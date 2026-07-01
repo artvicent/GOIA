@@ -164,7 +164,7 @@ document.getElementById("modalContent").innerHTML = `
 `;
 };
 /* =========================================================================
-   MOTOR DE EMISIÓN CLOUD UNIVERSAL - COMPATIBILIDAD AL ALZA (GOIA v2.02)
+   MOTOR DE EMISIÓN CLOUD UNIVERSAL - COMPATIBILIDAD CON ARREGLOS (v2.02 final)
    ========================================================================= */
 App.isAssignmentSubmittingLock = false;
 
@@ -212,12 +212,12 @@ App.executeCreateAssignment = function(e) {
         const deadline = new Date(now.getTime() + durationMin * 60000);
         const sufijoNombreTicket = asigNameText ? asigNameText : mgmtNameSelected;
 
-        // Generar una llave alfanumérica única irrepetible inmune a colisiones de red
+        // Generar una llave alfanumérica única irrepetible para que las tareas nunca se pisen en internet
         const ticketUnicoGeneradoId = "TK_" + now.getTime() + "_" + Math.random().toString(36).substr(2, 5).toUpperCase();
         var ticketTitleFormatted = "Ticket - " + sufijoNombreTicket;
 
         const payloadTicketObj = {
-            id: ticketUnicoGeneradoId,
+            id: ticketUnicoGeneradoId, // Llave única contra sobreescrituras en red
             name: ticketTitleFormatted, 
             title: sufijoNombreTicket,
             assignedTo: userTarget,
@@ -238,21 +238,23 @@ App.executeCreateAssignment = function(e) {
             createdBy: activeUser
         };
 
-        if (!AppDB.data.assignments) AppDB.data.assignments = {};
-        
-        // Registrar el ticket bajo su propia casilla exclusiva en la nube
-        AppDB.data.assignments[ticketUnicoGeneradoId] = payloadTicketObj;
-
         /* =========================================================================
-           📡 NOTIFICADOR EN TIEMPO REAL CON SINTAXIS UNIVERSAL COMPATIBLE
-           Se corrige para usar .set() directo sobre un ID numérico aleatorio continuo
+           🚀 CORRECCIÓN DE ALTA FIELIDDAD: HOMOLOGACIÓN DE FORMATOS DE RED
+           Garantizamos que la data se maneje como un Arreglo Limpio para no romper tus tablas
            ========================================================================= */
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
+        
+        // Se inyecta al arreglo nativo usando .push() garantizando compatibilidad total
+        AppDB.data.assignments.push(payloadTicketObj);
+
+        // Notificador en tiempo real compatible
         if (typeof firebase !== 'undefined' && firebase.database && userTarget.toLowerCase().trim() !== activeUser.toLowerCase().trim()) {
             try {
                 const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
                 const uniqueNoticeKey = "NOT_" + now.getTime();
                 
-                // Apuntar directamente al nodo usando la llave única construida por software
                 firebase.database().ref("notifications/" + cleanTargetKey + "/" + uniqueNoticeKey).set({
                     id: ticketUnicoGeneradoId,
                     title: "Nueva Actividad",
@@ -262,16 +264,13 @@ App.executeCreateAssignment = function(e) {
                     createdAt: now.toISOString(),
                     createdAtNum: now.getTime()
                 });
-                console.log("📡 NOTIFICADOR: Alerta enviada con éxito mediante sintaxis universal.");
-            } catch (err) { 
-                console.error("Error al propagar notificación en red:", err); 
-            }
+            } catch (err) { console.error("Error al propagar notificación:", err); }
         }
 
         if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
         AppDB.data.config.ticketCounter = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
 
-        // EJECUCIÓN CLAVE: Guardar y transmitir cambios masivos de tu AppDB original
+        // Guardar y transmitir cambios masivos de tu AppDB original
         AppDB.save();
         
         if (typeof AppDB.addLog === "function") {
