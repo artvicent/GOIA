@@ -164,7 +164,7 @@ document.getElementById("modalContent").innerHTML = `
 `;
 };
 /* =========================================================================
-   MOTOR DE EMISIÓN CLOUD UNIVERSAL - COMPATIBILIDAD CON ARREGLOS (v2.02 final)
+   MOTOR DE EMISIÓN CLOUD SECUENCIAL - CORRELATIVO COMPATIBLE (v2.02)
    ========================================================================= */
 App.isAssignmentSubmittingLock = false;
 
@@ -185,7 +185,7 @@ App.executeCreateAssignment = function(e) {
             return;
         }
 
-        // Capturar elementos correspondientes del formulario inyectado
+        // Capturar elementos correspondientes del formulario inyectado original
         const userTarget = document.getElementById("asigUserTarget").value;
         const mgmtNameSelected = document.getElementById("asigMgmtName").value;
         const mailLink = document.getElementById("asigMailLink").value.trim();
@@ -208,18 +208,29 @@ App.executeCreateAssignment = function(e) {
 
         App.isAssignmentSubmittingLock = true;
 
+        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
+        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
+            AppDB.data.assignments = [];
+        }
+
+        /* =========================================================================
+           🚀 RESTABLECIMIENTO DEL CORRELATIVO NUMÉRICO SECUENCIAL NATIVO GOIA
+           ========================================================================= */
+        // Incrementamos el contador global único almacenado de forma segura en Firebase
+        var assignedTicketNum = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
+        AppDB.data.config.ticketCounter = assignedTicketNum;
+
         const now = new Date();
         const deadline = new Date(now.getTime() + durationMin * 60000);
         const sufijoNombreTicket = asigNameText ? asigNameText : mgmtNameSelected;
 
-        // Generar una llave alfanumérica única irrepetible para que las tareas nunca se pisen en internet
-        const ticketUnicoGeneradoId = "TK_" + now.getTime() + "_" + Math.random().toString(36).substr(2, 5).toUpperCase();
-        var ticketTitleFormatted = "Ticket - " + sufijoNombreTicket;
+        // Tu formato original estructurado exacto: Ticket #1, Ticket #2, etc.
+        var ticketTitleFormatted = "Ticket #" + assignedTicketNum + " - " + sufijoNombreTicket;
 
         const payloadTicketObj = {
-            id: ticketUnicoGeneradoId, // Llave única contra sobreescrituras en red
+            id: assignedTicketNum, // Restablecido a número correlativo puro
             name: ticketTitleFormatted, 
-            title: sufijoNombreTicket,
+            title: "Ticket #" + assignedTicketNum,
             assignedTo: userTarget,
             managementName: mgmtNameSelected,
             source: mgmtNameSelected,
@@ -238,26 +249,18 @@ App.executeCreateAssignment = function(e) {
             createdBy: activeUser
         };
 
-        /* =========================================================================
-           🚀 CORRECCIÓN DE ALTA FIELIDDAD: HOMOLOGACIÓN DE FORMATOS DE RED
-           Garantizamos que la data se maneje como un Arreglo Limpio para no romper tus tablas
-           ========================================================================= */
-        if (!AppDB.data.assignments || !Array.isArray(AppDB.data.assignments)) {
-            AppDB.data.assignments = [];
-        }
-        
-        // Se inyecta al arreglo nativo usando .push() garantizando compatibilidad total
+        // Inyectar de forma directa al arreglo nativo de tu sistema
         AppDB.data.assignments.push(payloadTicketObj);
 
-        // Notificador en tiempo real compatible
+        // Notificador en tiempo real con sintaxis compatible
         if (typeof firebase !== 'undefined' && firebase.database && userTarget.toLowerCase().trim() !== activeUser.toLowerCase().trim()) {
             try {
                 const cleanTargetKey = userTarget.toLowerCase().trim().replace("@", "");
                 const uniqueNoticeKey = "NOT_" + now.getTime();
                 
                 firebase.database().ref("notifications/" + cleanTargetKey + "/" + uniqueNoticeKey).set({
-                    id: ticketUnicoGeneradoId,
-                    title: "Nueva Actividad",
+                    id: assignedTicketNum,
+                    title: "Ticket #" + assignedTicketNum,
                     msg: "Se le ha asignado la actividad: " + sufijoNombreTicket,
                     createdBy: activeUser,
                     status: "unread",
@@ -267,14 +270,11 @@ App.executeCreateAssignment = function(e) {
             } catch (err) { console.error("Error al propagar notificación:", err); }
         }
 
-        if (!AppDB.data.config) AppDB.data.config = { ticketCounter: 0 };
-        AppDB.data.config.ticketCounter = (parseInt(AppDB.data.config.ticketCounter) || 0) + 1;
-
         // Guardar y transmitir cambios masivos de tu AppDB original
         AppDB.save();
         
         if (typeof AppDB.addLog === "function") {
-            AppDB.addLog(activeUser, "EMITIR_TICKET", `Emitió ticket con ID único asignado a @${userTarget}`);
+            AppDB.addLog(activeUser, "EMITIR_TICKET", `Se emitió con éxito el Ticket #${assignedTicketNum} asignado a @${userTarget}`);
         }
 
         // Limpiar cuadros de texto
@@ -285,7 +285,7 @@ App.executeCreateAssignment = function(e) {
         if (document.getElementById("asigRef")) document.getElementById("asigRef").value = "";
 
         document.getElementById("modalOverlay").classList.add("hidden");
-        alert("✅ ¡Actividad Asignada con Éxito!\n\nCada colaborador mantendrá su registro independiente en la nube.");
+        alert("✅ ¡Ticket #" + assignedTicketNum + " Emitido con Éxito!\n\nAsignación inyectada a la base de datos de la gerencia.");
         
         App.isAssignmentSubmittingLock = false;
 
