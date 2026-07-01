@@ -1123,11 +1123,11 @@ App.openAboutModal = function() {
     `;
 };
 /* =========================================================================
-   PARCHE DE GOBERNANZA INTEGRAL: REINICIO MENSUAL DEL TOP (v2.02)
+   PARCHE DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02)
    ========================================================================= */
 App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
     
-    // 1. Ejecutar los contadores y acumuladores estándar de tu app
+    // 1. Inyección síncrona en los contadores corporativos superiores
     document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
     
     const labelTotal = document.getElementById("labelTotalRealizadas");
@@ -1153,23 +1153,57 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     }
     document.getElementById("countPerformance").innerText = `${ied}%`;
 
-    // 2. RASTREADOR OPERACIONAL: Forzar reinicio del Top si Julio está en 0
+    /* =========================================================================
+       🔒 INTERCEPTOR DEL PODIO DE ENCABEZADO: REINICIAR TOP USER EN JULIO
+       ========================================================================= */
+    const podioElementoHeader = document.getElementById("topUserWorker");
+    
     if (globalProcessedSum === 0) {
-        console.log("♻️ CORE GOIA: Limpiando la tarjeta de honor del Top por inicio de mes.");
-        
-        // Buscamos todos los elementos de texto en las tarjetas superiores de tu pantalla
-        const elementosPanel = document.querySelectorAll(".counter-card h3, .counter-card div, .counter-card span, h3, p");
-        
-        elementosPanel.forEach(function(el) {
-            const texto = el.innerText || "";
-            // Si el cuadro contiene el arroba de un usuario, sabemos con certeza que es la tarjeta del Top
-            if (texto.includes("@") && (texto.includes("u)") || texto.includes("gestiones") || el.parentNode.innerText.toLowerCase().includes("eficiencia") || el.parentNode.innerText.toLowerCase().includes("top"))) {
-                el.innerText = "Sin registros";
+        // Si las gestiones totales de julio están en cero, limpiamos el podio de honor
+        console.log("♻️ CORE GOIA: Nuevo ciclo detectado. Vaciando podio de honor superior.");
+        if (podioElementoHeader) {
+            podioElementoHeader.innerText = "Sin registros";
+        }
+    } else {
+        // LÓGICA DE RECALCULO EN CALIENTE: Hállar el líder real del mes en curso (Julio)
+        let conteoJulioPorUsuario = {};
+        let maxGestionesJulio = 0;
+        let liderActualJulio = "Sin registros";
+
+        const assignmentsData = AppDB.data.assignments;
+        const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
+        const hoyTop = new Date();
+
+        assignmentsArray.forEach(function(item) {
+            if (!item) return;
+            const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
+            
+            // Procesar únicamente tickets emitidos en este mes activo
+            if (itemDate.getMonth() === hoyTop.getMonth() && itemDate.getFullYear() === hoyTop.getFullYear()) {
+                const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
+                let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
+
+                if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
+                    if (!conteoJulioPorUsuario[owner]) conteoCicloActualPorUsuario[owner] = 0; // Seguridad de inicialización
+                    conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
+                }
             }
         });
+
+        Object.keys(conteoJulioPorUsuario).forEach(function(username) {
+            const total = conteoJulioPorUsuario[username];
+            if (total > maxGestionesJulio) {
+                maxGestionesJulio = total;
+                liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} u)`;
+            }
+        });
+
+        if (podioElementoHeader) {
+            podioElementoHeader.innerText = liderActualJulio;
+        }
     }
 
-    // 3. Pintar la gráfica IED
+    // 3. Dibujar la barra de la gráfica elástica del Índice IED
     let colorGraficaIED = "#dc2626";
     if (ied >= 80) colorGraficaIED = "#16a34a";
     else if (ied >= 50) colorGraficaIED = "#ea580c";
@@ -1197,4 +1231,3 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
 
     App.activateDashboardIntervalWatcher();
 };
-
