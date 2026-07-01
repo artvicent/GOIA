@@ -1154,27 +1154,65 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     document.getElementById("countPerformance").innerText = `${ied}%`;
 
     /* =========================================================================
-       🔒 BLOQUEO ANTI-PARPADEO DEL PODIO DE ENCABEZADO (GOIA v2.02)
+   MÓDULO DE GOBERNANZA: REINICIO MENSUAL DEL PODIO TOP EFICIENCIA (v2.02 REPARADO)
+   ========================================================================= */
+App.completeDashboardRendering = function(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor) {
+    
+    // 1. Inyección síncrona en los contadores corporativos superiores
+    if (document.getElementById("countTotal")) {
+        document.getElementById("countTotal").innerText = globalProcessedSum.toLocaleString("es-VE");
+    }
+    
+    const labelTotal = document.getElementById("labelTotalRealizadas");
+    const cardIndiv = document.getElementById("cardIndividualProduction");
+    
+    if (isSupervisor) {
+        if (labelTotal) labelTotal.innerText = "Gestiones Totales Equipo";
+        if (cardIndiv) {
+            cardIndiv.classList.remove("hidden");
+            if (document.getElementById("countIndividual")) {
+                document.getElementById("countIndividual").innerText = individualProcessedSum.toLocaleString("es-VE");
+            }
+        }
+    } else {
+        if (labelTotal) labelTotal.innerText = "Mis Gestiones Procesadas";
+        if (cardIndiv) cardIndiv.classList.add("hidden");
+    }
+
+    if (document.getElementById("countWarning")) document.getElementById("countWarning").innerText = totalWarning;
+    if (document.getElementById("countDanger")) document.getElementById("countDanger").innerText = totalDanger;
+    
+    let ied = 0;
+    if (metaTotalCount > 0) {
+        ied = Math.round((processedTotalCount / metaTotalCount) * 100);
+    }
+    if (document.getElementById("countPerformance")) {
+        document.getElementById("countPerformance").innerText = `${ied}%`;
+    }
+};
+    /* =========================================================================
+       🔒 MÁSCARA ESTÉTICA ANTI-PARPADEO SINTAXIS CERTIFICADA
        ========================================================================= */
     const podioElementoHeader = document.getElementById("topUserWorker");
     
     if (globalProcessedSum === 0) {
-        // A) SI EL MES AMANECIÓ EN CERO: Forzar letrero y congelar propiedad para matar el setInterval de db.js
+        // A) SI EL MES AMANECIÓ EN CERO: Forzamos el texto de forma limpia y segura
         if (podioElementoHeader) {
-            // Sobreescribimos el setter de texto nativo del navegador en este elemento específico
-            // De esta forma, si db.js intenta escribir el nombre viejo, el navegador lo ignora
-            Object.defineProperty(podioElementoHeader, 'innerText', {
-                value: "Sin registros",
-                writable: false, // Bloqueo de escritura perimetral absoluto
-                configurable: true // Permite desbloquearlo después cuando haya producción
-            });
+            podioElementoHeader.style.display = "inline"; 
+            podioElementoHeader.innerText = "Sin registros";
+            
+            let styleParche = document.getElementById("goiaTopUserFixStyle");
+            if (!styleParche) {
+                styleParche = document.createElement("style");
+                styleParche.id = "goiaTopUserFixStyle";
+                styleParche.innerHTML = "#topUserWorker { font-size: 0 !important; } #topUserWorker::before { content: 'Sin registros' !important; font-size: 13px !important; font-weight: bold !important; color: #ffffff !important; }";
+                document.head.appendChild(styleParche);
+            }
         }
     } else {
-        // B) SI YA HAY GESTIONES EN JULIO: Desbloquear el nodo y calcular el líder del mes en curso
-        if (podioElementoHeader) {
-            // Eliminar el candado de solo lectura para permitir el flujo dinámico
-            delete podioElementoHeader.innerText; 
-        }
+        // B) SI YA HAY GESTIONES EN JULIO: Destruimos la máscara CSS y calculamos el líder real
+        let styleParche = document.getElementById("goiaTopUserFixStyle");
+        if (styleParche) styleParche.remove();
 
         let conteoJulioPorUsuario = {};
         let maxGestionesJulio = 0;
@@ -1188,7 +1226,6 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
             if (!item) return;
             const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
             
-            // Filtrar y procesar únicamente tickets pertenecientes al mes fiscal activo (Julio)
             if (itemDate.getMonth() === hoyTop.getMonth() && itemDate.getFullYear() === hoyTop.getFullYear()) {
                 const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
                 let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
@@ -1198,7 +1235,7 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
                 }
             }
         });
-
+        
         Object.keys(conteoJulioPorUsuario).forEach(function(username) {
             const total = conteoJulioPorUsuario[username];
             if (total > maxGestionesJulio) {
