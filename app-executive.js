@@ -449,13 +449,8 @@ App.handleDismissAlertInline = function(alertId) {
     }
 };
 
-/**
-* SISTEMA DE CONTROL DE GESTIONES - MOTOR EJECUTIVO VISUAL (app-executive.js)
-* PARTE 2 DE 3: PROGRESO DE ACTIVIDADES, ACTUALIZACIÓN DE LOGS Y REPORTES CONSOLIDADOS
-*/
-
 /* =========================================================================
-   MÓDULO: MODAL DE ACTUALIZACIÓN Y EDICIÓN AVANZADA DE CARGAS (v2.02)
+   MÓDULO: MODAL DE ACTUALIZACIÓN JERÁRQUICO CON ID CLOUD ÚNICO (GOIA v2.02) - BLOQUE 1
    ========================================================================= */
 App.openUpdateProgressModal = function(index) {
     if (!AppDB.data || !AppDB.data.assignments) return;
@@ -465,12 +460,15 @@ App.openUpdateProgressModal = function(index) {
     var item = assignmentsArray[index];
     if (!item) return;
 
+    // CAPTURA TRANSACCIONAL: Guardamos la llave única real para el puente de guardado
+    const targetTicketId = item.id;
+
     // 1. Validar jerarquía estricta del usuario logueado
     const activeUsername = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
     const userRole = App.currentUser ? App.currentUser.role : "Analista";
     const roleMeta = (AppDB.data.roles && AppDB.data.roles[userRole]) ? AppDB.data.roles[userRole] : { lvl: 1 };
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
-    const isSupervisor = (activeUsername === "admin" || userLevel >= 2); // Admin, Gerente, Coordinador
+    const isSupervisor = (activeUsername === "admin" || userLevel >= 2); 
 
     document.getElementById("modalOverlay").classList.remove("hidden");
     
@@ -492,7 +490,8 @@ App.openUpdateProgressModal = function(index) {
                 <h3>⚙️ Consola de Edición de Actividad</h3>
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
             </div>
-            <form id="formAdvancedEdit" onsubmit="App.handleAdvancedAssignmentSave(event, ${index})" class="admin-config-form-layout" style="padding:10px;">
+            <!-- SE INTEGRA LA LLAVE DE RED EN EL REMITENTE -->
+            <form id="formAdvancedEdit" onsubmit="App.handleAdvancedAssignmentSave(event, '${targetTicketId}')" class="admin-config-form-layout" style="padding:10px;">
                 <div class="form-group">
                     <label style="display:block; font-weight:bold; margin-bottom:4px;">Nombre / Título de la Actividad</label>
                     <input type="text" id="editItemName" value="${item.name || item.title || ''}" required class="form-control" style="width:100%; padding:8px;">
@@ -510,7 +509,7 @@ App.openUpdateProgressModal = function(index) {
                     </div>
                     <div>
                         <label style="display:block; font-weight:bold; margin-bottom:4px;">Gestiones Procesadas Actuales</label>
-                        <input type="number" id="editItemProcessed" value="${item.processed || item.realizadas || 0}" min="0" required class="form-control" style="width:100%; padding:8px;">
+                        <input type="number" id="editItemProcessed" value="${Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0))}" min="0" required class="form-control" style="width:100%; padding:8px;">
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:10px;">
@@ -529,9 +528,10 @@ App.openUpdateProgressModal = function(index) {
                 <h3>📈 Reportar Progreso de Actividad</h3>
                 <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
             </div>
-            <form id="formAnalystProgress" onsubmit="App.handleAnalystProgressSave(event, ${index})" class="admin-config-form-layout" style="padding:10px;">
+            <!-- SE INTEGRA LA LLAVE DE RED EN EL REMITENTE -->
+            <form id="formAnalystProgress" onsubmit="App.handleAnalystProgressSave(event, '${targetTicketId}')" class="admin-config-form-layout" style="padding:10px;">
                 <p style="margin:0 0 10px 0; font-size:13px;">Actividad: <b>${item.name || item.title}</b></p>
-                <p style="margin:0 0 10px 0; font-size:12px; color:#475569;">Meta Asignada: <b>${item.meta || item.target}</b> | Procesadas: <b>${item.processed || 0}</b></p>
+                <p style="margin:0 0 10px 0; font-size:12px; color:#475569;">Meta Asignada: <b>${item.meta || item.target}</b> | Procesadas: <b>${Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0))}</b></p>
                 <div class="form-group">
                     <label style="display:block; font-weight:bold; margin-bottom:4px;">Cantidad de Nuevas Gestiones Realizadas</label>
                     <input type="number" id="inputIncrementCount" min="1" required class="form-control" placeholder="Ej: 50" style="width:100%; padding:8px;">
@@ -545,104 +545,66 @@ App.openUpdateProgressModal = function(index) {
 
     document.getElementById("modalContent").innerHTML = modalHtml;
 };
-// A) CONTROLADOR SUPERVISOR: Reescribe y recalcula propiedades sin bloqueos
-App.handleAdvancedAssignmentSave = function(event, index) {
-    event.preventDefault();
-    
-    const newName = document.getElementById("editItemName").value.trim();
-    const newUser = document.getElementById("editItemAssignedTo").value;
-    const newMeta = parseInt(document.getElementById("editItemMeta").value || 0);
-    const newProcessed = parseInt(document.getElementById("editItemProcessed").value || 0);
-    const newRef = document.getElementById("editItemReference").value.trim();
-
-    if (newProcessed > newMeta) {
-        return alert("⚠️ ALERTA OPERACIONAL: Las gestiones procesadas no pueden superar la meta estipulada.");
-    }
-
-    const activeUser = (App.currentUser && App.currentUser.username) ? App.currentUser.username : "admin";
-    
-    // Modificar directamente la memoria local mapeada
-    var assignmentsData = AppDB.data.assignments;
-    var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
-    var targetItem = assignmentsArray[index];
-
-    if (targetItem) {
-        const oldUser = targetItem.assignedTo;
-        const oldMeta = targetItem.meta || targetItem.target;
-
-        targetItem.name = newName;
-        targetItem.title = newName;
-        targetItem.assignedTo = newUser;
-        targetItem.meta = newMeta;
-        targetItem.target = newMeta;
-        targetItem.processed = newProcessed;
-        targetItem.realizadas = newProcessed;
-        targetItem.reference = newRef;
+/* =========================================================================
+   MÓDULO: PROCESADORES DE GUARDADO JERÁRQUICOS CON ID CLOUD ÚNICO - BLOQUE 2
+   ========================================================================= */
+// A) CONTROLADOR DE GUARDADO DEL SUPERVISOR (Edición Avanzada Completa)
+App.handleAdvancedAssignmentSave = function(event, ticketId) {
+    if (event) event.preventDefault();
+    try {
+        if (!AppDB.data.assignments) AppDB.data.assignments = {};
         
-        // Ajustar el estatus de completado según los nuevos números ingresados
-        targetItem.status = (newProcessed >= newMeta) ? "completed" : "pending";
+        // Buscar el ticket por su ID único directo
+        let t = AppDB.data.assignments[ticketId] || Object.values(AppDB.data.assignments).find(x => x && x.id == ticketId);
+        if (!t) return alert("❌ Error: Tarea no localizada en internet.");
 
-        // Registrar trazabilidad estricta en el historial de auditoría cloud
-        AppDB.addLog(activeUser, "EDICION_AVANZADA", `Modificó actividad #${index}. Reasignó de @${oldUser} a @${newUser}. Meta ajustada de ${oldMeta} a ${newMeta}.`);
-        
-        // Guardar cambios ejecutando la encriptación nativa en Firebase
+        const nuevaMeta = parseInt(document.getElementById("editItemMeta").value || 0);
+        const nuevoProcesado = parseInt(document.getElementById("editItemProcessed").value || 0);
+
+        t.name = document.getElementById("editItemName").value.trim();
+        t.assignedTo = document.getElementById("editItemAssignedTo").value;
+        t.meta = nuevaMeta;
+        t.target = nuevaMeta;
+        t.processed = nuevoProcesado;
+        t.realizadas = nuevoProcesado;
+        t.reference = document.getElementById("editItemReference").value.trim();
+
+        if (nuevoProcesado >= nuevaMeta && nuevaMeta > 0) t.status = "completed";
+        else t.status = "pending";
+
         AppDB.save();
-        
-        alert("✅ ÉXITO: Parámetros de la actividad reconfigurados y sincronizados con éxito.");
         document.getElementById("modalOverlay").classList.add("hidden");
-        
-        // Refrescar el dashboard y recalcular las 5 tarjetas de contadores
-        this.renderDashboardData();
-    }
+        alert("✅ Modificación guardada y sincronizada de forma transparente.");
+        App.renderDashboardData();
+    } catch(err) { alert("Fallo al guardar: " + err.message); }
 };
 
-// B) CONTROLADOR ANALISTA ORDINARIO: Solo acumula avance incremental sopesando su meta fija
-App.handleAnalystProgressSave = function(event, index) {
-    event.preventDefault();
-    const increment = parseInt(document.getElementById("inputIncrementCount").value || 0);
-    if (increment <= 0) return;
-
-    var assignmentsData = AppDB.data.assignments;
-    var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
-    var targetItem = assignmentsArray[index];
-
-    if (targetItem) {
-        const currentProcessed = parseInt(targetItem.processed || 0);
-        const currentMeta = parseInt(targetItem.meta || targetItem.target || 0);
-        const finalTotal = currentProcessed + increment;
-
-        if (finalTotal > currentMeta) {
-            return alert(`❌ Operación denegada: Reportar +${increment} gestiones supera tu meta establecida.`);
-        }
-
-        targetItem.processed = finalTotal;
-        targetItem.realizadas = finalTotal;
-        if (finalTotal >= currentMeta) targetItem.status = "completed";
-
-        AppDB.addLog(App.currentUser?.username || "analista", "REPORTE_AVANCE", `Sumó +${increment} gestiones a la actividad #${index}.`);
-        AppDB.save();
+// B) CONTROLADOR DE GUARDADO DEL ANALISTA (Suma de Nuevas Gestiones)
+App.handleAnalystProgressSave = function(event, ticketId) {
+    if (event) event.preventDefault();
+    try {
+        if (!AppDB.data.assignments) AppDB.data.assignments = {};
         
-        alert("👍 Avance registrado con éxito.");
-        document.getElementById("modalOverlay").classList.add("hidden");
-        this.renderDashboardData();
-    }
-};
+        let t = AppDB.data.assignments[ticketId] || Object.values(AppDB.data.assignments).find(x => x && x.id == ticketId);
+        if (!t) return alert("❌ Error: Tarea no localizada en el servidor cloud.");
 
-App.markAssignmentAsCompleted = function(index) {
-    const item = AppDB.data.assignments[index];
-    const itemMeta = parseInt(item.meta || item.target || 0);
-    
-    item.status = "completed";
-    item.processed = itemMeta;
-    
-    AppDB.save();
-    
-    var operarioLog = App.currentUser ? App.currentUser.username : "sistema";
-    AppDB.addLog(operarioLog, "CULMINAR_TAREA", `Marcó como completada: ${item.name || item.title}`);
-    
-    document.getElementById("modalOverlay").classList.add("hidden");
-    alert("Actividad guardada en estado culminado.");
-    App.renderDashboardData();
+        const cantidadASumar = parseInt(document.getElementById("inputIncrementCount").value || 0);
+        if (cantidadASumar <= 0) return alert("Por favor, ingrese un número mayor a cero.");
+
+        const acumuladoViejo = Math.max(parseInt(t.processed || 0), parseInt(t.realizadas || 0));
+        const totalNetoNuevo = acumuladoViejo + cantidadASumar;
+        const metaFija = parseInt(t.meta || t.target || 0);
+
+        t.processed = totalNetoNuevo;
+        t.realizadas = totalNetoNuevo;
+
+        if (totalNetoNuevo >= metaFija && metaFija > 0) t.status = "completed";
+
+        AppDB.save();
+        document.getElementById("modalOverlay").classList.add("hidden");
+        alert(`✅ Avance de ${cantidadASumar} unidades guardado de forma permanente.`);
+        App.renderDashboardData();
+    } catch(err) { alert("Fallo en comunicación de red: " + err.message); }
 };
 
 /* =========================================================================
