@@ -182,8 +182,6 @@ App.renderDashboardData = function() {
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
 };
 
-
-
 /* =========================================================================
    MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.0Final) - PARTE 1
    ========================================================================= */
@@ -222,45 +220,56 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     }
 
     /* =========================================================================
-       🔒 LÓGICA DE GOBERNANZA NATIVA: CÁLCULO DEL TOP EXCLUSIVO DEL MES EN CURSO
+       🔒 LÓGICA DE GOBERNANZA UNIVERSAL: CÁLCULO DEL TOP DEL MES EN CURSO
        ========================================================================= */
     const podioElementoHeader = document.getElementById("topUserWorker");
     
-    let conteoJulioPorUsuario = {};
-    let maxGestionesJulio = 0;
-    let liderActualJulio = "Sin registros";
+    let conteoMesEnCursoPorUsuario = {};
+    let maxGestionesMesEnCurso = 0;
+    let liderActualMesEnCurso = "Sin registros";
 
     const assignmentsData = AppDB.data.assignments;
     const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
-    const hoyTop = new Date();
+    
+    // CAPTURA CRONOLÓGICA PERPETUA AUTOMÁTICA (Inmune a saltos de mes o año)
+    const fechaCalendarioServidor = new Date();
+    const numeroMesEnCurso = fechaCalendarioServidor.getMonth();
+    const numeroAñoEnCurso = fechaCalendarioServidor.getFullYear();
 
     assignmentsArray.forEach(function(item) {
         if (!item) return;
         
-        const itemDate = new Date(item.createdAt || item.timestamp || hoyTop);
-        const esMismoMes = (itemDate.getMonth() === hoyTop.getMonth());
-        const esMismoAño = (itemDate.getFullYear() === hoyTop.getFullYear());
+        // Forzar la lectura de la fecha real de creación de la tarea en Firebase
+        const itemDate = new Date(item.createdAt || item.timestamp || fechaCalendarioServidor);
+        
+        // CONDICIÓN OPERATIVA PERPETUA: El ticket DEBE pertenecer estrictamente al mes y año que transcurre hoy
+        const esMismoMes = (itemDate.getMonth() === numeroMesEnCurso);
+        const esMismoAño = (itemDate.getFullYear() === numeroAñoEnCurso);
 
         if (esMismoMes && esMismoAño) {
             const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
             let owner = String(item.assignedTo || "S/A").trim().toLowerCase().replace("@", "");
 
             if (owner !== "admin" && owner !== "s/a" && itemProcessed > 0) {
-                conteoJulioPorUsuario[owner] = (conteoJulioPorUsuario[owner] || 0) + itemProcessed;
+                if (!conteoMesEnCursoPorUsuario[owner]) {
+                    conteoMesEnCursoPorUsuario[owner] = 0;
+                }
+                conteoMesEnCursoPorUsuario[owner] += itemProcessed;
             }
         }
     });
     
-    Object.keys(conteoJulioPorUsuario).forEach(function(username) {
-        const total = conteoJulioPorUsuario[username];
-        if (total > maxGestionesJulio) {
-            maxGestionesJulio = total;
-            liderActualJulio = `@${username} (${total.toLocaleString("es-VE")} Gestiones)`;
+    Object.keys(conteoMesEnCursoPorUsuario).forEach(function(username) {
+        const total = conteoMesEnCursoPorUsuario[username];
+        if (total > maxGestionesMesEnCurso) {
+            maxGestionesMesEnCurso = total;
+            liderActualMesEnCurso = `@${username} (${total.toLocaleString("es-VE")} u)`;
         }
     });
 
+    // Inyectar el resultado directo en el HTML nativo del header sin parpadeos
     if (podioElementoHeader) {
-        podioElementoHeader.innerText = liderActualJulio;
+        podioElementoHeader.innerText = liderActualMesEnCurso;
     }
 
     // 2. Dibujar la barra de la gráfica elástica del Índice IED
