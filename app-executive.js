@@ -101,7 +101,7 @@ App.renderDashboardData = function() {
         return 0;
     });
 
-    assignmentsArray.forEach(function(item, index) {
+        assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
         const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
@@ -110,12 +110,25 @@ App.renderDashboardData = function() {
         // A) FILTRADO DE GOBERNANZA: El analista común solo ve sus propios registros
         if (!isSupervisor && taskOwner !== cleanActiveUser) return;
 
-        // B) NUEVO FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
+        // B) FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
         if (isSupervisor && currentUserFilter !== "all" && taskOwner !== currentUserFilter) return;
 
-        // Filtrado de calendario mensual
-        if (currentMonthFilter !== "all" && currentMonthFilter !== "current") {
-            const itemDate = new Date(item.createdAt || item.timestamp);
+        /* =========================================================================
+           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (GOIA v2.02)
+           Si el filtro dice "Ciclo Activo", obligamos a la pantalla a procesar solo el mes actual
+           ========================================================================= */
+        const itemDate = new Date(item.createdAt || item.timestamp || now);
+        
+        if (currentMonthFilter === "all") {
+            // "Ciclo Activo" evalúa estrictamente que corresponda al mes y año en curso (Julio 2026)
+            const esMismoMes = (itemDate.getMonth() === now.getMonth());
+            const esMismoAño = (itemDate.getFullYear() === now.getFullYear());
+            
+            // Si la tarea es de Junio o meses anteriores, se archiva de la vista principal (pero sigue en Firebase)
+            if (!esMismoMes || !esMismoAño) return;
+        } 
+        else if (currentMonthFilter !== "current") {
+            // Si el usuario cambia el filtro a un mes específico en el histórico
             if ((itemDate.getMonth() + 1).toString() !== currentMonthFilter) return;
         }
 
@@ -125,10 +138,9 @@ App.renderDashboardData = function() {
         let esAlertaCritica = false;
 
         const itemMeta = parseInt(item.meta || item.target || 0);
-        // CORRECCIÓN TRANSPARENTE: Unificar la lectura de avances para el renderizador de la tabla
         const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
 
-        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES
+        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES DEL MES EN CURSO
         globalProcessedSum += itemProcessed;
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
             individualProcessedSum += itemProcessed;
@@ -149,7 +161,6 @@ App.renderDashboardData = function() {
 
             if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
-                // CORRECCIÓN CLAVE: Forzamos la clase a danger para que el CSS nativo la pinte de rojo
                 statusClass = "danger"; 
                 cardAlertClass = "bg-danger";
                 totalDanger++;
