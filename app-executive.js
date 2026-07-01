@@ -3,6 +3,11 @@
    ========================================================================= */
 App.closedAlertsMemory = App.closedAlertsMemory || [];
 
+/* =========================================================================
+   MÓDULO: RENDERIZADOR DINÁMICO DE REINICIO MENSUAL DE CICLO (v2.02) - PARTE 1 DE 2
+   ========================================================================= */
+App.closedAlertsMemory = App.closedAlertsMemory || [];
+
 App.renderDashboardData = function() {
     if (!AppDB.data || !AppDB.data.assignments) return;
     
@@ -21,55 +26,8 @@ App.renderDashboardData = function() {
     const userLevel = typeof roleMeta.lvl !== 'undefined' ? roleMeta.lvl : 1;
     const isSupervisor = (activeUsername === "admin" || userLevel >= 2);
 
-        /* =========================================================================
-       INYECCIÓN DINÁMICA DEL TERCER FILTRO ALINEADO EN LA MISMA FILA (v2.02)
-       ========================================================================= */
-    let userSelect = document.getElementById("filterAssignmentUser");
-    
-    // Si el filtro no existe físicamente en la pantalla, lo creamos y alineamos en línea
-    if (!userSelect && isSupervisor) {
-        const statusSelect = document.getElementById("filterAssignmentStatus");
-        if (statusSelect && statusSelect.parentNode) {
-            userSelect = document.createElement("select");
-            userSelect.id = "filterAssignmentUser";
-            // Quitamos la clase form-control que causaba el tamaño gigante del 100%
-            userSelect.className = ""; 
-            
-            // ATRIBUTOS DE DISEÑO DE ALTA PRECISIÓN (Mismo tamaño exacto de tus botones)
-            userSelect.style.padding = "6px 12px";
-            userSelect.style.borderRadius = "6px";
-            userSelect.style.marginLeft = "8px"; 
-            userSelect.style.border = "1px solid #cbd5e1";
-            userSelect.style.color = "#1e293b";
-            userSelect.style.fontSize = "13px";
-            userSelect.style.fontWeight = "600";
-            userSelect.style.background = "#ffffff";
-            userSelect.style.height = "34px"; // Altura idéntica de la barra nativa
-            userSelect.style.cursor = "pointer";
-            userSelect.style.display = "inline-block";
-            userSelect.style.width = "auto"; // Evita que se estire al 100%
-            userSelect.style.maxWidth = "200px"; // Ancho compacto controlado
-            
-            // Opción base
-            userSelect.innerHTML = `<option value="all">Todos los Colaboradores</option>`;
-            
-            // Poblar el filtro leyendo la nómina
-            if (AppDB.data.users) {
-                Object.values(AppDB.data.users).forEach(function(u) {
-                    const cleanName = u.username.replace("@", "").toLowerCase();
-                    userSelect.innerHTML += `<option value="${cleanName}">👤 @${cleanName}</option>`;
-                });
-            }
-            
-            // Conectar evento de cruce
-            userSelect.onchange = function() { App.renderDashboardData(); };
-            
-            // Insertar de inmediato a la derecha de "Todas las Cargas"
-            statusSelect.parentNode.insertBefore(userSelect, statusSelect.nextSibling);
-        }
-    }
-
-    // Capturar el valor seleccionado en el nuevo filtro (si no existe, evalúa "all")
+    // Capturar el valor seleccionado en el nuevo filtro de usuarios
+    const userSelect = document.getElementById("filterAssignmentUser");
     const currentUserFilter = userSelect ? userSelect.value : "all";
 
     let globalProcessedSum = 0;     
@@ -84,24 +42,21 @@ App.renderDashboardData = function() {
     var assignmentsData = AppDB.data.assignments;
     var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
 
-        // ORDENAR: Coloca de primero las tareas abiertas y de último las completadas
+    // ORDENAR: Coloca de primero las tareas abiertas y de último las completadas
     assignmentsArray.sort(function(a, b) {
         if (!a || !b) return 0;
         const metaA = parseInt(a.meta || a.target || 0);
-        // CORRECCIÓN TRANSPARENTE: Evaluar el valor más alto absoluto entre ambos campos de progreso
         const procA = Math.max(parseInt(a.processed || 0), parseInt(a.realizadas || 0));
         const estaCulminadoA = (a.status === "completed" || (procA >= metaA && metaA > 0));
-        
         const metaB = parseInt(b.meta || b.target || 0);
         const procB = Math.max(parseInt(b.processed || 0), parseInt(b.realizadas || 0));
         const estaCulminadoB = (b.status === "completed" || (procB >= metaB && metaB > 0));
-        
         if (estaCulminadoA && !estaCulminadoB) return 1;
         if (!estaCulminadoA && estaCulminadoB) return -1;
         return 0;
     });
 
-        assignmentsArray.forEach(function(item, index) {
+    assignmentsArray.forEach(function(item, index) {
         if (!item) return;
 
         const taskOwner = String(item.assignedTo || item.createdBy || "").trim().toLowerCase().replace("@", "");
@@ -110,25 +65,24 @@ App.renderDashboardData = function() {
         // A) FILTRADO DE GOBERNANZA: El analista común solo ve sus propios registros
         if (!isSupervisor && taskOwner !== cleanActiveUser) return;
 
-        // B) FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
+        // B) NUEVO FILTRO DE CRUCE: Si seleccionas un usuario x, descarta el resto de filas de la tabla
         if (isSupervisor && currentUserFilter !== "all" && taskOwner !== currentUserFilter) return;
 
         /* =========================================================================
-           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (GOIA v2.02)
-           Si el filtro dice "Ciclo Activo", obligamos a la pantalla a procesar solo el mes actual
+           🛡️ CONTROL DE CICLO MENSUAL AUTOMÁTICO (PCI-DSS)
+           Si el filtro dice "Ciclo Activo" (all), obligamos a acumular SOLO el mes en curso (Julio)
            ========================================================================= */
         const itemDate = new Date(item.createdAt || item.timestamp || now);
         
-        if (currentMonthFilter === "all") {
-            // "Ciclo Activo" evalúa estrictamente que corresponda al mes y año en curso (Julio 2026)
+        if (currentMonthFilter === "all" || currentMonthFilter === "current") {
             const esMismoMes = (itemDate.getMonth() === now.getMonth());
             const esMismoAño = (itemDate.getFullYear() === now.getFullYear());
             
-            // Si la tarea es de Junio o meses anteriores, se archiva de la vista principal (pero sigue en Firebase)
+            // Si el ticket pertenece a Junio o meses anteriores, se ignora del ciclo actual de medición
             if (!esMismoMes || !esMismoAño) return;
         } 
-        else if (currentMonthFilter !== "current") {
-            // Si el usuario cambia el filtro a un mes específico en el histórico
+        else {
+            // Si el supervisor usa el filtro desplegable para auditar un mes histórico previo
             if ((itemDate.getMonth() + 1).toString() !== currentMonthFilter) return;
         }
 
@@ -140,7 +94,7 @@ App.renderDashboardData = function() {
         const itemMeta = parseInt(item.meta || item.target || 0);
         const itemProcessed = Math.max(parseInt(item.processed || 0), parseInt(item.realizadas || 0));
 
-        // ACUMULADORES OPERATIVOS DE VOLUMEN NETO DE GESTIONES DEL MES EN CURSO
+        // ACUMULADORES OPERATIVOS CON EL FILTRO EXCLUSIVO DEL MES EN CURSO YA APLICADO
         globalProcessedSum += itemProcessed;
         if (taskOwner === cleanActiveUser || (cleanActiveUser === "admin" && taskOwner === "admin")) {
             individualProcessedSum += itemProcessed;
@@ -158,7 +112,9 @@ App.renderDashboardData = function() {
             
             metaTotalCount += itemMeta;
             processedTotalCount += itemProcessed;
-
+/* =========================================================================
+   MÓDULO: RENDERIZADOR DINÁMICO DE REINICIO MENSUAL DE CICLO (v2.02) - PARTE 2 DE 2
+   ========================================================================= */
             if (diffMin <= 0) {
                 timeRemainingStr = " Vencida";
                 statusClass = "danger"; 
@@ -188,14 +144,13 @@ App.renderDashboardData = function() {
         const ownerLabel = isSupervisor ? `<br><small style="color:#2563eb; font-weight:600;">👤 @${item.assignedTo || 'S/A'}</small>` : "";
         const ticketSafeId = item.id || `task_${index}`;
 
-                let tr = document.createElement("tr");
-        tr.className = `status-row-${statusClass}`; // Ahora generará de forma correcta status-row-danger
+        let tr = document.createElement("tr");
+        tr.className = `status-row-${statusClass}`;
         tr.innerHTML = `
             <td><b>${item.name || item.title || 'Ticket'}</b>${ownerLabel}</td>
             <td class="text-center font-bold">${itemMeta}</td>
             <td class="text-center">${itemProcessed}</td>
             <td class="text-center"><span class="badge-reference">${item.reference || "S/R"}</span></td>
-            <!-- CORRECCIÓN DE LA ETIQUETA CRONOLÓGICA DE ALERTA ROJA -->
             <td class="text-center"><span class="time-label-${statusClass === 'danger' ? 'expired' : statusClass}">${timeRemainingStr}</span></td>
             <td class="text-center">
                 ${mailButtonHtml}
@@ -206,11 +161,11 @@ App.renderDashboardData = function() {
 
         const alertaUniqueKey = `alert_${ticketSafeId}`;
         if (esAlertaCritica && !App.closedAlertsMemory.includes(alertaUniqueKey)) {
-            const labelTipoAlerta = statusClass === "expired" ? "🛑 GESTIÓN VENCIDA" : "⚠️ POR VENCER (<30 MIN)";
-            const colorLetraAlerta = statusClass === "expired" ? "#991b1b" : "#9a3412";
+            const labelTipoAlerta = statusClass === "danger" ? "🛑 GESTIÓN VENCIDA" : "⚠️ POR VENCER (<30 MIN)";
+            const colorLetraAlerta = statusClass === "danger" ? "#991b1b" : "#9a3412";
             
             monitorHtml += `
-            <div id="${alertaUniqueKey}" class="counter-card ${cardAlertClass}" style="position: relative; margin-bottom: 8px; border-left: 5px solid ${statusClass === 'expired' ? '#dc2626' : '#ea580c'}; padding-right: 35px;">
+            <div id="${alertaUniqueKey}" class="counter-card ${cardAlertClass}" style="position: relative; margin-bottom: 8px; border-left: 5px solid ${statusClass === 'danger' ? '#dc2626' : '#ea580c'}; padding-right: 35px;">
                 <p style="margin: 0; font-size: 11px; font-weight: 800; color: ${colorLetraAlerta}; letter-spacing: 0.5px;">${labelTipoAlerta}</p>
                 <p style="margin: 3px 0 0 0; font-size: 11px; color: #1e293b; line-height: 1.3;">
                     La actividad <b>${item.name || item.title}</b> asignada a <b>@${item.assignedTo}</b> se encuentra en estado crítico (${timeRemainingStr}).
@@ -220,7 +175,7 @@ App.renderDashboardData = function() {
         }
     });
 
-    // Delegar al inyector final de contadores
+    // Delegar el volcado final de contadores recalculados para reiniciar las tarjetas superiores
     App.completeDashboardRendering(globalProcessedSum, individualProcessedSum, totalWarning, totalDanger, metaTotalCount, processedTotalCount, monitorHtml, isSupervisor);
 };
 
