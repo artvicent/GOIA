@@ -574,13 +574,20 @@ App.openReportsMenu = function() {
                     </button>
                 </div>
                 
-                <!-- CORTE 3: CORTE MENSUAL ACUMULADO -->
+                                // ... (El bloque semanal selectTargetAuditWeek se mantiene igual arriba) ...
+                
+                <!-- CORTE 3: REPORTE MENSUAL ACUMULADO DEL MES ACTIVO (JULIO) -->
                 <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px;">
                     📈 EMITIR REPORTE MENSUAL ACUMULADO (MES ACTIVO)
                 </button>
                 
-                <!-- CORTE 4: HISTÓRICO DE 6 MESES -->
-                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <!-- NUEVO CORTE REQUERIDO: REPORTE EXCLUSIVO DEL MES ANTERIOR (JUNIO) -->
+                <button type="button" onclick="App.executeExportDataToPDF('MES_ANTERIOR')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px;">
+                    📅 EMITIR REPORTE DEL MES ANTERIOR (CIERRE FISCAL)
+                </button>
+                
+                <!-- CORTE 5: HISTÓRICO DE AUDITORÍA RETROSPECTIVA -->
+                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 4px;">
                     🔎 DESCARGAR HISTORIAL RETROSPECTIVO CONSOLIDADO (6 MESES)
                 </button>
                 
@@ -594,7 +601,7 @@ App.openReportsMenu = function() {
 };
 
 /* =========================================================================
-   MÓDULO: MOTOR CRONOLÓGICO CON FILTRO DIARIO EN VIVO (GOIA v2.02)
+   MÓDULO: MOTOR CRONOLÓGICO CON FILTRO DE MES ANTERIOR (GOIA v2.02)
    ========================================================================= */
 App.executeExportDataToPDF = function(tipoReporte) {
     if (!AppDB.data || !AppDB.data.assignments) {
@@ -609,12 +616,22 @@ App.executeExportDataToPDF = function(tipoReporte) {
     let fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), 1); 
     let fechaFinFiltro = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59); 
 
-    // INTERCEPTOR CRONOLÓGICO EXPANDIDO
+    // INTERCEPTOR CRONOLÓGICO CON NUEVA ACCIÓN DE CONSULTA
     if (tipoReporte === 'DIARIO') {
-        // Fijar el inicio de la búsqueda a las 12:00 AM de hoy
         fechaInicioFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
-        // Fijar el fin de la búsqueda a las 11:59 PM de hoy
         fechaFinFiltro = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+    }
+    else if (tipoReporte === 'MES_ANTERIOR') {
+        // Calcular el mes pasado de forma segura (Inmune a cambios de año en enero)
+        let añoPasado = hoy.getFullYear();
+        let mesPasado = hoy.getMonth() - 1;
+        if (mesPasado < 0) {
+            mesPasado = 11;
+            añoPasado--;
+        }
+        // Fijar del 1 al último día de Junio a las 23:59:59
+        fechaInicioFiltro = new Date(añoPasado, mesPasado, 1, 0, 0, 0, 0);
+        fechaFinFiltro = new Date(añoPasado, mesPasado + 1, 0, 23, 59, 59, 999);
     }
     else if (tipoReporte === 'SEMANAL') {
         const selectSemana = document.getElementById("selectTargetAuditWeek");
