@@ -1139,13 +1139,6 @@ App.openAvatarSelectionModal = function() {
     }
 };
 
-// Disparar el recálculo analítico automático de eficiencia cada 5 segundos
-setInterval(function() {
-    if (typeof App !== 'undefined' && AppDB.data && AppDB.data.assignments) {
-        App.calculateMeritPodiumPerformance();
-    }
-}, 5000);
-
 /* =========================================================================
    MÓDULO: BLOC DE NOTAS COLABORATIVO MULTI-PESTAÑA CLOUD (GOIA v2.02)
    ========================================================================= */
