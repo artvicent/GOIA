@@ -121,7 +121,7 @@ const App = {
  * PARTE 2 DE 4: PROCESAMIENTO DE LOGIN, CONTROL DE INTENTOS Y CIERRE DE SESIÓN CORREGIDO
  */
 
-App.handleLogin = function(e) {
+App.handleLogin = async function(e) {
     if (e) e.preventDefault();
     
     const userField = document.getElementById("loginUser");
@@ -149,20 +149,19 @@ App.handleLogin = function(e) {
             if (typeof this.openForcePasswordChangeModal === "function") {
                 this.openForcePasswordChangeModal();
             }
-                    if (typeof this.applySecurityCerberusPermissions === "function") {
-            this.applySecurityCerberusPermissions();
-        }
-        if (typeof App.renderDashboardData === "function") {
-            App.renderDashboardData();
-        }
+            if (typeof this.applySecurityCerberusPermissions === "function") {
+                this.applySecurityCerberusPermissions();
+            }
+            if (typeof App.renderDashboardData === "function") {
+                App.renderDashboardData();
+            }
 
-        /* 🛡️ INYECCIÓN CORE: ACTIVAR ESCUCHA EN TIEMPO REAL DE NOTIFICACIONES CLOUD */
-        if (App.RealtimeNotificationCore && typeof App.RealtimeNotificationCore.init === "function") {
-            App.RealtimeNotificationCore.init();
-        }
-        
-        return; // Éxito total desde la nube corporativa
-
+            /* 🛡️ INYECCIÓN CORE: ACTIVAR ESCUCHA EN TIEMPO REAL DE NOTIFICACIONES CLOUD */
+            if (App.RealtimeNotificationCore && typeof App.RealtimeNotificationCore.init === "function") {
+                App.RealtimeNotificationCore.init();
+            }
+            
+            return; // Éxito total desde la nube corporativa
         }
         
         // Si todo está correcto en Firebase, limpiar campos e ingresar
@@ -207,61 +206,6 @@ App.handleLogin = function(e) {
         
         return; // Éxito total desde la nube corporativa
     }
-
-    /* =========================================================================
-       FASE 2: RESPALDO DE HARDWARE SÓLO SI FIREBASE FALLÓ O SE VACIÓ
-       ========================================================================= */
-    if (username.toLowerCase() === "admin") {
-        const cryptoHash = async (string) => {
-            const utf8 = new TextEncoder().encode(string);
-            const buffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(buffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        };
-        
-        const inputPasswordHash = await cryptoHash(password);
-        const backupMasterHash = "121f11e9f4fb89e3ec027b409cbbfefc5de8d5dae79cf90da9b6264ff6e87fca";
-        
-        if (inputPasswordHash === backupMasterHash) {
-            console.warn("⚠️ ACCESO DE CONTINGENCIA: Firebase no validó al admin. Iniciando por bypass de hardware.");
-            
-            this.currentUser = {
-                username: "admin",
-                names: "Administrador",
-                lastnames: "De Contingencia",
-                role: "Administrador",
-                status: "active",
-                passwordChangedDate: new Date().toISOString()
-            };
-            
-            userField.value = "";
-            passField.value = "";
-            
-            this.showView("viewDashboard");
-            
-            const welcomeName = document.getElementById("dashWelcomeName");
-            const userRole = document.getElementById("dashUserRole");
-            if (welcomeName) welcomeName.innerText = "Administrador De Contingencia";
-            if (userRole) userRole.innerText = "Administrador";
-            
-            const topBanner = document.getElementById("topBanner");
-            if (topBanner) topBanner.classList.remove("hidden");
-            
-            if (typeof this.applySecurityCerberusPermissions === "function") {
-                this.applySecurityCerberusPermissions();
-            }
-            if (typeof App.renderDashboardData === "function") {
-                App.renderDashboardData();
-            }
-            if (App.InactivityMonitor && typeof App.InactivityMonitor.init === "function") {
-                App.InactivityMonitor.init();
-            }
-            return;
-        }
-    }
-    
-    // Si fallaron tanto Firebase (Fase 1) como la llave maestra (Fase 2)
-    alert(result.msg || "❌ Credenciales inválidas o error de descifrado en red.");
 };
 
 // Cierre de sesión voluntario y limpieza de hilos activos de memoria RAM
