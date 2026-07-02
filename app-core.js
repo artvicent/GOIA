@@ -1,14 +1,16 @@
 /* =========================================================================
-   🛡️ DETECTOR DE DESFASE OPERATIVO POR DÍA Y SESIÓN (GOIA v2.02)
+   🛡️ DETECTOR DE DESFASE OPERATIVO POR DÍA Y SESIÓN (GOIA v2.02 CORREGIDO)
    Fuerza la recarga limpia si arrastran la pestaña abierta del día anterior.
    ========================================================================= */
 (function() {
     const ahoraVerificador = new Date();
+    // Registra la huella exacta del día, mes y año actual (Inmune a parpadeos)
     const llaveDiaLocal = "goia_dia_" + ahoraVerificador.getDate() + "_" + ahoraVerificador.getMonth() + "_" + ahoraVerificador.getFullYear();
     
     if (typeof localStorage !== 'undefined') {
         const ultimoDiaRegistrado = localStorage.getItem("goia_active_day_cycle");
         
+        // 1. CONTROL DE JORNADA: Si la pestaña se quedó abierta desde ayer, recarga en frío
         if (ultimoDiaRegistrado && ultimoDiaRegistrado !== llaveDiaLocal) {
             console.warn("🔒 ADVERTENCIA: Cambio de jornada operativa detectado. Sincronizando caché...");
             localStorage.setItem("goia_active_day_cycle", llaveDiaLocal);
@@ -22,17 +24,19 @@
     }
 })();
 
-// 2. CONTROL AL INTENTAR LOGUEARSE: Fuerza la última versión antes de validar la clave
-App.executeForceFreshLoginCheck = function() {
+// 2. SINTAXIS UNIVERSAL: Se amarra a window para evitar el bucle de recarga infinita en el arranque
+window.executeForceFreshLoginCheck = function() {
     console.log("🔍 SGR: Validando frescura del código en el servidor antes del ingreso...");
     
     if (!sessionStorage.getItem("goia_just_refreshed")) {
         sessionStorage.setItem("goia_just_refreshed", "true");
         window.location.reload(true);
     } else {
+        // Romper el ciclo de forma definitiva una vez que la página ya se refrescó con éxito
         sessionStorage.removeItem("goia_just_refreshed");
     }
 };
+
 
 /**
 * SISTEMA DE CONTROL DE GESTIONES - NÚCLEO CENTRAL (app-core.js)
