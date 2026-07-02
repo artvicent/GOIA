@@ -231,7 +231,6 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     const assignmentsData = AppDB.data.assignments;
     const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
     
-    // CAPTURA CRONOLÓGICA PERPETUA AUTOMÁTICA (Inmune a saltos de mes o año)
     const fechaCalendarioServidor = new Date();
     const numeroMesEnCurso = fechaCalendarioServidor.getMonth();
     const numeroAñoEnCurso = fechaCalendarioServidor.getFullYear();
@@ -239,10 +238,7 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
     assignmentsArray.forEach(function(item) {
         if (!item) return;
         
-        // Forzar la lectura de la fecha real de creación de la tarea en Firebase
         const itemDate = new Date(item.createdAt || item.timestamp || fechaCalendarioServidor);
-        
-        // CONDICIÓN OPERATIVA PERPETUA: El ticket DEBE pertenecer estrictamente al mes y año que transcurre hoy
         const esMismoMes = (itemDate.getMonth() === numeroMesEnCurso);
         const esMismoAño = (itemDate.getFullYear() === numeroAñoEnCurso);
 
@@ -263,11 +259,11 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
         const total = conteoMesEnCursoPorUsuario[username];
         if (total > maxGestionesMesEnCurso) {
             maxGestionesMesEnCurso = total;
-            liderActualMesEnCurso = `@${username} (${total.toLocaleString("es-VE")} u)`;
+            // RESTABLECIDO: Palabra corporativa original integrada de forma limpia
+            liderActualMesEnCurso = `@${username.toUpperCase()} (${total.toLocaleString("es-VE")} Gestiones)`;
         }
     });
 
-    // Inyectar el resultado directo en el HTML nativo del header sin parpadeos
     if (podioElementoHeader) {
         podioElementoHeader.innerText = liderActualMesEnCurso;
     }
@@ -300,6 +296,130 @@ App.completeDashboardRendering = function(globalProcessedSum, individualProcesse
 
     App.activateDashboardIntervalWatcher();
 };
+/* =========================================================================
+   MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.0Final) - PARTE 2
+   ========================================================================= */
+App.activateDashboardIntervalWatcher = function() {
+    if (!window.AppDashboardIntervalActive) {
+        window.AppDashboardIntervalActive = true;
+        setInterval(function() {
+            if (document.getElementById("viewDashboard") && !document.getElementById("viewDashboard").classList.contains("hidden")) {
+                App.renderDashboardData(); 
+            }
+        }, 10000); 
+    }
+};
+
+App.handleDismissAlertInline = function(alertId) {
+    if (!App.closedAlertsMemory.includes(alertId)) {
+        App.closedAlertsMemory.push(alertId);
+    }
+    const contenedorAlerta = document.getElementById(alertId);
+    if (contenedorAlerta) {
+        contenedorAlerta.remove();
+    }
+    const monitorContainer = document.getElementById("monitorContainer");
+    const tieneAlertasRestantes = monitorContainer ? (monitorContainer.children.length > 1) : false;
+    if (monitorContainer && !tieneAlertasRestantes) {
+        const graficaVieja = monitorContainer.querySelector(".ied-chart-card-wrapper")?.outerHTML || "";
+        monitorContainer.innerHTML = graficaVieja + `<p class="monitor-empty-text">Cero alertas operacionales activas.</p>`;
+    }
+};
+
+App.openReportsMenu = function() {
+    if (!AppDB.data || !AppDB.data.assignments) {
+        return alert("❌ Error: No existen datos operativos para consolidar el reporte.");
+    }
+
+    document.getElementById("modalOverlay").classList.remove("hidden");
+
+    const hoy = new Date();
+    const añoActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth();
+
+    let opcionesSemanasHtml = "";
+    
+    const primerDiaMesActual = new Date(añoActual, mesActual, 1);
+    const lunesMesAnterior = new Date(primerDiaMesActual);
+    lunesMesAnterior.setDate(lunesMesAnterior.getDate() - 7);
+    const diaLunesAnterior = lunesMesAnterior.getDay();
+    const difLunesAnterior = lunesMesAnterior.getDate() - diaLunesAnterior + (diaLunesAnterior === 0 ? -6 : 1);
+    lunesMesAnterior.setDate(difLunesAnterior);
+    const domingoMesAnterior = new Date(lunesMesAnterior);
+    domingoMesAnterior.setDate(domingoMesAnterior.getDate() + 6);
+    
+    opcionesSemanasHtml += `<option value="ANTERIOR_ULTIMA">⬅️ Última Semana Mes Anterior (${lunesMesAnterior.toLocaleDateString("es-VE")} al ${domingoMesAnterior.toLocaleDateString("es-VE")})</option>`;
+
+    let fechaBucle = new Date(añoActual, mesActual, 1);
+    let diaBucle = fechaBucle.getDay();
+    let difLunesBucle = fechaBucle.getDate() - diaBucle + (diaBucle === 0 ? -6 : 1);
+    if (difLunesBucle < 1) difLunesBucle = 1;
+    fechaBucle.setDate(difLunesBucle);
+
+    let numeroSemana = 1;
+    while (fechaBucle.getMonth() === mesActual) {
+        let lunesSemana = new Date(fechaBucle);
+        lunesSemana.setHours(0,0,0,0);
+        let domingoSemana = new Date(fechaBucle);
+        domingoSemana.setDate(domingoSemana.getDate() + 6);
+        domingoSemana.setHours(23,59,59,999);
+        
+        const labelSemana = `Semana #${numeroSemana} del Mes (${lunesSemana.toLocaleDateString("es-VE")} al ${domingoSemana.toLocaleDateString("es-VE")})`;
+        const valueSemana = `${lunesSemana.getTime()}_${domingoSemana.getTime()}`;
+        const esSemanaActual = (hoy >= lunesSemana && hoy <= domingoSemana) ? "selected" : "";
+        
+        opcionesSemanasHtml += `<option value="${valueSemana}" ${esSemanaActual}>📅 ${labelSemana}</option>`;
+        fechaBucle.setDate(fechaBucle.getDate() + 7);
+        numeroSemana++;
+    }
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="modal-inner-header">
+            <h3>📊 Centro de Reportería y Auditoría Cronológica</h3>
+            <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')">&times;</button>
+        </div>
+        
+        <div class="admin-config-card" style="padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <div style="margin-bottom: 15px; text-align: center;">
+                <h4 style="margin: 0; font-size: 14px; color: #1e3a8a; font-weight: bold;">Gerencia General de Adquirencia</h4>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Seleccione el corte y el rango de calendario para compilar el informe auditable.</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" onclick="App.executeExportDataToPDF('DIARIO')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📅 EMITIR REPORTE DIARIO (GESTIONES DE HOY)
+                </button>
+
+                <div class="form-group" style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px; background: #f8fafc;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:6px; color:#1e3a8a;">CRITERIO DE FILTRADO SEMANAL:</label>
+                    <select id="selectTargetAuditWeek" class="form-control full-width" style="width:100%; padding:8px; font-weight:600; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; color:#0f172a; margin-bottom: 8px;">
+                        ${opcionesSemanasHtml}
+                    </select>
+                    <button type="button" onclick="App.executeExportDataToPDF('SEMANAL')" class="btn-primary" style="width: 100%; padding: 11px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size:11px;">
+                        🔷 EMITIR REPORTE SEMANAL SELECCIONADO
+                    </button>
+                </div>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('MENSUAL')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📈 EMITIR REPORTE MENSUAL ACUMULADO (MES ACTIVO)
+                </button>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('MES_ANTERIOR')" class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📅 EMITIR REPORTE DEL MES ANTERIOR (CIERRE FISCAL)
+                </button>
+                
+                <button type="button" onclick="App.executeExportDataToPDF('HISTORICO')" class="btn-secondary" style="width: 100%; padding: 12px; font-weight: bold; background: #f8fafc; color: #1e3a8a; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    🔎 DESCARGAR HISTORIAL RETROSPECTIVO CONSOLIDADO (6 MESES)
+                </button>
+            </div>
+            
+            <div class="modal-action-row-footer" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <button type="button" onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="btn-secondary-cancel" style="width: 100%; padding: 10px; font-weight: bold;">Cerrar Ventana</button>
+            </div>
+        </div>`;
+};
+
+
 /* =========================================================================
    MÓDULO DE RENDERIZADO EJECUTIVO Y CONTROL DE CONTADORES (GOIA v2.0Final) - PARTE 2
    ========================================================================= */
@@ -1000,46 +1120,6 @@ App.deleteAssignmentCloud = function(index) {
     console.warn(`Intento de remoción física de fila interceptado y denegado para el índice: ${index} por @${operarioLog}`);
     alert("🚨 Operación denegada por la Gerencia: Las gestiones operacionales activas poseen inmunidad de borrado para resguardar el Índice IED y las auditorías de red.");
     return false;
-};
-
-App.calculateMeritPodiumPerformance = function() {
-    const topUserField = document.getElementById("topUserWorker");
-    if (!topUserField || !AppDB.data || !AppDB.data.assignments) {
-        if (topUserField) topUserField.innerText = "Sin registros acumulados";
-        return;
-    }
-    
-    var assignmentsData = AppDB.data.assignments;
-    var assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : Object.values(assignmentsData);
-
-    if (assignmentsArray.length === 0) {
-        topUserField.innerText = "Sin registros acumulados";
-        return;
-    }
-
-    let userScores = {};
-    assignmentsArray.forEach(function(item) {
-        if (item && (item.status === "completed" || item.processed >= item.meta) && (item.createdBy || item.assignedTo)) {
-            const user = (item.assignedTo || item.createdBy).toUpperCase();
-            const score = parseInt(item.processed || 0);
-            userScores[user] = (userScores[user] || 0) + score;
-        }
-    });
-    
-    let topUser = null;
-    let maxScore = -1;
-    for (const [user, score] of Object.entries(userScores)) {
-        if (score > maxScore) {
-            maxScore = score;
-            topUser = user;
-        }
-    }
-    
-    if (topUser && maxScore > 0) {
-        topUserField.innerText = `${topUser} (${maxScore} Gestiones)`;
-    } else {
-        topUserField.innerText = "Analizando ciclo activo...";
-    }
 };
 
 App.openAvatarSelectionModal = function() {
